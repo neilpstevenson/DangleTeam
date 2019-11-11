@@ -1,10 +1,10 @@
 # Basic motor control process, using IPC interface
 import pygame
-import redboard
-from Motor import Motor
-from MotorControlShared import MotorControlShared
-from ServoControlShared import ServoControlShared
-from SimpleControlShared import SimpleControlShared
+import hardware.redboard as redboard
+from hardware.Motor import Motor
+from interfaces.MotorControlSharedIPC import MotorControlSharedIPC
+from interfaces.ServoControlSharedIPC import ServoControlSharedIPC
+from interfaces.SimpleControlSharedIPC import SimpleControlSharedIPC
 import atexit
 
 pygame.init()
@@ -18,13 +18,13 @@ class MotorControlProcess:
 	
 	def __init__(self):
 		# Initialise the IPC classes
-		self.motorsIPC = MotorControlShared()
+		self.motorsIPC = MotorControlSharedIPC()
 		self.motorsIPC.create()
 		self.currentMotorValues = [0.0]*3
-		self.servosIPC = ServoControlShared()
+		self.servosIPC = ServoControlSharedIPC()
 		self.servosIPC.create()
 		self.currentServoValues = [0.0]*32
-		self.simpleControlsIPC = SimpleControlShared()
+		self.simpleControlsIPC = SimpleControlSharedIPC()
 		self.simpleControlsIPC.create()
 		self.currentSimpleValues = [0]*32
 		
