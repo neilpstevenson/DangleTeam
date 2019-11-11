@@ -22,7 +22,7 @@ class ControlAccessFactory:
 	@classmethod
 	def getSingleton(cls):
 		if cls.__instance == None:
-			cls.__instance = ControlIPC()
+			cls.__instance = ControlAccessFactory()
 		return cls.__instance
 		
 	def process(self):
