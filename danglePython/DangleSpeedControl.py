@@ -74,7 +74,7 @@ class DangleControl:
 		# Speed PID controller
 		speedSensorL = self.sensors.rateCounter(0)
 		speedRequestL = Scaler([Scaler(joystickForward, scaling = 0.8), Scaler(joystickLeftRight, scaling = -0.5)], scaling = 1.0)
-		pidL = PID(0.5,0.1,0.05, proportional_on_measurement = False)
+		pidL = PID(0.5,0.0,0.05, proportional_on_measurement = False)
 		pidTorqueErrorL = SimplePIDErrorValue(pidL, Scaler(speedSensorL, scaling = 0.0008)) # Full speed => 0.8 ish
 		torqueLprev = FixedValue(0.0)
 		torqueL = Scaler([speedRequestL, pidTorqueErrorL])
@@ -88,7 +88,7 @@ class DangleControl:
 		
 		speedSensorR = self.sensors.rateCounter(1)
 		speedRequestR = Scaler([Scaler(joystickForward, scaling = 0.8), Scaler(joystickLeftRight, scaling = 0.5)], scaling = -1.0)
-		pidR = PID(0.5,0.1,0.05, proportional_on_measurement = False)
+		pidR = PID(0.5,0.0,0.05, proportional_on_measurement = False)
 		pidTorqueErrorR = SimplePIDErrorValue(pidR, Scaler(speedSensorR, scaling = -0.0008)) # Full speed => 0.8 ish
 		torqueRprev = FixedValue(0.0)
 		torqueR = Scaler([speedRequestR, pidTorqueErrorR])
