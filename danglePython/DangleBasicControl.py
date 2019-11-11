@@ -5,8 +5,8 @@ from simple_pid import PID
 import atexit
 
 # Interfaces
-from interfaces/ControlAccessFactory import ControlAccessFactory
-from interfaces/SensorAccessFactory import SensorAccessFactory
+from interfaces.ControlAccessFactory import ControlAccessFactory
+from interfaces.SensorAccessFactory import SensorAccessFactory
 # Value providers
 from analysis/Scaler import Scaler
 from analysis/SimplePIDErrorValue import SimplePIDErrorValue
