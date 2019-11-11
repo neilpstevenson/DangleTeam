@@ -1,10 +1,9 @@
 import time
 import pygame
-import redboard
-from SensorsShared import SensorsShared
+from interfaces.SensorsSharedIPC import SensorsSharedIPC
 # For quadrature encoder
 import smbus2
-import i2cEncoderLibV2
+import hardware.i2cEncoderLibV2 as i2cEncoderLibV2
 
 pygame.init()
 
@@ -12,7 +11,7 @@ class SensorsProcess:
 
 	def __init__(self):
 		# Initialise the IPC classes
-		self.sensorsIPC = SensorsShared()
+		self.sensorsIPC = SensorsSharedIPC()
 		self.sensorsIPC.create()
 		self.joystick = None
 		
