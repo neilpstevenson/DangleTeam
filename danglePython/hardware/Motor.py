@@ -1,4 +1,4 @@
-import redboard
+import hardware.redboard as redboard
 import numpy
 
 class Motor:
