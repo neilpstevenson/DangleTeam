@@ -5,33 +5,33 @@ from simple_pid import PID
 import atexit
 
 # Interfaces
-from ControlIPC import ControlIPC
-from SensorIPC import SensorIPC
+from interfaces.ControlAccessFactory import ControlAccessFactory
+from interfaces.SensorAccessFactory import SensorAccessFactory
 # Value providers
-from Scaler import Scaler
-from SimplePIDErrorValue import SimplePIDErrorValue
-from HeadingPIDErrorValue import HeadingPIDErrorValue
-from OneShotButtonValue import OneShotButtonValue
-from FixedValue import FixedValue
+from analysis.Scaler import Scaler
+from analysis.SimplePIDErrorValue import SimplePIDErrorValue
+from analysis.HeadingPIDErrorValue import HeadingPIDErrorValue
+from analysis.OneShotButtonValue import OneShotButtonValue
+from analysis.FixedValue import FixedValue
 # Value combination helpers
-from ValueIntegrator import ValueIntegrator
-from ValueAdder import ValueAdder
+from analysis.ValueIntegrator import ValueIntegrator
+from analysis.ValueAdder import ValueAdder
 # Control mediators
-from SimpleControlMediator import SimpleControlMediator
-from SwitchingControlMediator import SwitchingControlMediator
+from challenge.SimpleControlMediator import SimpleControlMediator
+from challenge.SwitchingControlMediator import SwitchingControlMediator
 
 pygame.init()
 
 # recommended for auto-disabling motors on shutdown!
 def stopAtExit():
-	ControlIPC.getSingleton().emergencyStop() # This destroys everying and stops the motors
+	ControlAccessFactory.getSingleton().emergencyStop() # This destroys everying and stops the motors
 atexit.register(stopAtExit)
 
 class DangleControl:
 
 	def __init__(self):
-		self.controls = ControlIPC.getSingleton()
-		self.sensors = SensorIPC.getSingleton()
+		self.controls = ControlAccessFactory.getSingleton()
+		self.sensors = SensorAccessFactory.getSingleton()
 		self.highPriorityProcesses = []
 		self.medPriorityProcesses = []
 		self.counter = 0
