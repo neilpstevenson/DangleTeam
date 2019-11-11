@@ -1,15 +1,15 @@
-from MotionSensorSharedIPC import MotionSensorSharedIPC
+from interfaces.MotionSensorSharedIPC import MotionSensorSharedIPC
 import pygame
-from JoystickAxis import JoystickAxis
-from Button import Button
-from UpDownButton import UpDownButton
-from Roll import Roll
-from Pitch import Pitch
-from Yaw import Yaw
-from SensorsSharedIPC import SensorsSharedIPC
-from CounterSensor import CounterSensor
-from CounterChangeSensor import CounterChangeSensor
-from AnalogSensor import AnalogSensor
+from interfaces.JoystickAxis import JoystickAxis
+from interfaces.Button import Button
+from interfaces.UpDownButton import UpDownButton
+from interfaces.Roll import Roll
+from interfaces.Pitch import Pitch
+from interfaces.Yaw import Yaw
+from interfaces.SensorsSharedIPC import SensorsSharedIPC
+from interfaces.CounterSensor import CounterSensor
+from interfaces.CounterChangeSensor import CounterChangeSensor
+from interfaces.AnalogSensor import AnalogSensor
 
 class SensorAccessFactory:
 

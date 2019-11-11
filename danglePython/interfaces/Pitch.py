@@ -1,4 +1,4 @@
-from SensorInterface import SensorInterface
+from interfaces.SensorInterface import SensorInterface
 
 class Pitch(SensorInterface):
 	""" Accessor to get the current pitch (nose-up) angle of the MPU sensor

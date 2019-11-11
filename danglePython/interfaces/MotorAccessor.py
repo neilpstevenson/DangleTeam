@@ -1,4 +1,4 @@
-from ControlInterface import ControlInterface
+from interfaces.ControlInterface import ControlInterface
 
 class MotorAccessor(ControlInterface):
 	""" Class to set a value to a motor via the IPC provided

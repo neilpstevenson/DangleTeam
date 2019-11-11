@@ -1,4 +1,4 @@
-from SensorInterface import SensorInterface
+from interfaces.SensorInterface import SensorInterface
 
 class JoystickAxis(SensorInterface):
 	""" Accessor to get a value of an analog joystick axis.  

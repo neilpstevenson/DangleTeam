@@ -1,4 +1,4 @@
-from SensorInterface import SensorInterface
+from interfaces.SensorInterface import SensorInterface
 
 class Roll(SensorInterface):
 	""" Accessor to get the current roll (left/right) angle of the MPU sensor

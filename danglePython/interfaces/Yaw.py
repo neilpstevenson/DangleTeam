@@ -1,4 +1,4 @@
-from SensorInterface import SensorInterface
+from interfaces.SensorInterface import SensorInterface
 
 class Yaw(SensorInterface):
 	""" Accessor to get the current yaw (heading) angle of the MPU sensor

@@ -1,4 +1,4 @@
-from SensorInterface import SensorInterface
+from interfaces.SensorInterface import SensorInterface
 
 class Button(SensorInterface):
 	""" Class to get the binary state of a button state.  

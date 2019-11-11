@@ -1,4 +1,4 @@
-from SensorInterface import SensorInterface
+from interfaces.SensorInterface import SensorInterface
 
 class CounterSensor(SensorInterface):
 	""" Class to get an analog sensor reading. 

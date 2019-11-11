@@ -1,4 +1,4 @@
-from ControlInterface import ControlInterface
+from interfaces.ControlInterface import ControlInterface
 
 class LedAccessor(ControlInterface):
 	""" Class to set a value to an LED or similar display via the IPC provided

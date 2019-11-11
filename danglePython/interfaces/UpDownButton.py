@@ -1,4 +1,4 @@
-from SensorInterface import SensorInterface
+from interfaces.SensorInterface import SensorInterface
 
 class UpDownButton(SensorInterface):
 	""" Class to get the tri-state value of a two-button up/down control.  

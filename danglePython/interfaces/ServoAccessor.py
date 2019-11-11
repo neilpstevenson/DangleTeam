@@ -1,4 +1,4 @@
-from ControlInterface import ControlInterface
+from interfaces.ControlInterface import ControlInterface
 
 class ServoAccessor(ControlInterface):
 	""" Class to set a value to a servo to a fixed position
