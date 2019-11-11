@@ -149,9 +149,12 @@ class DangleControl:
 			if self.counter % 10 == 0:
 				self.processAll(self.medPriorityProcesses)
 			
-			#speedSensorValL = speedSensorL.getCounter()
-			#rateOfChange = speedSensorL.getValue()
-			#print(f"speedSensorValL: {speedSensorValL}, speed: {rateOfChange}")
+			speedSensorValL = speedSensorL.getCounter()
+			rateOfChangeL = speedSensorL.getValue()
+			print(f"speedSensorValL: {speedSensorValL}, speed: {rateOfChangeL}")
+			speedSensorValR = speedSensorR.getCounter()
+			rateOfChangeR = speedSensorR.getValue()
+			print(f"speedSensorValR: {speedSensorValR}, speed: {rateOfChangeR}")
 			
 			if running:
 				currentTorqueL = torqueL.getValue()
