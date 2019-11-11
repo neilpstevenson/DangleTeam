@@ -1,5 +1,5 @@
 # Direct access at the moment
-import redboard
+#import redboard
 from MotorControl import MotorControl
 from ServoControl import ServoControl
 from ServoControlSharedIPC import ServoControlSharedIPC
@@ -38,7 +38,7 @@ class ControlAccessFactory:
 	def emergencyStop(self):
 		self.stopAllMotors()
 		#redboard.led_off()
-		redboard.Stop() # This destroys everying and stops the motors
+		#redboard.Stop() # This destroys everying and stops the motors
 
 	def resetWatchdog(self, count = 100):
 		self.motorsIPC.resetWatchdog(count)
