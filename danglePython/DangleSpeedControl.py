@@ -91,7 +91,7 @@ class DangleControl:
 		pidR = PID(0.5,0.1,0.05, proportional_on_measurement = False)
 		pidTorqueErrorR = SimplePIDErrorValue(pidR, Scaler(speedSensorR, scaling = -0.0008)) # Full speed => 0.8 ish
 		torqueRprev = FixedValue(0.0)
-		torqueR = Scaler([speedRequestL, pidTorqueErrorR])
+		torqueR = Scaler([speedRequestR, pidTorqueErrorR])
 		motorR = SwitchingControlMediator( [ motorsStop, 								 # Choice 0 = Stopped \
 																						 # Choice 1 = Controlled
 											[torqueR]	# Speed control via PID  \
