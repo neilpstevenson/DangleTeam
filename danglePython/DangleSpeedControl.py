@@ -85,12 +85,13 @@ class DangleControl:
 											self.controls.motor(2), \
 											motorEnable )
 		self.highPriorityProcesses.append(motorL)
-		speedSensorR = self.sensors.rateCounter(0)
+		
+		speedSensorR = self.sensors.rateCounter(1)
 		speedRequestR = Scaler([Scaler(joystickForward, scaling = 0.8), Scaler(joystickLeftRight, scaling = 0.5)], scaling = -1.0)
 		pidR = PID(0.5,0.1,0.05, proportional_on_measurement = False)
-		pidTorqueErrorR = SimplePIDErrorValue(pidL, Scaler(speedSensorR, scaling = -0.0008)) # Full speed => 0.8 ish
+		pidTorqueErrorR = SimplePIDErrorValue(pidR, Scaler(speedSensorR, scaling = -0.0008)) # Full speed => 0.8 ish
 		torqueRprev = FixedValue(0.0)
-		torqueR = Scaler([speedRequestL, pidTorqueErrorL])
+		torqueR = Scaler([speedRequestL, pidTorqueErrorR])
 		motorR = SwitchingControlMediator( [ motorsStop, 								 # Choice 0 = Stopped \
 																						 # Choice 1 = Controlled
 											[torqueR]	# Speed control via PID  \
