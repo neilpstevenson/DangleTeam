@@ -15,31 +15,30 @@ class SensorsProcess:
 		self.sensorsIPC.create()
 		self.joystick = None
 		
-	def initialiseQuadratureCounters(self):
+	def initialiseQuadratureCounters(self, address):
 		# Set up quadrature interface board
 		i2cBus=smbus2.SMBus(1)
-		self.encoder = i2cEncoderLibV2.i2cEncoderLibV2(i2cBus,0x45)
+		encoder = i2cEncoderLibV2.i2cEncoderLibV2(i2cBus,address)
 		encconfig=(i2cEncoderLibV2.INT_DATA | i2cEncoderLibV2.WRAP_ENABLE | i2cEncoderLibV2.DIRE_RIGHT | i2cEncoderLibV2.IPUP_ENABLE | i2cEncoderLibV2.RMOD_X1 | i2cEncoderLibV2.RGB_ENCODER)
-		self.encoder.begin(encconfig)
-		self.encoder.writeCounter(0)
-		self.encoder.writeMax(32767)
-		self.encoder.writeMin(-32767)
-		self.encoder.writeStep(1)
-		self.encoder.writeInterruptConfig(0xff)
-		self.lastQuadratureCount = 0
+		encoder.begin(encconfig)
+		encoder.writeCounter(0)
+		encoder.writeMax(32767)
+		encoder.writeMin(-32767)
+		encoder.writeStep(1)
+		encoder.writeInterruptConfig(0xff)
 		
-	def getQuadratureCounter(self):
-		self.encoder.updateStatus()
-		if self.encoder.readStatus(i2cEncoderLibV2.RINC) == True :
+	def getQuadratureCounter(self, encoder, lastQuadratureCount):
+		encoder.updateStatus()
+		if encoder.readStatus(i2cEncoderLibV2.RINC) == True :
 			#last = encoder.readCounter32()
-			count = self.encoder.readCounter16()
-			print ('Increment: %8d=0x%08x %8d' % (count, count&0xffffffff, count-self.lastQuadratureCount)) 
-		elif self.encoder.readStatus(i2cEncoderLibV2.RDEC) == True :
+			count = encoder.readCounter16()
+			print ('Increment: %8d=0x%08x %8d' % (count, count&0xffffffff, count-lastQuadratureCount)) 
+		elif encoder.readStatus(i2cEncoderLibV2.RDEC) == True :
 			#last = encoder.readCounter32()
-			count = self.encoder.readCounter16()
-			print ('Decrement:  %8d=0x%08x %8d' % (count, count&0xffffffff, count-self.lastQuadratureCount))
+			count = encoder.readCounter16()
+			print ('Decrement:  %8d=0x%08x %8d' % (count, count&0xffffffff, count-lastQuadratureCount))
 		else:
-			count = self.lastQuadratureCount
+			count = lastQuadratureCount
 		return count
 		
 	def initialiseJoystick(self):
@@ -62,7 +61,10 @@ class SensorsProcess:
 		# Initialise the Joystick connection
 		self.initialiseJoystick()
 		# Initialise the quadrature interface board
-		self.initialiseQuadratureCounters()
+		self.encoderL = self.initialiseQuadratureCounters(0x45)
+		lastQuadratureCountL = 0
+		self.encoderR = self.initialiseQuadratureCounters(0x46)
+		lastQuadratureCountR = 0
 		
 		done = False
 		while not done:
@@ -82,10 +84,15 @@ class SensorsProcess:
 				self.sensorsIPC.setDigitalValue(button, buttonValue)
 			
 			# Read the motor speed sensors
-			newCount = self.getQuadratureCounter()
+			newCount = self.getQuadratureCounter(self.encoderL, lastQuadratureCountL)
 			timestamp = time.perf_counter()
 			self.sensorsIPC.setCounterValue(0, newCount, timestamp=timestamp)
-			self.lastQuadratureCount = newCount
+			lastQuadratureCountL = newCount
+			
+			newCount = self.getQuadratureCounter(self.encoderR, lastQuadratureCountR)
+			timestamp = time.perf_counter()
+			self.sensorsIPC.setCounterValue(1, newCount, timestamp=timestamp)
+			lastQuadratureCountR = newCount
 			
 			pygame.time.wait(50) # mS
 
