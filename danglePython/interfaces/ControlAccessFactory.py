@@ -1,11 +1,11 @@
 # Direct access at the moment
 #import redboard
-from MotorAccessor import MotorAccessor
-from ServoAccessor import ServoAccessor
-from ServoControlSharedIPC import ServoControlSharedIPC
-from SimpleControlSharedIPC import SimpleControlSharedIPC
-from MotorControlSharedIPC import MotorControlSharedIPC
-from LedAccessor import LedAccessor
+from interfaces.MotorAccessor import MotorAccessor
+from interfaces.ServoAccessor import ServoAccessor
+from interfaces.ServoControlSharedIPC import ServoControlSharedIPC
+from interfaces.SimpleControlSharedIPC import SimpleControlSharedIPC
+from interfaces.MotorControlSharedIPC import MotorControlSharedIPC
+from interfaces.LedAccessor import LedAccessor
 
 class ControlAccessFactory:
 
