@@ -26,6 +26,7 @@ class SensorsProcess:
 		encoder.writeMin(-32767)
 		encoder.writeStep(1)
 		encoder.writeInterruptConfig(0xff)
+		return encoder
 		
 	def getQuadratureCounter(self, encoder, lastQuadratureCount):
 		encoder.updateStatus()
