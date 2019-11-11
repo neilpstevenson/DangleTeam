@@ -1,4 +1,4 @@
-from ../interfaces/ControlMediatorInterface import ControlMediatorInterface
+from interfaces.ControlMediatorInterface import ControlMediatorInterface
 
 class SimpleControlMediator(ControlMediatorInterface):
 	""" Class to simply copy one or more sensor values to a controller, e.g. joystick axis to motor

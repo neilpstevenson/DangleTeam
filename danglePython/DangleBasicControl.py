@@ -8,17 +8,17 @@ import atexit
 from interfaces.ControlAccessFactory import ControlAccessFactory
 from interfaces.SensorAccessFactory import SensorAccessFactory
 # Value providers
-from analysis/Scaler import Scaler
-from analysis/SimplePIDErrorValue import SimplePIDErrorValue
-from analysis/HeadingPIDErrorValue import HeadingPIDErrorValue
-from analysis/OneShotButtonValue import OneShotButtonValue
-from analysis/FixedValue import FixedValue
+from analysis.Scaler import Scaler
+from analysis.SimplePIDErrorValue import SimplePIDErrorValue
+from analysis.HeadingPIDErrorValue import HeadingPIDErrorValue
+from analysis.OneShotButtonValue import OneShotButtonValue
+from analysis.FixedValue import FixedValue
 # Value combination helpers
-from analysis/ValueIntegrator import ValueIntegrator
-from analysis/ValueAdder import ValueAdder
+from analysis.ValueIntegrator import ValueIntegrator
+from analysis.ValueAdder import ValueAdder
 # Control mediators
-from challenge/SimpleControlMediator import SimpleControlMediator
-from challenge/SwitchingControlMediator import SwitchingControlMediator
+from challenge.SimpleControlMediator import SimpleControlMediator
+from challenge.SwitchingControlMediator import SwitchingControlMediator
 
 pygame.init()
 

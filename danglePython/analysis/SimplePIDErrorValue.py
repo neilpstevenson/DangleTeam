@@ -1,4 +1,4 @@
-from ../interfaces/SensorInterface import SensorInterface
+from interfaces.SensorInterface import SensorInterface
 
 class SimplePIDErrorValue(SensorInterface):
 	""" Class to implement a simple PID control error calculation, based on an input value. It uses the supplied PID and either passes on 

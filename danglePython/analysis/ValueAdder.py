@@ -1,4 +1,4 @@
-from ../interfaces/SensorInterface import SensorInterface
+from interfaces.SensorInterface import SensorInterface
 
 class ValueAdder(SensorInterface):
 	""" Class to sum a set of sensor values, returning

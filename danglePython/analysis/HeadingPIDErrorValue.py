@@ -1,4 +1,4 @@
-from ../interfaces/SensorInterface import SensorInterface
+from interfaces.SensorInterface import SensorInterface
 import numpy as np
 
 class HeadingPIDErrorValue(SensorInterface):

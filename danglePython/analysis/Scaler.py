@@ -1,4 +1,4 @@
-from ../interfaces/SensorInterface import SensorInterface
+from interfaces.SensorInterface import SensorInterface
 
 class Scaler(SensorInterface):
 	""" Class to apply a scale/offset/limit to a value from a sensor

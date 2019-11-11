@@ -1,4 +1,4 @@
-from ../interfaces/SensorInterface import SensorInterface
+from interfaces.SensorInterface import SensorInterface
 
 class FixedValue(SensorInterface):
 	""" Class to get a value from a sensor and provide
