@@ -3,14 +3,14 @@ import numpy as np
 import cv2
 from picamera.array import PiRGBArray
 from picamera import PiCamera
-from LineAnalysisSharedResult import LineAnalysisSharedResult
+from interfaces.LineAnalysisSharedIPC import LineAnalysisSharedIPC
 
 class VisionLineProcessor:
 
 	def __init__(self):
 		
 		# Create/overwrite
-		self.results = LineAnalysisSharedResult()
+		self.results = LineAnalysisSharedIPC()
 		self.results.create()
 		
 		# Define the analysis parameters
