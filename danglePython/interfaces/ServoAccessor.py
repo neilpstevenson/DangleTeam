@@ -17,3 +17,6 @@ class ServoAccessor(ControlInterface):
 		elif value > 1.0:
 			value = 1.0
 		self.servosIPC.setPosition(self.servo, value)
+
+	def getValue(self):
+		return self.servosIPC.getPosition(self.servo)

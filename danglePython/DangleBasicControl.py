@@ -8,12 +8,12 @@ import atexit
 from interfaces.ControlAccessFactory import ControlAccessFactory
 from interfaces.SensorAccessFactory import SensorAccessFactory
 # Value providers
-from analysis.Scaler import Scaler
 from analysis.SimplePIDErrorValue import SimplePIDErrorValue
 from analysis.HeadingPIDErrorValue import HeadingPIDErrorValue
 from analysis.OneShotButtonValue import OneShotButtonValue
 from analysis.FixedValue import FixedValue
 # Value combination helpers
+from analysis.Scaler import Scaler
 from analysis.ValueIntegrator import ValueIntegrator
 from analysis.ValueAdder import ValueAdder
 # Control mediators

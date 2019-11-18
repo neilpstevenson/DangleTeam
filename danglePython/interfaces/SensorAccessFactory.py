@@ -1,5 +1,5 @@
 from interfaces.MotionSensorSharedIPC import MotionSensorSharedIPC
-import pygame
+#import pygame
 from interfaces.JoystickAxis import JoystickAxis
 from interfaces.Button import Button
 from interfaces.UpDownButton import UpDownButton
@@ -28,9 +28,9 @@ class SensorAccessFactory:
 		
 	def process(self):
 		# Do common processing of state
-		for event in pygame.event.get():
-			# Processes necessary events to update current joystick state
-			pass
+		#for event in pygame.event.get():
+		#	# Processes necessary events to update current joystick state
+		#	pass
 		self.mpu.updateReading()
 
 	## Raw MPU accessor methods
