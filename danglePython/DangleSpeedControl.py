@@ -72,9 +72,10 @@ class DangleControl:
 		joystickLeftRight = self.sensors.joystickAxis(3)
 		
 		# Speed PID controller
+		## LEFT
 		speedSensorL = self.sensors.rateCounter(0) # Raw speed
-		speedSensorScaledL = Scaler(speedSensorL, scaling = 0.0012) # Roughly +/-1000 => +/1.0 max speed
-		speedRequestL = ValueAdder([Scaler(joystickForward, scaling = 0.8), Scaler(joystickLeftRight, scaling = -0.5)])
+		speedSensorScaledL = Scaler(speedSensorL, scaling = 0.003) # Roughly +/-1000 => +/1.0 max speed
+		speedRequestL = ValueAdder([Scaler(joystickForward, scaling = 0.5), Scaler(joystickLeftRight, scaling = -0.2)])
 		#pidL = PID(2.0,0.0,0.05, sample_time=0.05, output_limits=(-1.0, 1.0), proportional_on_measurement = False)
 		pidL = PID(0.3,0.3,0.05, sample_time=0.05, output_limits=(-1.0, 1.0), proportional_on_measurement = True)
 		torqueErrorL = SimplePIDErrorValue(pidL, Scaler(speedSensorScaledL, scaling = -1.0))
@@ -86,21 +87,10 @@ class DangleControl:
 											self.controls.motor(2), \
 											motorEnable )
 		self.highPriorityProcesses.append(motorL)
-		#speedSensorL = self.sensors.rateCounter(0)
-		#speedRequestL = Scaler([Scaler(joystickForward, scaling = 0.8), Scaler(joystickLeftRight, scaling = -0.5)], scaling = 1.0)
-		#pidL = PID(0.5,0.0,0.05, proportional_on_measurement = False)
-		#pidTorqueErrorL = SimplePIDErrorValue(pidL, Scaler(speedSensorL, scaling = -0.0008)) # Full speed => 0.8 ish
-		#torqueLprev = FixedValue(0.0)
-		#torqueL = Scaler([speedRequestL, pidTorqueErrorL])
-		#motorL = SwitchingControlMediator( [ motorsStop, 								 # Choice 0 = Stopped \
-		#									  											 # Choice 1 = Controlled
-		#									[torqueL]	# Speed control via PID  \
-		#								   ],
-		#									self.controls.motor(2), \
-		#									motorEnable )
+		## RIGHT
 		speedSensorR = self.sensors.rateCounter(1) # Raw speed
-		speedSensorScaledR = Scaler(speedSensorR, scaling = -0.0012) # Roughly +/-1000 => +/1.0 max speed
-		speedRequestR = ValueAdder([Scaler(joystickForward, scaling = 0.8), Scaler(joystickLeftRight, scaling = 0.5)])
+		speedSensorScaledR = Scaler(speedSensorR, scaling = -0.003) # Roughly +/-1000 => +/1.0 max speed
+		speedRequestR = ValueAdder([Scaler(joystickForward, scaling = 0.5), Scaler(joystickLeftRight, scaling = 0.2)])
 		#pidL = PID(2.0,0.0,0.05, sample_time=0.05, output_limits=(-1.0, 1.0), proportional_on_measurement = False)
 		pidR = PID(0.3,0.3,0.05, sample_time=0.05, output_limits=(-1.0, 1.0), proportional_on_measurement = True)
 		torqueErrorR = SimplePIDErrorValue(pidR, Scaler(speedSensorScaledR, scaling = -1.0))
@@ -113,6 +103,7 @@ class DangleControl:
 											motorEnable )
 		self.highPriorityProcesses.append(motorR)
 
+		# Led Status
 		ledIndicator = self.controls.led(0)
 		
 		# Set initial state of servos and motors

@@ -10,6 +10,8 @@ class SensorsSharedIPC:
 			Counters - These are integer-based, and generally increase or decrease in response to external stimuli, such 
 			as quadature encoders.  It also returns a rate-of-change in counts/second (note: only really valid for rapid 
 			changing sensors)
+		Watchdog should be decremented on each read in any control loop and if reaches zero, the sensor values should be treated as 
+		unreliable (probably crashed) and set motors etc. into safe mode.  Set to 100 for 1 second protection.
 	'''
 	sensor_analog_dt = np.dtype([
 					('status', np.uint16),	# 0=no value, 1=valid value
@@ -25,6 +27,7 @@ class SensorsSharedIPC:
 					('value', np.int64),
 					('rateOfChange', np.float32)])
 	servos_shared_dt = np.dtype([
+					('watchdog', np.uint16),
 					('analog', sensor_analog_dt, (32)),
 					('digital', sensor_digital_dt, (32)),
 					('counter', sensor_counter_dt, (32))])
@@ -38,6 +41,14 @@ class SensorsSharedIPC:
 		# Read/write (no create)
 		self.data  = np.memmap(SensorsSharedIPC.filename, offset=0, dtype=SensorsSharedIPC.servos_shared_dt, mode='r+')
 
+	def checkWatchdog(self):
+		if self.data[0]['watchdog'] > 0:
+			# countdown
+			self.data[0]['watchdog'] -= 1
+		return self.data[0]['watchdog']
+	def resetWatchdog(self, count = 100):
+		self.data[0]['watchdog'] = count
+		
 	def setAnalogValue(self, sensor, value, status=1, timestamp = 0):
 		self.data[0]['analog'][sensor]['value'] = value
 		self.data[0]['analog'][sensor]['status'] = status
