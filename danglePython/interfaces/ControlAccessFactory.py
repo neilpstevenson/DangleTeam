@@ -44,6 +44,9 @@ class ControlAccessFactory:
 		self.motorsIPC.resetWatchdog(count)
 		self.servosIPC.resetWatchdog(count)
 		
+	def checkWatchdog(self):
+		return self.sensorsIPC.checkWatchdog()
+
 	####################################################################
 	# Factory methods to access the control interfacte
 	# These are the primary methods used to set the control IPC values

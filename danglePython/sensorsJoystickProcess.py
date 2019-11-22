@@ -95,6 +95,9 @@ class SensorsProcess:
 			self.sensorsIPC.setCounterValue(1, newCount, timestamp=timestamp)
 			lastQuadratureCountR = newCount
 			
+			# Report sensors alive
+			self.sensorsIPC.resetWatchdog()
+			
 			pygame.time.wait(50) # mS
 
 main = SensorsProcess()

@@ -33,6 +33,12 @@ class SensorAccessFactory:
 		#	pass
 		self.mpu.updateReading()
 
+	def resetWatchdog(self, count = 100):
+		self.sensorsIPC.resetWatchdog(count)
+
+	def checkWatchdog(self):
+		return self.sensorsIPC.checkWatchdog()
+
 	## Raw MPU accessor methods
 	def getAcceleration(self):
 		return self.mpu.get_accel()

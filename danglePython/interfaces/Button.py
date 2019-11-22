@@ -14,4 +14,7 @@ class Button(SensorInterface):
 		
 	def getValue(self):
 		return self.sensorIPC.getDigitalValue(self.button)
+		
+	def setValue(self, value, status=1):
+		self.sensorIPC.setDigitalValue(self.button, value, status=status)
 	

@@ -74,7 +74,7 @@ class DangleControl:
 		# Speed PID controller
 		## LEFT
 		speedSensorL = self.sensors.rateCounter(0) # Raw speed
-		speedSensorScaledL = Scaler(speedSensorL, scaling = 0.003) # Roughly +/-1000 => +/1.0 max speed
+		speedSensorScaledL = Scaler(speedSensorL, scaling = 0.0005) # Roughly +/-1000 => +/1.0 max speed
 		speedRequestL = ValueAdder([Scaler(joystickForward, scaling = 0.5), Scaler(joystickLeftRight, scaling = -0.2)])
 		#pidL = PID(2.0,0.0,0.05, sample_time=0.05, output_limits=(-1.0, 1.0), proportional_on_measurement = False)
 		pidL = PID(0.3,0.3,0.05, sample_time=0.05, output_limits=(-1.0, 1.0), proportional_on_measurement = True)
@@ -89,7 +89,7 @@ class DangleControl:
 		self.highPriorityProcesses.append(motorL)
 		## RIGHT
 		speedSensorR = self.sensors.rateCounter(1) # Raw speed
-		speedSensorScaledR = Scaler(speedSensorR, scaling = -0.003) # Roughly +/-1000 => +/1.0 max speed
+		speedSensorScaledR = Scaler(speedSensorR, scaling = -0.0005) # Roughly +/-1000 => +/1.0 max speed
 		speedRequestR = ValueAdder([Scaler(joystickForward, scaling = 0.5), Scaler(joystickLeftRight, scaling = 0.2)])
 		#pidL = PID(2.0,0.0,0.05, sample_time=0.05, output_limits=(-1.0, 1.0), proportional_on_measurement = False)
 		pidR = PID(0.3,0.3,0.05, sample_time=0.05, output_limits=(-1.0, 1.0), proportional_on_measurement = True)
@@ -175,8 +175,11 @@ class DangleControl:
 			
 			pygame.time.wait(10) # mS
 
-			# Keep motors alive
-			self.controls.resetWatchdog()
+			# Keep motors alive if sensors also alive
+			if self.sensors.checkWatchdog() > 0:
+				self.controls.resetWatchdog()
+			else:
+				motorEnable.setValue(0, status=0)
 			
 main = DangleControl()
 main.run()
