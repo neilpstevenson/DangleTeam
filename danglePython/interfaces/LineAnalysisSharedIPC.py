@@ -5,7 +5,8 @@ class LineAnalysisSharedIPC:
 	line_analysis_shared_dt = np.dtype([
 					('timestamp',np.uint64),
 					('elapsed',np.float32),
-					('angle',np.float32),
+					('angle',np.float32),	# Relative
+					('yaw',np.float32),		# Absolute target at time of image capture
 					('vector',np.float32,(2,2)),
 					('numberpoints',np.uint32),
 					('points',np.float32,(2,32))])
@@ -19,10 +20,11 @@ class LineAnalysisSharedIPC:
 		# Read only
 		self.data  = np.memmap(LineAnalysisSharedIPC.filename, offset=0, dtype=LineAnalysisSharedIPC.line_analysis_shared_dt, mode='r')
 		
-	def shareResults(self, timestamp, elapsed, angle, vector, points):
+	def shareResults(self, timestamp, elapsed, angle, yaw, vector, points):
 		self.data[0]['timestamp'] = timestamp
 		self.data[0]['elapsed'] = elapsed
 		self.data[0]['angle'] = angle
+		self.data[0]['yaw'] = yaw
 		self.data[0]['vector'][0] = vector
 		self.data[0]['numberpoints'] = len(points)
 		for point in range(len(points)):
@@ -36,6 +38,9 @@ class LineAnalysisSharedIPC:
 		
 	def getAngle(self):
 		return self.data[0]['angle']
+		
+	def getYaw(self):
+		return self.data[0]['yaw']
 		
 	def getVector(self):
 		return self.data[0]['vector'][0]

@@ -25,7 +25,7 @@ class HeadingPIDErrorValue(SensorInterface):
 		return heading
 		
 	def getValue(self):
-		current = -self.currentHeading.getValue()
+		current = self.currentHeading.getValue()
 		headingDiff = self.normaliseHeading(self.targetHeading - current)
 		error = self.pid(headingDiff) * self.scaling
 		np.set_printoptions(precision=2)

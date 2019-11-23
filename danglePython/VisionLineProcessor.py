@@ -4,6 +4,7 @@ import cv2
 from picamera.array import PiRGBArray
 from picamera import PiCamera
 from interfaces.LineAnalysisSharedIPC import LineAnalysisSharedIPC
+from interfaces.SensorAccessFactory import SensorAccessFactory
 
 class VisionLineProcessor:
 
@@ -23,12 +24,20 @@ class VisionLineProcessor:
 		self.camera.framerate = 30
 		self.rawCapture = PiRGBArray(self.camera, size=self.camera.resolution)
 		
+		# Current Yaw reading
+		self.sensors = SensorAccessFactory.getSingleton()
+		self.yaw = self.sensors.yaw()
+		
 	def captureAndAssess(self, display):
 		# Start timer, so we know how long things took
 		startTime = cv2.getTickCount()
 		
 		# grab the next frame as a numpy array
 		for frame in self.camera.capture_continuous(self.rawCapture, format="bgr", use_video_port=True):
+	
+			# Get the curretn yaw value
+			self.sensors.process()
+			yaw = self.yaw.getValue()
 			
 			# grab the raw NumPy array representing the image, then initialize the timestamp
 			# and occupied/unoccupied text
@@ -65,8 +74,14 @@ class VisionLineProcessor:
 			endTime = cv2.getTickCount()
 			time = (endTime - startTime) / cv2.getTickFrequency()
 			
+			yawAngle = yaw + angle 
+			if yawAngle > 180.0:
+				yawAngle -= 360.0
+			elif yawAngle < -180.0:
+				yawAngle += 360.0
+				
 			# Share the results
-			self.results.shareResults(startTime, time, angle, ((vx, vy), (x0, y0)), point)
+			self.results.shareResults(startTime, time, angle, yawAngle, ((vx, vy), (x0, y0)), point)
 			
 			# clear the stream in preparation for the next frame
 			self.rawCapture.truncate(0)
@@ -86,12 +101,13 @@ class VisionLineProcessor:
 				# Draw an arrow representing the brightest points
 				cv2.arrowedLine(assessment, (x0-vx, y0-vy), (x0+vx, y0+vy), (255, 255, 0), 2)
 				# Calculate an angle from where we are to approx mid point
-				currentPosition = (self.camera.resolution[0]//2, self.camera.resolution[1])
-				desiredPosition = (x0,y0)
-				angle = np.arctan((currentPosition[0]-desiredPosition[0])/(currentPosition[1]-desiredPosition[1])) * 180.0/3.14159
+				#currentPosition = (self.camera.resolution[0]//2, self.camera.resolution[1])
+				#desiredPosition = (x0,y0)
+				#angle = np.arctan((currentPosition[0]-desiredPosition[0])/(currentPosition[1]-desiredPosition[1])) * 180.0/3.14159
 				cv2.arrowedLine(assessment, currentPosition, desiredPosition, (0, 255, 0), 3)
 				# Overlay the angle calculated
-				cv2.putText(assessment, f"{angle} degrees", (5, self.camera.resolution[1]-4), cv2.FONT_HERSHEY_DUPLEX, 0.4, (0, 255, 0))
+				np.set_printoptions(precision=2)
+				cv2.putText(assessment, f"{yaw:.2f}deg => {yawAngle}deg", (5, self.camera.resolution[1]-4), cv2.FONT_HERSHEY_DUPLEX, 0.4, (0, 255, 0))
 				cv2.imshow(f"assessed direction", assessment)
 				
 				displayEndTime = cv2.getTickCount()
