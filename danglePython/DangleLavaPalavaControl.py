@@ -51,8 +51,8 @@ class DangleControl:
 		# Yaw control
 		yaw = self.sensors.yaw()
 		targetLineHeading = self.vision.getLineHeading()
-		pidHeading = PID(0.3,0.003,0.05, sample_time=0.05)
-		target_heading = HeadingPIDErrorValue(yaw, pidHeading, yaw.getValue(), min = -0.2, max = 0.2, scaling=0.04)
+		pidHeading = PID(0.1,0.001,0.03, sample_time=0.05)
+		target_heading = HeadingPIDErrorValue(yaw, pidHeading, yaw.getValue(), min = -0.1, max = 0.1, scaling=0.02)
 		# Initialise the PID
 		target_heading.getValue()
 		
@@ -76,7 +76,7 @@ class DangleControl:
 		
 		# Motors
 		motorsStop = FixedValue(0.0)
-		motorsForward = FixedValue(-0.2)
+		motorsForward = FixedValue(-0.15)
 		motorEnable = self.sensors.button(4)
 		joystickForward = self.sensors.joystickAxis(1)
 		joystickLeftRight = self.sensors.joystickAxis(3)
@@ -85,7 +85,7 @@ class DangleControl:
 		## LEFT
 		speedSensorL = self.sensors.rateCounter(0) # Raw speed
 		speedSensorScaledL = Scaler(speedSensorL, scaling = 0.0005) # Roughly +/-1000 => +/1.0 max speed
-		speedRequestL = ValueAdder([motorsForward, Scaler(joystickForward, scaling = 0.5), Scaler(joystickLeftRight, scaling = -0.2), Scaler(target_heading, scaling = -1.0)])
+		speedRequestL = ValueAdder([motorsForward, Scaler(joystickForward, scaling = 0.5), Scaler(joystickLeftRight, scaling = -0.1), Scaler(target_heading, scaling = -1.0)])
 		#pidL = PID(2.0,0.0,0.05, sample_time=0.05, output_limits=(-1.0, 1.0), proportional_on_measurement = False)
 		pidL = PID(0.3,0.3,0.05, sample_time=0.05, output_limits=(-1.0, 1.0), proportional_on_measurement = True)
 		torqueErrorL = SimplePIDErrorValue(pidL, Scaler(speedSensorScaledL, scaling = -1.0))
@@ -101,7 +101,7 @@ class DangleControl:
 		## RIGHT
 		speedSensorR = self.sensors.rateCounter(1) # Raw speed
 		speedSensorScaledR = Scaler(speedSensorR, scaling = -0.0005) # Roughly +/-1000 => +/1.0 max speed
-		speedRequestR = ValueAdder([motorsForward, Scaler(joystickForward, scaling = 0.5), Scaler(joystickLeftRight, scaling = 0.2), Scaler(target_heading, scaling = 1.0)])
+		speedRequestR = ValueAdder([motorsForward, Scaler(joystickForward, scaling = 0.5), Scaler(joystickLeftRight, scaling = 0.1), Scaler(target_heading, scaling = 1.0)])
 		#pidL = PID(2.0,0.0,0.05, sample_time=0.05, output_limits=(-1.0, 1.0), proportional_on_measurement = False)
 		pidR = PID(0.3,0.3,0.05, sample_time=0.05, output_limits=(-1.0, 1.0), proportional_on_measurement = True)
 		torqueErrorR = SimplePIDErrorValue(pidR, Scaler(speedSensorScaledR, scaling = -1.0))
