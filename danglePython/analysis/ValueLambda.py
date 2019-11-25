@@ -1,13 +1,14 @@
 from interfaces.SensorInterface import SensorInterface
 
-class ValueAdder(SensorInterface):
-	""" Class to sum a set of sensor values, returning
-		as a derived sensor value
+class ValueLambda(SensorInterface):
+	""" Class to apply an arbitrary lambda function to the imput value(s).
+		Default is a value squared function
 	"""
 	
-	def __init__(self, input, min = -1.0, max = 1.0, scaling = 1.0, offset = 0.0):
+	def __init__(self, input, function = lambda x:x*x, min = -1.0, max = 1.0, scaling = 1.0, offset = 0.0):
 		SensorInterface.__init__(self)
 		self.input = input
+		self.function = function
 		self.min = min
 		self.max = max
 		self.scaling = scaling
@@ -18,13 +19,9 @@ class ValueAdder(SensorInterface):
 			rawValue = sum(map(lambda x: x.getValue(), self.input))
 		else:
 			rawValue = self.input.getValue()
-		scaledValue = rawValue*self.scaling + self.offset
+		scaledValue = function(rawValue)*self.scaling + self.offset
 		if scaledValue > self.max:
 			return self.max
 		elif scaledValue < self.min:
 			return self.min
 		return scaledValue
-
-		
-
-	

@@ -16,6 +16,7 @@ from analysis.FixedValue import FixedValue
 from analysis.Scaler import Scaler
 from analysis.ValueIntegrator import ValueIntegrator
 from analysis.ValueAdder import ValueAdder
+from analysis.ValueLambda import ValueLambda
 # Control mediators
 from challenge.SimpleControlMediator import SimpleControlMediator
 from challenge.SwitchingControlMediator import SwitchingControlMediator
@@ -72,7 +73,7 @@ class DangleControl:
 		joystickLeftRight = self.sensors.joystickAxis(3)
 		motorL = SwitchingControlMediator( [ motorsStop, 								 # Choice 0 = Stopped \
 											  											 # Choice 1 = Controlled
-											[Scaler(joystickForward, scaling = 0.8), Scaler(joystickLeftRight, scaling = -0.5)]	# Joystick  \
+											ValueLambda([Scaler(joystickForward, scaling = 0.8), Scaler(joystickLeftRight, scaling = -0.3)])	# Joystick  \
 										   ],
 											self.controls.motor(2), \
 											motorEnable )
@@ -80,7 +81,7 @@ class DangleControl:
 		self.highPriorityProcesses.append(motorL)
 		motorR = SwitchingControlMediator( [ motorsStop, 								 # Choice 0 = Stopped \
 																						 # Choice 1 = Controlled
-											[Scaler(joystickForward, scaling = -0.8), Scaler(joystickLeftRight, scaling = -0.5)]  # Joystick \
+											ValueLambda([Scaler(joystickForward, scaling = -0.8), Scaler(joystickLeftRight, scaling = -0.3)])  # Joystick \
 										   ],
 											self.controls.motor(1), \
 											motorEnable )
