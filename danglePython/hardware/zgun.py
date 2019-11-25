@@ -31,7 +31,7 @@ MIN=900
 MAX=2000
 
 class Zgun(object):
-    def __init__(self,addr=0x60):
+    def __init__(self,addr=0x10):
         self.addr=addr
         try:
             self.sb=SMBus(1)

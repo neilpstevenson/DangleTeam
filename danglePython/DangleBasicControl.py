@@ -21,6 +21,9 @@ from analysis.ValueLambda import ValueLambda
 from challenge.SimpleControlMediator import SimpleControlMediator
 from challenge.SwitchingControlMediator import SwitchingControlMediator
 
+# Direct hardware for the moment
+from hardware.zgun import Zgun
+
 pygame.init()
 
 # recommended for auto-disabling motors on shutdown!
@@ -65,6 +68,11 @@ class DangleControl:
 		grabber = SimpleControlMediator( grabReleaseButtons, \
 										 grabberServo )
 		self.medPriorityProcesses.append(grabber)
+
+		# Zgun
+		zgunUpDownButtons = ValueIntegrator(self.sensors.upDownButton(13, 14), min = 900, max = 2000, scaling = 100)
+		zgun=Zgun()
+		
 		
 		# Motors
 		motorsStop = FixedValue(0.0)
@@ -115,6 +123,7 @@ class DangleControl:
 			running = (motorEnable.getValue() > 0)
 			if running:
 				ledIndicator.setValue(0x04)
+				zgun.setpos(zgunUpDownButtons.getValue())
 			else:
 				ledIndicator.setValue(0x02)
 
