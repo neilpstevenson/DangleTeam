@@ -73,7 +73,7 @@ class DangleControl:
 		joystickLeftRight = self.sensors.joystickAxis(3)
 		motorL = SwitchingControlMediator( [ motorsStop, 								 # Choice 0 = Stopped \
 											  											 # Choice 1 = Controlled
-											ValueLambda([Scaler(joystickForward, scaling = 0.8), Scaler(joystickLeftRight, scaling = -0.3)])	# Joystick  \
+											ValueLambda([Scaler(joystickForward, scaling = 0.6), Scaler(joystickLeftRight, scaling = -0.1)])	# Joystick  \
 										   ],
 											self.controls.motor(2), \
 											motorEnable )
@@ -81,7 +81,7 @@ class DangleControl:
 		self.highPriorityProcesses.append(motorL)
 		motorR = SwitchingControlMediator( [ motorsStop, 								 # Choice 0 = Stopped \
 																						 # Choice 1 = Controlled
-											ValueLambda([Scaler(joystickForward, scaling = -0.8), Scaler(joystickLeftRight, scaling = -0.3)])  # Joystick \
+											ValueLambda([Scaler(joystickForward, scaling = -0.6), Scaler(joystickLeftRight, scaling = -0.1)])  # Joystick \
 										   ],
 											self.controls.motor(1), \
 											motorEnable )
@@ -129,8 +129,11 @@ class DangleControl:
 			
 			pygame.time.wait(10) # mS
 
-			# Keep motors alive
-			self.controls.resetWatchdog()
+			# Keep motors alive if sensors also alive
+			if self.sensors.checkWatchdog() > 0:
+				self.controls.resetWatchdog()
+			else:
+				motorEnable.setValue(0, status=0)
 			
 main = DangleControl()
 main.run()

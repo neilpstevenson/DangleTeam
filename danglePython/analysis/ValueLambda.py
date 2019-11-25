@@ -19,7 +19,10 @@ class ValueLambda(SensorInterface):
 			rawValue = sum(map(lambda x: x.getValue(), self.input))
 		else:
 			rawValue = self.input.getValue()
-		scaledValue = function(rawValue)*self.scaling + self.offset
+		scaledValue = self.function(rawValue)*self.scaling + self.offset
+		# Preserve sign
+		if rawValue < 0.0 and scaledValue > 0.0:
+			scaledValue = -scaledValue
 		if scaledValue > self.max:
 			return self.max
 		elif scaledValue < self.min:
