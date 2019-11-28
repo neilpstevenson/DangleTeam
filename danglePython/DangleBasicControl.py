@@ -70,7 +70,7 @@ class DangleControl:
 		self.medPriorityProcesses.append(grabber)
 
 		# Zgun
-		zgunUpDownButtons = ValueIntegrator(self.sensors.upDownButton(13, 14), min = 900, max = 2000, scaling = 100)
+		zgunUpDownButtons = ValueIntegrator(self.sensors.upDownButton(13, 14), min = 900, max = 2000, scaling = 5)
 		zgun=Zgun()
 		
 		
@@ -81,7 +81,7 @@ class DangleControl:
 		joystickLeftRight = self.sensors.joystickAxis(3)
 		motorL = SwitchingControlMediator( [ motorsStop, 								 # Choice 0 = Stopped \
 											  											 # Choice 1 = Controlled
-											ValueLambda([Scaler(joystickForward, scaling = 0.6), Scaler(joystickLeftRight, scaling = -0.1)])	# Joystick  \
+											[ValueLambda(Scaler(joystickForward, scaling =  0.9)), ValueLambda(Scaler(joystickLeftRight, scaling = -0.5))]	# Joystick  \
 										   ],
 											self.controls.motor(2), \
 											motorEnable )
@@ -89,7 +89,7 @@ class DangleControl:
 		self.highPriorityProcesses.append(motorL)
 		motorR = SwitchingControlMediator( [ motorsStop, 								 # Choice 0 = Stopped \
 																						 # Choice 1 = Controlled
-											ValueLambda([Scaler(joystickForward, scaling = -0.6), Scaler(joystickLeftRight, scaling = -0.1)])  # Joystick \
+											[ValueLambda(Scaler(joystickForward, scaling = -0.9)), ValueLambda(Scaler(joystickLeftRight, scaling = -0.5))]  # Joystick \
 										   ],
 											self.controls.motor(1), \
 											motorEnable )
