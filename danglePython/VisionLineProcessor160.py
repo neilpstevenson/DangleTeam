@@ -3,19 +3,21 @@ import numpy as np
 import cv2
 from picamera.array import PiRGBArray
 from picamera import PiCamera
-from LineAnalysisSharedResult import LineAnalysisSharedResult
+from interfaces.LineAnalysisSharedIPC import LineAnalysisSharedIPC
+from interfaces.SensorAccessFactory import SensorAccessFactory
 
 class VisionLineProcessor:
 
 	def __init__(self):
 		
 		# Create/overwrite
-		self.results = LineAnalysisSharedResult()
+		self.results = LineAnalysisSharedIPC()
 		self.results.create()
 		
 		# Define the analysis parameters
-		self.radius = 31	# ensure radius is odd and slighly bigger than the white line
+		self.radius = 160//15#31	# ensure radius is odd and slighly bigger than the white line
 		self.numSlices = 20
+		self.targetLookaheadRatio = 0.8 # % of screen height that we attempt to head towards
 
 		# initialize the camera and grab a reference to the raw camera capture
 		self.camera = PiCamera()
@@ -23,12 +25,24 @@ class VisionLineProcessor:
 		self.camera.framerate = 30
 		self.rawCapture = PiRGBArray(self.camera, size=self.camera.resolution)
 		
-	def captureAndAssess(self, display):
+		# Current Yaw reading
+		self.sensors = SensorAccessFactory.getSingleton()
+		self.yaw = self.sensors.yaw()
+		
+		# File capture
+		# Define the codec and create VideoWriter object.The output is stored in 'outpy.avi' file.
+		self.captureFile = cv2.VideoWriter('visionCapture.mp4', cv2.VideoWriter_fourcc(*'MJPG'), 10, self.camera.resolution)
+ 
+	def captureAndAssess(self, display, writeToFile):
 		# Start timer, so we know how long things took
 		startTime = cv2.getTickCount()
-		
+
 		# grab the next frame as a numpy array
 		for frame in self.camera.capture_continuous(self.rawCapture, format="bgr", use_video_port=True):
+	
+			# Get the curretn yaw value
+			self.sensors.process()
+			yaw = self.yaw.getValue()
 			
 			# grab the raw NumPy array representing the image, then initialize the timestamp
 			# and occupied/unoccupied text
@@ -37,7 +51,8 @@ class VisionLineProcessor:
 			# Convert to greyscale and apply a Gaussian blur to the image in order 
 			# to make more robust against noise and reflections
 			gray = cv2.cvtColor(original.copy(), cv2.COLOR_BGR2GRAY)
-			cv2.GaussianBlur(gray, (self.radius, self.radius), 0)
+			#gray = cv2.GaussianBlur(gray, (self.radius, self.radius), 0)
+			gray = cv2.blur(gray, (self.radius, self.radius))
 
 			# Chop the image into a number of horizontal slices
 			slices = np.array_split(gray,self.numSlices)
@@ -57,20 +72,31 @@ class VisionLineProcessor:
 			if vy > 0:
 				vy = -vy
 				vx = -vx
+			# Re-origin to stop some jitter
+			y0 = self.camera.resolution[1]*(self.numSlices-1)//self.numSlices//2
+			# scale the vector to approx screen size
+			vx *= self.camera.resolution[1]//2
+			vy *= self.camera.resolution[1]//2
 			# Calculate an angle from where we are to approx mid point
 			currentPosition = (self.camera.resolution[0]//2, self.camera.resolution[1])
-			desiredPosition = (x0,y0)
+			desiredPosition = (int(x0+vx*self.targetLookaheadRatio), int(y0+vy*self.targetLookaheadRatio))
 			angle = np.arctan((currentPosition[0]-desiredPosition[0])/(currentPosition[1]-desiredPosition[1])) * 180.0/3.14159
 
 			endTime = cv2.getTickCount()
 			time = (endTime - startTime) / cv2.getTickFrequency()
 			
+			yawAngle = yaw + angle 
+			if yawAngle > 180.0:
+				yawAngle -= 360.0
+			elif yawAngle < -180.0:
+				yawAngle += 360.0
+				
 			# Share the results
-			self.results.shareResults(startTime, time, angle, ((vx, vy), (x0, y0)), point)
+			self.results.shareResults(startTime, time, angle, yawAngle, ((vx, vy), (x0, y0)), point)
 			
 			# clear the stream in preparation for the next frame
 			self.rawCapture.truncate(0)
-			
+
 			# display the results
 			if display:
 				# Print the time taken
@@ -78,21 +104,20 @@ class VisionLineProcessor:
 				# Create an overlayed image
 				assessment = original.copy()
 				for point in points:
-					#cv2.circle(assessment, point, self.radius, (255, 0, 0), 1)
 					cv2.circle(assessment, point, 5, (0,0,255), 1)
-				# scale the vector to approx screen size
-				vx *= self.camera.resolution[0]//3
-				vy *= self.camera.resolution[0]//3
 				# Draw an arrow representing the brightest points
 				cv2.arrowedLine(assessment, (x0-vx, y0-vy), (x0+vx, y0+vy), (255, 255, 0), 2)
-				# Calculate an angle from where we are to approx mid point
-				currentPosition = (self.camera.resolution[0]//2, self.camera.resolution[1])
-				desiredPosition = (x0,y0)
-				angle = np.arctan((currentPosition[0]-desiredPosition[0])/(currentPosition[1]-desiredPosition[1])) * 180.0/3.14159
+				# Draw an angle from where we are to target
 				cv2.arrowedLine(assessment, currentPosition, desiredPosition, (0, 255, 0), 3)
 				# Overlay the angle calculated
-				cv2.putText(assessment, f"{angle} degrees", (5, self.camera.resolution[1]-4), cv2.FONT_HERSHEY_DUPLEX, 0.4, (0, 255, 0))
+				np.set_printoptions(precision=2)
+				cv2.putText(assessment, f"{yaw:.2f}deg => {yawAngle:.2f}deg", (5, self.camera.resolution[1]-4), cv2.FONT_HERSHEY_DUPLEX, 0.4, (0, 255, 0))
 				cv2.imshow(f"assessed direction", assessment)
+				cv2.imshow(f"grey", gray)
+				
+				if writeToFile:
+					# Write the frame into the file 'output.avi'
+					self.captureFile.write(assessment)
 				
 				displayEndTime = cv2.getTickCount()
 				overalltime = (displayEndTime - startTime) / cv2.getTickFrequency()
@@ -104,4 +129,4 @@ class VisionLineProcessor:
 			startTime = cv2.getTickCount()
 				
 processor = VisionLineProcessor()
-processor.captureAndAssess(True)
+processor.captureAndAssess(True, True)
