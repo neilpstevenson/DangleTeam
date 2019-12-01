@@ -22,7 +22,7 @@ from challenge.SimpleControlMediator import SimpleControlMediator
 from challenge.SwitchingControlMediator import SwitchingControlMediator
 
 # Direct hardware for the moment
-from hardware.zgun import Zgun
+#from hardware.zgun import Zgun
 
 pygame.init()
 
@@ -65,14 +65,19 @@ class DangleControl:
 		# Grabber hand servo
 		grabberServo = self.controls.servo(5)
 		grabReleaseButtons = ValueIntegrator(self.sensors.upDownButton(1, 3), min = -0.8, max = 0.6, scaling = 0.2)
-		grabber = SimpleControlMediator( grabReleaseButtons, \
-										 grabberServo )
+		grabber = SimpleControlMediator( grabReleaseButtons, grabberServo )
 		self.medPriorityProcesses.append(grabber)
 
 		# Zgun
-		zgunUpDownButtons = ValueIntegrator(self.sensors.upDownButton(13, 14), min = 900, max = 2000, scaling = 5)
-		zgun=Zgun()
+		zgunUpDownButtons = ValueIntegrator(self.sensors.upDownButton(13, 14), min = -1.0, max = 1.0, scaling = 0.005)
+		zgunElevationServo = self.controls.servo(0)
+		zgunElevation = SimpleControlMediator( zgunUpDownButtons, zgunElevationServo )
+		self.highPriorityProcesses.append(zgunElevation)
 		
+		zgunTrigger = self.sensors.button(6)
+		zgunFireMotor = self.controls.motor(0)
+		zgunFire = SimpleControlMediator( zgunTrigger, zgunFireMotor )
+		self.medPriorityProcesses.append(zgunFire)
 		
 		# Motors
 		motorsStop = FixedValue(0.0)
@@ -123,7 +128,6 @@ class DangleControl:
 			running = (motorEnable.getValue() > 0)
 			if running:
 				ledIndicator.setValue(0x04)
-				zgun.setpos(zgunUpDownButtons.getValue())
 			else:
 				ledIndicator.setValue(0x02)
 
@@ -135,6 +139,11 @@ class DangleControl:
 			speedSensorL = self.speedSensorL.getValue()
 			rateOfChange = self.speedSensorL.getRateOfChange()
 			print(f"speedSensorL: {speedSensorL}, speed: {rateOfChange}")
+			
+			#zgunElevation = zgunUpDownButtons.getValue()
+			#print(f"zgunElevation: {zgunElevation}")
+			zgunFireVal = zgunTrigger.getValue()
+			print(f"zgunFireVal: {zgunFireVal}")
 			
 			pygame.time.wait(10) # mS
 

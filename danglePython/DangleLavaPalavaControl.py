@@ -51,8 +51,8 @@ class DangleControl:
 		# Yaw control
 		yaw = self.sensors.yaw()
 		targetLineHeading = self.vision.getLineHeading()
-		pidHeading = PID(0.1,0.001,0.03, sample_time=0.05)
-		target_heading = HeadingPIDErrorValue(yaw, pidHeading, yaw.getValue(), min = -0.1, max = 0.1, scaling=0.02)
+		pidHeading = PID(0.1,0.001,0.04, sample_time=0.05)
+		target_heading = HeadingPIDErrorValue(yaw, pidHeading, yaw.getValue(), min = -0.3, max = 0.3, scaling=0.3)
 		# Initialise the PID
 		target_heading.getValue()
 		
@@ -62,7 +62,7 @@ class DangleControl:
 		# Camera angle servo
 		cameraTiltServo = self.controls.servo(6)
 		currentPitch = Scaler(self.sensors.pitch(), scaling = -0.015)
-		cameraUpDownButtons = ValueIntegrator(self.sensors.upDownButton(2, 0), scaling = -0.01, min=-0.85, max=0.85, offset = 0.5)
+		cameraUpDownButtons = ValueIntegrator(self.sensors.upDownButton(2, 0), scaling = -0.01, min=-0.85, max=0.85, offset = 0.2)
 		cameraLeveller = SimpleControlMediator( Scaler([currentPitch, cameraUpDownButtons], min=-0.9, max=0.85 ), \
 												cameraTiltServo )
 		self.highPriorityProcesses.append(cameraLeveller)
@@ -76,7 +76,7 @@ class DangleControl:
 		
 		# Motors
 		motorsStop = FixedValue(0.0)
-		motorsForward = FixedValue(-0.15)
+		motorsForward = FixedValue(-0.3)
 		motorEnable = self.sensors.button(4)
 		joystickForward = self.sensors.joystickAxis(1)
 		joystickLeftRight = self.sensors.joystickAxis(3)

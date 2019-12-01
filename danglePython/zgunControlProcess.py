@@ -13,8 +13,8 @@ pygame.init()
 
 class MotorControlProcess:
 
-	managedServos = (0)
-	managedMotors = (0)
+	managedServos = [0]
+	managedMotors = [0]
 	
 	def __init__(self):
 		# Initialise the IPC classes
@@ -62,7 +62,7 @@ class MotorControlProcess:
 					self.currentMotorValues[motor] = torque
 
 			# This controller is not time-sensitive
-			pygame.time.wait(100) # mS
+			pygame.time.wait(50) # mS
 
 			if self.motorsIPC.checkWatchdog() == 0:
 				print("MotorControlProcess: Paused due to watchdog expiry")
@@ -70,7 +70,7 @@ class MotorControlProcess:
 				for servo in MotorControlProcess.managedServos:
 					pass
 					#servo_off(servo)
-				for servo in MotorControlProcess.managedMotors:
+				for motor in MotorControlProcess.managedMotors:
 					self.motorsIPC.setRequiredTorque(motor, 0.0)
 					#motor_off(motor)
 				pygame.time.wait(1000) # mS
