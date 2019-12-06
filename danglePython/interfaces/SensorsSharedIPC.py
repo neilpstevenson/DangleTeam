@@ -34,8 +34,11 @@ class SensorsSharedIPC:
 	filename = '/dev/shm/sensors_shared.mmf'
 	
 	def create(self):
-		# Create/overwrite
-		self.data  = np.memmap(SensorsSharedIPC.filename, offset=0, dtype=SensorsSharedIPC.servos_shared_dt, mode='w+', shape=(1))
+		try:
+			self.open()
+		except:
+			# Create/overwrite
+			self.data  = np.memmap(SensorsSharedIPC.filename, offset=0, dtype=SensorsSharedIPC.servos_shared_dt, mode='w+', shape=(1))
 	
 	def open(self):
 		# Read/write (no create)

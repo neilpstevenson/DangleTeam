@@ -20,8 +20,11 @@ class MotorControlSharedIPC:
 	filename = '/dev/shm/motor_control_shared.mmf'
 	
 	def create(self):
-		# Create/overwrite
-		self.data  = np.memmap(MotorControlSharedIPC.filename, offset=0, dtype=MotorControlSharedIPC.motors_shared_dt, mode='w+', shape=(1))
+		try:
+			self.open()
+		except:
+			# Create/overwrite
+			self.data  = np.memmap(MotorControlSharedIPC.filename, offset=0, dtype=MotorControlSharedIPC.motors_shared_dt, mode='w+', shape=(1))
 	
 	def open(self):
 		# Read/write (no create)

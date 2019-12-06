@@ -17,8 +17,11 @@ class SimpleControlSharedIPC:
 	filename = '/dev/shm/simple_control_shared.mmf'
 	
 	def create(self):
-		# Create/overwrite
-		self.data  = np.memmap(SimpleControlSharedIPC.filename, offset=0, dtype=SimpleControlSharedIPC.controls_shared_dt, mode='w+', shape=(1))
+		try:
+			self.open()
+		except:
+			# Create/overwrite
+			self.data  = np.memmap(SimpleControlSharedIPC.filename, offset=0, dtype=SimpleControlSharedIPC.controls_shared_dt, mode='w+', shape=(1))
 	
 	def open(self):
 		# Read/write (no create)

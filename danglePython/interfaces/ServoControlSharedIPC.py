@@ -14,8 +14,11 @@ class ServoControlSharedIPC:
 	filename = '/dev/shm/servo_control_shared.mmf'
 	
 	def create(self):
-		# Create/overwrite
-		self.data  = np.memmap(ServoControlSharedIPC.filename, offset=0, dtype=ServoControlSharedIPC.servos_shared_dt, mode='w+', shape=(1))
+		try:
+			self.open()
+		except:
+			# Create/overwrite
+			self.data  = np.memmap(ServoControlSharedIPC.filename, offset=0, dtype=ServoControlSharedIPC.servos_shared_dt, mode='w+', shape=(1))
 	
 	def open(self):
 		# Read/write (no create)
