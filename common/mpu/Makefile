@@ -1,0 +1,23 @@
+# You need to "sudo apt-get install libgtkmm-3.0-dev" to build the demo_3d binary
+
+all: mpu9250_shared
+
+HDRS = 
+CMN_OBJS = core/driver/eMPL/inv_mpu.o core/driver/eMPL/inv_mpu_dmp_motion_driver.o i2c-rpi3b.o mpu6500_6050_9250_shared.o
+DMP_OBJS = 
+
+# Set DMP FIFO rate to 20Hz to avoid overflows on 3d demo.  See comments in
+# MPU6500_6Axis_MotionApps20.h for details.
+
+CXXFLAGS = -DEMPL_TARGET_PI_NEIL -DMPU9250 -DDMP_FIFO_RATE=7 -DUSE_MEMORY_MAPPED_FILE=1 -Wall -g -O2 `pkg-config gtkmm-3.0 --cflags --libs`
+CFLAGS = $(CXXFLAGS)
+
+$(CMN_OBJS) $(DMP_OBJS) $(RAW_OBJS) : $(HDRS)
+
+mpu9250_shared: $(CMN_OBJS) $(DMP_OBJS)
+	$(CXX) -o $@ $^ -lm
+
+
+clean:
+	rm -f $(CMN_OBJS) $(DMP_OBJS) mpu9250_shared
+

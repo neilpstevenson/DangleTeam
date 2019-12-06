@@ -39,7 +39,7 @@ class MotionSensorSharedIPC:
 								('mag',numpy.float32,(3,1)),
 								('shared_readings_buffer', shared_reading_dt, (1024,1))])
 		#	('shared_readings_buffer', (('timestamp',numpy.uint32),('accel',numpy.float32,(3,1)),('gyro',numpy.float32,(3,1)),('quaternion',numpy.float32,(4,1)),('flags',numpy.int32)),(1,1024))])
-		self.data  = numpy.memmap('/tmp/mpu6050_6500_values_shared.mmf', offset=0, dtype=shared_dt, mode='r')
+		self.data  = numpy.memmap('/dev/shm/mpu_values_shared.mmf', offset=0, dtype=shared_dt, mode='r')
 
 	def updateReading(self):
 		self.sample_count += 1
