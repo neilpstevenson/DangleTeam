@@ -73,7 +73,7 @@ class ChallengeBasicRemoteControl:
 
 		# LED display state
 		self.ledIndicator = self.controls.led(0)
-		medPriorityProcesses.append(SimpleControlMediator( Scaler(self.motorEnable, scaling=2, offset=2), self.ledIndicator))
+		medPriorityProcesses.append(SimpleControlMediator( Scaler(self.motorEnable, scaling=2, offset=2, max=4), self.ledIndicator))
 		
 		#running = False
 		
