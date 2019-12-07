@@ -28,7 +28,7 @@ class DangleRun:
 		self.medPriorityProcesses = []
 		self.counter = 0
 		# Set up specific challenge instance
-		self.challenge = ControlAccessFactory()
+		self.challenge = ChallengeBasicRemoteControl()
 
 	def processAll(self, processes):
 		[x.process() for x in processes]
