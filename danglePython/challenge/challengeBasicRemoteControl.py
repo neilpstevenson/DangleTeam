@@ -24,6 +24,7 @@ class ChallengeBasicRemoteControl:
 	def createProcesses(self, highPriorityProcesses, medPriorityProcesses):
 		# LED display state
 		self.ledIndicator = self.controls.led(0)
+		medPriorityProcesses.append(Scaler(self.ledIndicator, scaling=2, offset=2))
 
 		# Camera angle servo
 		cameraTiltServo = self.controls.servo(6)
@@ -76,8 +77,9 @@ class ChallengeBasicRemoteControl:
 		running = False
 		
 	def move(self):
-			running = (self.motorEnable.getValue() > 0)
-			if running:
-				self.ledIndicator.setValue(0x04)
-			else:
-				self.ledIndicator.setValue(0x02)
+		pass
+		#	running = (self.motorEnable.getValue() > 0)
+		#	if running:
+		#		self.ledIndicator.setValue(0x04)
+		#	else:
+		#		self.ledIndicator.setValue(0x02)
