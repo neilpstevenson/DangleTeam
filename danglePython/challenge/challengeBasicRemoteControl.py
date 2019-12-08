@@ -1,4 +1,5 @@
 # Interfaces
+from interfaces.ChallengeInterface import ChallengeInterface
 from interfaces.ControlAccessFactory import ControlAccessFactory
 from interfaces.SensorAccessFactory import SensorAccessFactory
 # Value providers
@@ -14,40 +15,24 @@ from analysis.ValueLambda import ValueLambda
 # Control mediators
 from challenge.SimpleControlMediator import SimpleControlMediator
 from challenge.SwitchingControlMediator import SwitchingControlMediator
+# Common controls
+from challenge.grabberControl import GrabberControl
+from challenge.cameraLevellingControl import CameraLevellingControl
+from challenge.zGunControl import ZGunControl
 
-class ChallengeBasicRemoteControl:
+
+class ChallengeBasicRemoteControl(ChallengeInterface):
 
 	def __init__(self):
 		self.controls = ControlAccessFactory.getSingleton()
 		self.sensors = SensorAccessFactory.getSingleton()
+		# Common controls
+		self.grabberControl = GrabberControl()
+		self.cameraLevellingControl = CameraLevellingControl()
+		self.zGunControl = ZGunControl()
+
 
 	def createProcesses(self, highPriorityProcesses, medPriorityProcesses):
-
-		# Camera angle servo
-		cameraTiltServo = self.controls.servo(6)
-		currentPitch = Scaler(self.sensors.pitch(), scaling = -0.015)
-		cameraUpDownButtons = ValueIntegrator(self.sensors.upDownButton(2, 0), scaling = -0.01, min=-0.85, max=0.85, offset = 0.5)
-		cameraLeveller = SimpleControlMediator( Scaler([currentPitch, cameraUpDownButtons], min=-0.9, max=0.85 ), \
-												cameraTiltServo )
-		highPriorityProcesses.append(cameraLeveller)
-		
-		# Grabber hand servo
-		grabberServo = self.controls.servo(5)
-		grabReleaseButtons = ValueIntegrator(self.sensors.upDownButton(1, 3), min = -0.8, max = 0.6, scaling = 0.2)
-		grabber = SimpleControlMediator( grabReleaseButtons, grabberServo )
-		medPriorityProcesses.append(grabber)
-
-		# Zgun
-		zgunUpDownButtons = ValueIntegrator(self.sensors.upDownButton(13, 14), min = -1.0, max = 1.0, scaling = 0.005)
-		zgunElevationServo = self.controls.servo(0)
-		zgunElevation = SimpleControlMediator( zgunUpDownButtons, zgunElevationServo )
-		highPriorityProcesses.append(zgunElevation)
-		
-		zgunTrigger = self.sensors.button(6)
-		zgunFireMotor = self.controls.motor(0)
-		zgunFire = SimpleControlMediator( zgunTrigger, zgunFireMotor )
-		medPriorityProcesses.append(zgunFire)
-		
 		# Motors
 		motorsStop = FixedValue(0.0)
 		self.motorEnable = self.sensors.button(4)
@@ -75,12 +60,14 @@ class ChallengeBasicRemoteControl:
 		self.ledIndicator = self.controls.led(0)
 		medPriorityProcesses.append(SimpleControlMediator( Scaler(self.motorEnable, scaling=2, offset=2, max=4), self.ledIndicator))
 		
-		#running = False
+		# Common controls
+		self.grabberControl.createProcesses(highPriorityProcesses, medPriorityProcesses)
+		self.cameraLevellingControl.createProcesses(highPriorityProcesses, medPriorityProcesses)
+		self.zGunControl.createProcesses(highPriorityProcesses, medPriorityProcesses)
+
 		
-	def move(self):
-		pass
-		#	running = (self.motorEnable.getValue() > 0)
-		#	if running:
-		#		self.ledIndicator.setValue(0x04)
-		#	else:
-		#		self.ledIndicator.setValue(0x02)
+	def stop(self):
+		''' Stop the challenge
+		'''
+		self.motorEnable.setValue(0, status=0)
+		

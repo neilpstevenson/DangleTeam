@@ -52,6 +52,9 @@ class DangleRun:
 		
 		# Loop until the user clicks the close button.
 		done = False
+
+		# Start the challenge
+		self.challenge.start()
 		
 		while not done:
 			self.counter += 1
@@ -66,6 +69,7 @@ class DangleRun:
 				if event.type == pygame.QUIT: # If user clicked close.
 					done = True # Flag that we are done so we exit this loop.
 
+			# Calculate next move
 			self.challenge.move()
 			
 			# Update everything
@@ -75,11 +79,11 @@ class DangleRun:
 			
 			pygame.time.wait(10) # mS
 
-			# Keep motors alive if sensors also alive
+			# Keep challenge alive if sensors also alive
 			if self.sensors.checkWatchdog() > 0:
 				self.controls.resetWatchdog()
 			else:
-				motorEnable.setValue(0, status=0)
+				self.challenge.stop()
 			
 main = DangleRun()
 main.run()
