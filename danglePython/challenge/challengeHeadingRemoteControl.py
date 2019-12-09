@@ -37,10 +37,10 @@ class ChallengeHeadingRemoteControl(ChallengeInterface):
 	def createProcesses(self, highPriorityProcesses, medPriorityProcesses):
 		# Yaw control
 		yaw = self.sensors.yaw()
-		pidHeading = PID(0.3,0.003,0.05, sample_time=0.05)
-		headingError = HeadingPIDErrorValue(yaw, pidHeading, yaw.getValue(), min = -1.0, max = 1.0, scaling=0.04)
+		self.pidHeading = PID(0.3,0.003,0.05, sample_time=0.05)
+		self.headingError = HeadingPIDErrorValue(yaw, self.pidHeading, yaw.getValue(), min = -1.0, max = 1.0, scaling=0.04)
 		# Initialise the PID
-		headingError.getValue()
+		self.headingError.getValue()
 		
 		# Motors
 		motorsStop = FixedValue(0.0)
@@ -50,7 +50,7 @@ class ChallengeHeadingRemoteControl(ChallengeInterface):
 		motorL = SwitchingControlMediator( [ motorsStop, 								 # Choice 0 = Stopped \
 											  											 # Choice 1 = Controlled
 											#[ValueLambda(Scaler(joystickForward, scaling =  0.9)), ValueLambda(Scaler(joystickLeftRight, scaling = -0.5))]	# Joystick  \
-											[ValueLambda([Scaler(joystickForward, scaling =  0.9), Scaler(joystickLeftRight, scaling = -0.5), Scaler(headingError, scaling = -0.5)])]	# Joystick  \
+											[ValueLambda([Scaler(joystickForward, scaling =  0.9), Scaler(joystickLeftRight, scaling = -0.5), Scaler(self.headingError, scaling = -0.5)])]	# Joystick  \
 										   ],
 											self.controls.motor(2), \
 											self.motorEnable )
@@ -59,7 +59,7 @@ class ChallengeHeadingRemoteControl(ChallengeInterface):
 		motorR = SwitchingControlMediator( [ motorsStop, 								 # Choice 0 = Stopped \
 																						 # Choice 1 = Controlled
 											#[ValueLambda(Scaler(joystickForward, scaling = -0.9)), ValueLambda(Scaler(joystickLeftRight, scaling = -0.5))]  # Joystick \
-											[ValueLambda([Scaler(joystickForward, scaling = -0.9), Scaler(joystickLeftRight, scaling = -0.5), Scaler(headingError, scaling = 0.5)])]	# Joystick  \
+											[ValueLambda([Scaler(joystickForward, scaling = -0.9), Scaler(joystickLeftRight, scaling = -0.5), Scaler(self.headingError, scaling = -0.5)])]	# Joystick  \
 										   ],
 											self.controls.motor(1), \
 											self.motorEnable )
@@ -76,12 +76,12 @@ class ChallengeHeadingRemoteControl(ChallengeInterface):
 
 	def move(self):
 		if self.motorEnable.getValue() > 0:
-			if not pidHeading.auto_mode:
-				pidHeading.auto_mode = True
+			if not self.pidHeading.auto_mode:
+				self.pidHeading.auto_mode = True
 		else:
 			# No change in position
-			pidHeading.auto_mode = False
-			headingError.setTarget(yaw.getValue())
+			self.pidHeading.auto_mode = False
+			self.headingError.setTarget(yaw.getValue())
 	
 	def stop(self):
 		''' Stop the challenge
