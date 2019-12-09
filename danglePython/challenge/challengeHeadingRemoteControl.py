@@ -81,7 +81,7 @@ class ChallengeHeadingRemoteControl(ChallengeInterface):
 		else:
 			# No change in position
 			self.pidHeading.auto_mode = False
-			self.headingError.setTarget(yaw.getValue())
+			self.headingError.setTarget(self.sensors.yaw().getValue())
 	
 	def stop(self):
 		''' Stop the challenge
