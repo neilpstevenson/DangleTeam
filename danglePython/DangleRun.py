@@ -4,10 +4,12 @@ import math
 from simple_pid import PID
 import atexit
 
+# Challenge options
 from challenge.challengeBasicRemoteControl import ChallengeBasicRemoteControl
-from interfaces.SensorAccessFactory import SensorAccessFactory
+from challenge.challengeHeadingRemoteControl import ChallengeHeadingRemoteControl
 
-# Interfaces
+# Factories
+from interfaces.SensorAccessFactory import SensorAccessFactory
 from interfaces.ControlAccessFactory import ControlAccessFactory
 
 MEDIUM_PRIORITY_FREQ = 10	# as proprotion of high priority
@@ -28,7 +30,8 @@ class DangleRun:
 		self.medPriorityProcesses = []
 		self.counter = 0
 		# Set up specific challenge instance
-		self.challenge = ChallengeBasicRemoteControl()
+		#self.challenge = ChallengeBasicRemoteControl()
+		self.challenge = ChallengeHeadingRemoteControl()
 
 	def processAll(self, processes):
 		[x.process() for x in processes]
