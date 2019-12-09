@@ -1,3 +1,5 @@
+from simple_pid import PID
+
 # Interfaces
 from interfaces.ChallengeInterface import ChallengeInterface
 from interfaces.ControlAccessFactory import ControlAccessFactory

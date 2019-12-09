@@ -1,7 +1,6 @@
 import time
 import pygame
 import math
-from simple_pid import PID
 import atexit
 
 # Challenge options
