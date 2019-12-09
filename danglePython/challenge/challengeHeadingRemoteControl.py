@@ -75,7 +75,7 @@ class ChallengeHeadingRemoteControl(ChallengeInterface):
 		self.zGunControl.createProcesses(highPriorityProcesses, medPriorityProcesses)
 
 	def move(self):
-		if self.motorEnable() > 0:
+		if self.motorEnable().getValue() > 0:
 			if not pidHeading.auto_mode:
 				pidHeading.auto_mode = True
 		else:
