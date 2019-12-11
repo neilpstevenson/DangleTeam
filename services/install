@@ -1,0 +1,12 @@
+#!/bin/bash
+
+# Link in services
+ln -s /home/pi/Projects/DangleTeam/services/mpu.service /etc/systemd/system
+
+# enable & start services
+systemctl daemon-reload
+systemctl enable mpu.service
+systemctl start mpu.service
+
+# View logs
+journalctl -b0 --unit=mpu.service
