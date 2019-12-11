@@ -63,8 +63,8 @@ pi.set_mode(pwmb, pigpio.OUTPUT)
 
 pi.write(dira, 0)
 pi.write(dirb, 0)
-pi.set_PWM_frequency(pwma, 1000)
-pi.set_PWM_frequency(pwmb, 1000)
+pi.set_PWM_frequency(pwma, 400)
+pi.set_PWM_frequency(pwmb, 400)
 
 pi.set_mode(servo_20, pigpio.OUTPUT)
 pi.set_mode(servo_21, pigpio.OUTPUT)

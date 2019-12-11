@@ -1,13 +1,11 @@
 # Basic motor control process, using IPC interface
-import pygame
+import time
 import hardware.redboard as redboard
 from hardware.Motor import Motor
 from interfaces.MotorControlSharedIPC import MotorControlSharedIPC
 from interfaces.ServoControlSharedIPC import ServoControlSharedIPC
 from interfaces.SimpleControlSharedIPC import SimpleControlSharedIPC
 import atexit
-
-pygame.init()
 
 # recommended for auto-disabling motors on shutdown!
 atexit.register(redboard.Stop)
@@ -35,11 +33,6 @@ class MotorControlProcess:
 		motorR = Motor(1)
 		
 		while not done:
-			# Check for quit
-			for event in pygame.event.get(): # User did something.
-				if event.type == pygame.QUIT: # If user clicked close.
-					done = True # Flag that we are done so we exit this loop.
-
 			if running:
 				# Adjust torque
 				torqueL = self.motorsIPC.getRequiredTorque(2)
@@ -82,7 +75,7 @@ class MotorControlProcess:
 						else:
 							redboard.blue_off()
 
-			pygame.time.wait(10) # mS
+			time.sleep(0.01)
 
 			if self.motorsIPC.checkWatchdog() == 0:
 				print("MotorControlProcess: Paused due to watchdog expiry")
@@ -95,7 +88,7 @@ class MotorControlProcess:
 					# Allow the motors to return to idle normally
 					motorL.setTorque(0.0)
 					motorR.setTorque(0.0)
-					pygame.time.wait(10) # mS
+					time.sleep(0.01)
 			else:
 				running = True
 

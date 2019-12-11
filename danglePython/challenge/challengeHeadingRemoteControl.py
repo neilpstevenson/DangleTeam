@@ -38,6 +38,7 @@ class ChallengeHeadingRemoteControl(ChallengeInterface):
 		self.pidP = config.get("heading.pid.p", 0.06)
 		self.pidI = config.get("heading.pid.i", 0.001)
 		self.pidD = config.get("heading.pid.d", 0.004)
+		self.proportionalOnMeasure = config.get("heading.pid.pom", False)
 		self.maxForward = config.get("heading.forward.max", 0.9)
 		self.maxManualTurn = config.get("heading.manualturn.max", 0.5)
 		self.maxHeadingTurn = config.get("heading.headingturn.max", 0.5)
@@ -46,7 +47,7 @@ class ChallengeHeadingRemoteControl(ChallengeInterface):
 	def createProcesses(self, highPriorityProcesses, medPriorityProcesses):
 		# Yaw control
 		yaw = self.sensors.yaw()
-		self.pidHeading = PID(self.pidP, self.pidI, self.pidD, sample_time=0.01)
+		self.pidHeading = PID(self.pidP, self.pidI, self.pidD, sample_time=0.01, proportional_on_measurement=self.proportionalOnMeasure)
 		self.headingError = HeadingPIDErrorValue(yaw, self.pidHeading, yaw.getValue(), min = -1.0, max = 1.0, scaling=1.0)
 		# Initialise the PID
 		self.headingError.getValue()
