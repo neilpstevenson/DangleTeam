@@ -4,6 +4,7 @@ from simple_pid import PID
 from interfaces.ChallengeInterface import ChallengeInterface
 from interfaces.ControlAccessFactory import ControlAccessFactory
 from interfaces.SensorAccessFactory import SensorAccessFactory
+from interfaces.Config import Config
 # Value providers
 from analysis.SimplePIDErrorValue import SimplePIDErrorValue
 from analysis.HeadingPIDErrorValue import HeadingPIDErrorValue
@@ -32,12 +33,20 @@ class ChallengeHeadingRemoteControl(ChallengeInterface):
 		self.grabberControl = GrabberControl()
 		self.cameraLevellingControl = CameraLevellingControl()
 		self.zGunControl = ZGunControl()
-
+		# Get config
+		config = Config()
+		self.pidP = config.get("heading.pid.p", 0.06)
+		self.pidI = config.get("heading.pid.i", 0.001)
+		self.pidD = config.get("heading.pid.d", 0.004)
+		self.maxForward = config.get("heading.forward.max", 0.9)
+		self.maxManualTurn = config.get("heading.manualturn.max", 0.5)
+		self.maxHeadingTurn = config.get("heading.headingturn.max", 0.5)
+		config.save()
 
 	def createProcesses(self, highPriorityProcesses, medPriorityProcesses):
 		# Yaw control
 		yaw = self.sensors.yaw()
-		self.pidHeading = PID(0.06,0.001,0.004, sample_time=0.01)
+		self.pidHeading = PID(self.pidP, self.pidI, self.pidD, sample_time=0.01)
 		self.headingError = HeadingPIDErrorValue(yaw, self.pidHeading, yaw.getValue(), min = -1.0, max = 1.0, scaling=1.0)
 		# Initialise the PID
 		self.headingError.getValue()
@@ -50,7 +59,7 @@ class ChallengeHeadingRemoteControl(ChallengeInterface):
 		motorL = SwitchingControlMediator( [ motorsStop, 								 # Choice 0 = Stopped \
 											  											 # Choice 1 = Controlled
 											#[ValueLambda(Scaler(joystickForward, scaling =  0.9)), ValueLambda(Scaler(joystickLeftRight, scaling = -0.5))]	# Joystick  \
-											[ValueLambda([Scaler(joystickForward, scaling =  0.9), Scaler(joystickLeftRight, scaling = -0.5), Scaler(self.headingError, scaling = -0.5)])]	# Joystick  \
+											[ValueLambda([Scaler(joystickForward, scaling = self.maxForward), Scaler(joystickLeftRight, scaling = -self.maxManualTurn), Scaler(self.headingError, scaling = -self.maxHeadingTurn)])]	# Joystick  \
 										   ],
 											self.controls.motor(2), \
 											self.motorEnable )
@@ -59,7 +68,7 @@ class ChallengeHeadingRemoteControl(ChallengeInterface):
 		motorR = SwitchingControlMediator( [ motorsStop, 								 # Choice 0 = Stopped \
 																						 # Choice 1 = Controlled
 											#[ValueLambda(Scaler(joystickForward, scaling = -0.9)), ValueLambda(Scaler(joystickLeftRight, scaling = -0.5))]  # Joystick \
-											[ValueLambda([Scaler(joystickForward, scaling = -0.9), Scaler(joystickLeftRight, scaling = -0.5), Scaler(self.headingError, scaling = -0.5)])]	# Joystick  \
+											[ValueLambda([Scaler(joystickForward, scaling = -self.maxForward), Scaler(joystickLeftRight, scaling = -self.maxManualTurn), Scaler(self.headingError, scaling = -self.maxHeadingTurn)])]	# Joystick  \
 										   ],
 											self.controls.motor(1), \
 											self.motorEnable )
