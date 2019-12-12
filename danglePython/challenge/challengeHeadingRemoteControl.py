@@ -55,13 +55,13 @@ class ChallengeHeadingRemoteControl(ChallengeInterface):
 		# Motors
 		motorsStop = FixedValue(0.0)
 		self.motorEnable = self.sensors.button(4)
-		joystickForward = self.sensors.joystickAxis(1)
-		joystickLeftRight = self.sensors.joystickAxis(3)
+		self.joystickForward = self.sensors.joystickAxis(1)
+		self.joystickLeftRight = self.sensors.joystickAxis(3)
 		motorL = SwitchingControlMediator( [ motorsStop, 								 # Choice 0 = Stopped \
 											  											 # Choice 1 = Controlled
-											#[ValueLambda(Scaler(joystickForward, scaling =  0.9)), ValueLambda(Scaler(joystickLeftRight, scaling = -0.5))]	# Joystick  \
-											#[ValueLambda([Scaler(joystickForward, scaling = self.maxForward), Scaler(joystickLeftRight, scaling = -self.maxManualTurn), Scaler(self.headingError, scaling = -self.maxHeadingTurn)])]	# Joystick  \
-											[ValueLambda([Scaler(joystickForward, scaling = self.maxForward), Scaler(self.headingError, scaling = -self.maxHeadingTurn)])]	# Joystick  \
+											#[ValueLambda(Scaler(self.joystickForward, scaling =  0.9)), ValueLambda(Scaler(self.joystickLeftRight, scaling = -0.5))]	# Joystick  \
+											#[ValueLambda([Scaler(self.joystickForward, scaling = self.maxForward), Scaler(self.joystickLeftRight, scaling = -self.maxManualTurn), Scaler(self.headingError, scaling = -self.maxHeadingTurn)])]	# Joystick  \
+											[ValueLambda([Scaler(self.joystickForward, scaling = self.maxForward), Scaler(self.headingError, scaling = -self.maxHeadingTurn)])]	# Joystick  \
 										   ],
 											self.controls.motor(2), \
 											self.motorEnable )
@@ -69,9 +69,9 @@ class ChallengeHeadingRemoteControl(ChallengeInterface):
 		highPriorityProcesses.append(motorL)
 		motorR = SwitchingControlMediator( [ motorsStop, 								 # Choice 0 = Stopped \
 																						 # Choice 1 = Controlled
-											#[ValueLambda(Scaler(joystickForward, scaling = -0.9)), ValueLambda(Scaler(joystickLeftRight, scaling = -0.5))]  # Joystick \
-											#[ValueLambda([Scaler(joystickForward, scaling = -self.maxForward), Scaler(joystickLeftRight, scaling = -self.maxManualTurn), Scaler(self.headingError, scaling = -self.maxHeadingTurn)])]	# Joystick  \
-											[ValueLambda([Scaler(joystickForward, scaling = -self.maxForward), Scaler(self.headingError, scaling = -self.maxHeadingTurn)])]	# Joystick  \
+											#[ValueLambda(Scaler(self.joystickForward, scaling = -0.9)), ValueLambda(Scaler(self.joystickLeftRight, scaling = -0.5))]  # Joystick \
+											#[ValueLambda([Scaler(self.joystickForward, scaling = -self.maxForward), Scaler(self.joystickLeftRight, scaling = -self.maxManualTurn), Scaler(self.headingError, scaling = -self.maxHeadingTurn)])]	# Joystick  \
+											[ValueLambda([Scaler(self.joystickForward, scaling = -self.maxForward), Scaler(self.headingError, scaling = -self.maxHeadingTurn)])]	# Joystick  \
 										   ],
 											self.controls.motor(1), \
 											self.motorEnable )
@@ -91,8 +91,8 @@ class ChallengeHeadingRemoteControl(ChallengeInterface):
 			if not self.pidHeading.auto_mode:
 				self.pidHeading.auto_mode = True
 			# Manual turns
-			if joystickLeftRight.getValue() <> 0.0:
-				self.headingError.setTarget(self.sensors.yaw().getValue() + Scaler(joystickLeftRight, scaling = self.maxManualTurn).getValue())
+			if self.joystickLeftRight.getValue() != 0.0:
+				self.headingError.setTarget(self.sensors.yaw().getValue() + self.joystickLeftRight.getValue() * self.maxManualTurn)
 		else:
 			# No change in position
 			self.pidHeading.auto_mode = False
