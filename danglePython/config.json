@@ -1,1 +1,9 @@
-{"heading.pid.p": 0.02, "heading.pid.i": 0.1, "heading.pid.d": 0.01, "heading.forward.max": 0.9, "heading.manualturn.max": 0.5, "heading.headingturn.max": 0.5, "heading.pid.pom": true}
+{
+  "heading.pid.p": 0.06,
+  "heading.pid.i": 0.001,
+  "heading.pid.d": 0.004,
+  "heading.pid.pom": false,
+  "heading.forward.max": 0.9,
+  "heading.manualturn.max": 0.5,
+  "heading.headingturn.max": 0.5
+}

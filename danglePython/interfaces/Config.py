@@ -5,7 +5,7 @@ class Config:
 		self.filename = filename
 		try:
 			with open(self.filename, 'r') as f:
-				self.config = json.loads(f)
+				self.config = json.load(f)
 			self.configChanged = False
 		except:
 			self.config = {}
