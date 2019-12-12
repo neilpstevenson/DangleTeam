@@ -5,29 +5,27 @@ class Config:
 		self.filename = filename
 		try:
 			with open(self.filename, 'r') as f:
-				self.config = json.loads(f.read())
+				self.config = json.loads(f)
+			self.configChanged = False
 		except:
 			self.config = {}
+			self.configChanged = True
 
 	def get(self, key, default):
 		if key in self.config:
 			return self.config[key]
 		else:
 			self.config[key] = default
+			self.configChanged = True
 			return default
 	 
 	def set(self, key, value):
 		self.config[key] = value
+		self.configChanged = True
 			
 	def save(self):
-		with open(self.filename, 'w+') as f:
-			f.write(json.dumps(self.config))
+		if self.configChanged:
+			with open(self.filename, 'w+') as f:
+				json.dumps(self.config, f, indent=2)
+			self.configChanged = False
 
-#c = Config()
-#print( c.get("test1", "defaultval") )
-#c.set("test1", "updated")
-#print( c.get("test1", "defaultval") )
-#print( c.get("testInt", 0) )
-#c.set("testInt", c.get("testInt", 0) + 1 )
-#print( c.get("testInt", 0) )
-#c.save()
