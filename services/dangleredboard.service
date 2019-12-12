@@ -2,6 +2,7 @@
 Description=Dangle redboard controller shared memory service
 [Service]
 Type=exec
+User=pi
 ExecStart=/usr/bin/python3 /home/pi/Projects/DangleTeam/danglePython/redboardControlProcess.py
 Restart=always
 RestartSec=10s
