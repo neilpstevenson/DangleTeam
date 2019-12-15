@@ -39,8 +39,8 @@ class ChallengeHeadingRemoteControl(ChallengeInterface):
 		self.pidI = config.get("heading.pid.i", 0.001)
 		self.pidD = config.get("heading.pid.d", 0.004)
 		self.proportionalOnMeasure = config.get("heading.pid.pom", False)
-		self.maxForward = config.get("heading.forward.max", 0.9)
-		self.maxManualTurn = config.get("heading.manualturn.max", 0.5)
+		self.maxForward = config.get("heading.forward.max", -0.9)
+		self.maxManualTurn = config.get("heading.manualturn.max", -15.0)
 		self.maxHeadingTurn = config.get("heading.headingturn.max", 0.5)
 		config.save()
 

@@ -3,6 +3,7 @@
 # Link in services
 ln -s /home/pi/Projects/DangleTeam/services/mpu.service /etc/systemd/system
 ln -s /home/pi/Projects/DangleTeam/services/dangleredboard.service /etc/systemd/system
+ln -s /home/pi/Projects/DangleTeam/services/approxeng.service /etc/systemd/system
 
 # enable & start services
 systemctl daemon-reload
@@ -10,6 +11,8 @@ systemctl enable mpu.service
 systemctl start mpu.service
 systemctl enable dangleredboard.service
 systemctl start dangleredboard.service
+systemctl enable approxeng.service
+systemctl start approxeng.service
 
 # View logs
-journalctl -b0 --unit=mpu.service,dangleredboard.service
+journalctl -b0 --unit=mpu.service --unit=dangleredboard.service --unit=approxeng.service
