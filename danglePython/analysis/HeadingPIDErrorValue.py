@@ -28,8 +28,8 @@ class HeadingPIDErrorValue(SensorInterface):
 		current = self.currentHeading.getValue()
 		headingDiff = self.normaliseHeading(self.targetHeading - current)
 		error = self.pid(headingDiff) * self.scaling
-		np.set_printoptions(precision=2)
-		print(f"HeadingPIDErrorValue: current={current}, headingDiff={headingDiff}, error={error}")
+		#np.set_printoptions(precision=2)
+		print(f"HeadingPIDErrorValue: current={current:4.2f}, headingDiff={headingDiff:4.2f}, error={error:4.2f}")
 		if self.integrate:
 			self.integratedValue += error
 			if self.integratedValue > self.max:
@@ -43,7 +43,7 @@ class HeadingPIDErrorValue(SensorInterface):
 				error = self.max
 			elif error < self.min:
 				error = self.min
-			print(error)
+			print(f"capped error={error:4.2f}")
 			return error
 
 	def setTarget(self,targetHeading):

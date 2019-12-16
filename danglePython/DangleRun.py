@@ -1,5 +1,4 @@
 import time
-import pygame
 import math
 import atexit
 
@@ -12,8 +11,6 @@ from interfaces.SensorAccessFactory import SensorAccessFactory
 from interfaces.ControlAccessFactory import ControlAccessFactory
 
 MEDIUM_PRIORITY_FREQ = 10	# as proprotion of high priority
-
-pygame.init()
 
 # recommended for auto-disabling motors on shutdown!
 def stopAtExit():
@@ -64,13 +61,6 @@ class DangleRun:
 			# Get current sensor state
 			self.sensors.process()
 			
-			#
-			# EVENT PROCESSING STEP
-			#
-			for event in pygame.event.get(): # User did something.
-				if event.type == pygame.QUIT: # If user clicked close.
-					done = True # Flag that we are done so we exit this loop.
-
 			# Calculate next move
 			self.challenge.move()
 			
@@ -79,13 +69,15 @@ class DangleRun:
 			if self.counter % MEDIUM_PRIORITY_FREQ == 0:
 				self.processAll(self.medPriorityProcesses)
 			
-			pygame.time.wait(10) # mS
+			time.sleep(0.01) # secs
 
 			# Keep challenge alive if sensors also alive
 			if self.sensors.checkWatchdog() > 0:
 				self.controls.resetWatchdog()
 			else:
+				print("Sensor watchdog expired... stopping")
 				self.challenge.stop()
+				time.sleep(1.0)
 			
 main = DangleRun()
 main.run()

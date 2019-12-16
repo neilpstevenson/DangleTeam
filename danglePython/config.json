@@ -1,7 +1,7 @@
 {
-  "heading.pid.p": 0.2,
-  "heading.pid.i": 0.0,
-  "heading.pid.d": 0.02,
+  "heading.pid.p": 0.015,
+  "heading.pid.i": 0.005,
+  "heading.pid.d": 0.005,
   "1heading.pid.p": 0.03,
   "1heading.pid.i": 0.1,
   "1heading.pid.d": 0.01,
