@@ -15,6 +15,7 @@ from analysis.Scaler import Scaler
 from analysis.ValueIntegrator import ValueIntegrator
 from analysis.ValueAdder import ValueAdder
 from analysis.ValueLambda import ValueLambda
+from analysis.SpeedDirectionCombiner import SpeedDirectionCombiner
 # Control mediators
 from challenge.SimpleControlMediator import SimpleControlMediator
 from challenge.SwitchingControlMediator import SwitchingControlMediator
@@ -62,7 +63,8 @@ class ChallengeHeadingRemoteControl(ChallengeInterface):
 											#[ValueLambda(Scaler(self.joystickForward, scaling =  0.9)), ValueLambda(Scaler(self.joystickLeftRight, scaling = -0.5))]	# Joystick  \
 											#[ValueLambda([Scaler(self.joystickForward, scaling = self.maxForward), Scaler(self.joystickLeftRight, scaling = -self.maxManualTurn), Scaler(self.headingError, scaling = -self.maxHeadingTurn)])]	# Joystick  \
 											#[ValueLambda([Scaler(self.joystickForward, scaling = self.maxForward), Scaler(self.headingError, scaling = -self.maxHeadingTurn)])]	# Joystick  \
-											[ValueLambda([Scaler(self.joystickForward, scaling = self.maxForward)]), Scaler(self.headingError, scaling = -self.maxHeadingTurn)]	# Joystick  \
+											#[ValueLambda([Scaler(self.joystickForward, scaling = self.maxForward)]), Scaler(self.headingError, scaling = -self.maxHeadingTurn)]	# Joystick  \
+											[SpeedDirectionCombiner(Scaler(self.joystickForward, scaling = self.maxForward), Scaler(self.headingError, scaling = -self.maxHeadingTurn))]  \
 										   ],
 											self.controls.motor(2), \
 											self.motorEnable )
@@ -73,7 +75,8 @@ class ChallengeHeadingRemoteControl(ChallengeInterface):
 											#[ValueLambda(Scaler(self.joystickForward, scaling = -0.9)), ValueLambda(Scaler(self.joystickLeftRight, scaling = -0.5))]  # Joystick \
 											#[ValueLambda([Scaler(self.joystickForward, scaling = -self.maxForward), Scaler(self.joystickLeftRight, scaling = -self.maxManualTurn), Scaler(self.headingError, scaling = -self.maxHeadingTurn)])]	# Joystick  \
 											#[ValueLambda([Scaler(self.joystickForward, scaling = -self.maxForward), Scaler(self.headingError, scaling = -self.maxHeadingTurn)])]	# Joystick  \
-											[ValueLambda([Scaler(self.joystickForward, scaling = -self.maxForward)]), Scaler(self.headingError, scaling = -self.maxHeadingTurn)]	# Joystick  \
+											#[ValueLambda([Scaler(self.joystickForward, scaling = -self.maxForward)]), Scaler(self.headingError, scaling = -self.maxHeadingTurn)]	# Joystick  \
+											[SpeedDirectionCombiner(Scaler(self.joystickForward, scaling = -self.maxForward), Scaler(self.headingError, scaling = -self.maxHeadingTurn))]  \
 										   ],
 											self.controls.motor(1), \
 											self.motorEnable )
