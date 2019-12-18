@@ -64,7 +64,7 @@ class ChallengeHeadingRemoteControl(ChallengeInterface):
 											#[ValueLambda([Scaler(self.joystickForward, scaling = self.maxForward), Scaler(self.joystickLeftRight, scaling = -self.maxManualTurn), Scaler(self.headingError, scaling = -self.maxHeadingTurn)])]	# Joystick  \
 											#[ValueLambda([Scaler(self.joystickForward, scaling = self.maxForward), Scaler(self.headingError, scaling = -self.maxHeadingTurn)])]	# Joystick  \
 											#[ValueLambda([Scaler(self.joystickForward, scaling = self.maxForward)]), Scaler(self.headingError, scaling = -self.maxHeadingTurn)]	# Joystick  \
-											[SpeedDirectionCombiner(Scaler(self.joystickForward, scaling = self.maxForward), Scaler(self.headingError, scaling = -self.maxHeadingTurn))]  \
+											[SpeedDirectionCombiner(Scaler(self.joystickForward, scaling = self.maxForward), Scaler(self.headingError, scaling = self.maxHeadingTurn))]  \
 										   ],
 											self.controls.motor(2), \
 											self.motorEnable )
@@ -76,7 +76,7 @@ class ChallengeHeadingRemoteControl(ChallengeInterface):
 											#[ValueLambda([Scaler(self.joystickForward, scaling = -self.maxForward), Scaler(self.joystickLeftRight, scaling = -self.maxManualTurn), Scaler(self.headingError, scaling = -self.maxHeadingTurn)])]	# Joystick  \
 											#[ValueLambda([Scaler(self.joystickForward, scaling = -self.maxForward), Scaler(self.headingError, scaling = -self.maxHeadingTurn)])]	# Joystick  \
 											#[ValueLambda([Scaler(self.joystickForward, scaling = -self.maxForward)]), Scaler(self.headingError, scaling = -self.maxHeadingTurn)]	# Joystick  \
-											[SpeedDirectionCombiner(Scaler(self.joystickForward, scaling = -self.maxForward), Scaler(self.headingError, scaling = -self.maxHeadingTurn))]  \
+											[Scaler(SpeedDirectionCombiner(Scaler(self.joystickForward, scaling = self.maxForward), Scaler(self.headingError, scaling = -self.maxHeadingTurn)), scaling = -1.0)]  \
 										   ],
 											self.controls.motor(1), \
 											self.motorEnable )
