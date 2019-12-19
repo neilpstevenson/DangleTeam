@@ -8,5 +8,8 @@
   "heading.pid.pom": false,
   "heading.forward.max": -0.9,
   "heading.manualturn.max": -15.0,
-  "heading.headingturn.max": 0.6
+  "heading.headingturn.max": 0.6,
+  "lava.speed": 0.7,
+  "speedsteer.slow": 0.6,
+  "speedsteer.med.decel": 0.7
 }

@@ -11,7 +11,7 @@ class SwitchingControlMediator(ControlMediatorInterface):
 		self.choice = choice
 		
 	def process(self):
-		input = self.inputChoices[self.choice.getValue()]
+		input = self.inputChoices[int(self.choice.getValue())]
 		if type(input) is list:
 			self.control.setValue( sum(map(lambda x: x.getValue(), input)) )
 		else:

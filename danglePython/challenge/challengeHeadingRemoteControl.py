@@ -4,6 +4,7 @@ from simple_pid import PID
 from interfaces.ChallengeInterface import ChallengeInterface
 from interfaces.ControlAccessFactory import ControlAccessFactory
 from interfaces.SensorAccessFactory import SensorAccessFactory
+from interfaces.VisionAccessFactory import VisionAccessFactory
 from interfaces.Config import Config
 # Value providers
 from analysis.SimplePIDErrorValue import SimplePIDErrorValue
@@ -30,6 +31,7 @@ class ChallengeHeadingRemoteControl(ChallengeInterface):
 	def __init__(self):
 		self.controls = ControlAccessFactory.getSingleton()
 		self.sensors = SensorAccessFactory.getSingleton()
+		self.vision = VisionAccessFactory.getSingleton()
 		# Common controls
 		self.grabberControl = GrabberControl()
 		self.cameraLevellingControl = CameraLevellingControl()
@@ -43,19 +45,29 @@ class ChallengeHeadingRemoteControl(ChallengeInterface):
 		self.maxForward = config.get("heading.forward.max", -0.9)
 		self.maxManualTurn = config.get("heading.manualturn.max", -15.0)
 		self.maxHeadingTurn = config.get("heading.headingturn.max", 0.5)
+		self.constantSpeed = config.get("lava.speed", 0.5)
 		config.save()
 
 	def createProcesses(self, highPriorityProcesses, medPriorityProcesses):
 		# Yaw control
 		yaw = self.sensors.yaw()
-		self.pidHeading = PID(self.pidP, self.pidI, self.pidD, sample_time=0.01, proportional_on_measurement=self.proportionalOnMeasure)
+		self.pidHeading = PID(self.pidP, self.pidI, self.pidD, sample_time=0.008, proportional_on_measurement=self.proportionalOnMeasure)
 		self.headingError = HeadingPIDErrorValue(yaw, self.pidHeading, yaw.getValue(), min = -1.0, max = 1.0, scaling=1.0)
 		# Initialise the PID
 		self.headingError.getValue()
 		
+		# Vision
+		self.visionTargetHeading = self.vision.getLineHeading()
+		self.pidVisionHeading = PID(self.pidP, self.pidI, self.pidD, sample_time=0.008, proportional_on_measurement=self.proportionalOnMeasure)
+		self.visionHeadingError = HeadingPIDErrorValue(yaw, self.pidVisionHeading, yaw.getValue(), min = -1.0, max = 1.0, scaling=1.0)
+		# Initialise the PID
+		self.visionHeadingError.getValue()
+
 		# Motors
 		motorsStop = FixedValue(0.0)
+		motorConstant = FixedValue(-self.constantSpeed)
 		self.motorEnable = self.sensors.button(4)
+		self.constantEnable = self.sensors.button(5)
 		self.joystickForward = self.sensors.joystickAxis(1)
 		self.joystickLeftRight = self.sensors.joystickAxis(3)
 		motorL = SwitchingControlMediator( [ motorsStop, 								 # Choice 0 = Stopped \
@@ -64,10 +76,11 @@ class ChallengeHeadingRemoteControl(ChallengeInterface):
 											#[ValueLambda([Scaler(self.joystickForward, scaling = self.maxForward), Scaler(self.joystickLeftRight, scaling = -self.maxManualTurn), Scaler(self.headingError, scaling = -self.maxHeadingTurn)])]	# Joystick  \
 											#[ValueLambda([Scaler(self.joystickForward, scaling = self.maxForward), Scaler(self.headingError, scaling = -self.maxHeadingTurn)])]	# Joystick  \
 											#[ValueLambda([Scaler(self.joystickForward, scaling = self.maxForward)]), Scaler(self.headingError, scaling = -self.maxHeadingTurn)]	# Joystick  \
-											[SpeedDirectionCombiner(Scaler(self.joystickForward, scaling = self.maxForward), Scaler(self.headingError, scaling = self.maxHeadingTurn))]  \
+											[SpeedDirectionCombiner(Scaler(self.joystickForward, scaling = self.maxForward), Scaler(self.headingError, scaling = self.maxHeadingTurn))],  \
+											[SpeedDirectionCombiner(motorConstant, Scaler(self.headingError, scaling = self.maxHeadingTurn))]  \
 										   ],
 											self.controls.motor(2), \
-											self.motorEnable )
+											ValueAdder([self.motorEnable,self.constantEnable], max=2) )
 		self.speedSensorL = self.sensors.counter(0)
 		highPriorityProcesses.append(motorL)
 		motorR = SwitchingControlMediator( [ motorsStop, 								 # Choice 0 = Stopped \
@@ -76,10 +89,11 @@ class ChallengeHeadingRemoteControl(ChallengeInterface):
 											#[ValueLambda([Scaler(self.joystickForward, scaling = -self.maxForward), Scaler(self.joystickLeftRight, scaling = -self.maxManualTurn), Scaler(self.headingError, scaling = -self.maxHeadingTurn)])]	# Joystick  \
 											#[ValueLambda([Scaler(self.joystickForward, scaling = -self.maxForward), Scaler(self.headingError, scaling = -self.maxHeadingTurn)])]	# Joystick  \
 											#[ValueLambda([Scaler(self.joystickForward, scaling = -self.maxForward)]), Scaler(self.headingError, scaling = -self.maxHeadingTurn)]	# Joystick  \
-											[Scaler(SpeedDirectionCombiner(Scaler(self.joystickForward, scaling = self.maxForward), Scaler(self.headingError, scaling = -self.maxHeadingTurn)), scaling = -1.0)]  \
+											[Scaler(SpeedDirectionCombiner(Scaler(self.joystickForward, scaling = self.maxForward), Scaler(self.headingError, scaling = -self.maxHeadingTurn)), scaling = -1.0)],  \
+											[SpeedDirectionCombiner(motorConstant, Scaler(self.headingError, scaling = -self.maxHeadingTurn), scaling =-1.0)]  \
 										   ],
 											self.controls.motor(1), \
-											self.motorEnable )
+											ValueAdder([self.motorEnable,self.constantEnable], max=2) )
 		highPriorityProcesses.append(motorR)
 
 		# LED display state
@@ -92,7 +106,13 @@ class ChallengeHeadingRemoteControl(ChallengeInterface):
 		self.zGunControl.createProcesses(highPriorityProcesses, medPriorityProcesses)
 
 	def move(self):
-		if self.motorEnable.getValue() > 0:
+		if self.constantEnable.getValue() > 0:
+			if not self.pidHeading.auto_mode:
+				self.pidHeading.auto_mode = True
+			# Vision turns
+			self.headingError.setTarget(self.visionTargetHeading.getValue())
+			print(self.pidHeading.components)
+		elif self.motorEnable.getValue() > 0:
 			if not self.pidHeading.auto_mode:
 				self.pidHeading.auto_mode = True
 			# Manual turns

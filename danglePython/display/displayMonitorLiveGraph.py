@@ -5,6 +5,8 @@ import matplotlib.animation as animation
 # Interfaces
 from interfaces.ControlAccessFactory import ControlAccessFactory
 from interfaces.SensorAccessFactory import SensorAccessFactory
+from interfaces.VisionAccessFactory import VisionAccessFactory
+from interfaces.Config import Config
 # Value providers
 from analysis.SimplePIDErrorValue import SimplePIDErrorValue
 from analysis.HeadingPIDErrorValue import HeadingPIDErrorValue
@@ -15,29 +17,34 @@ from analysis.Scaler import Scaler
 
 class MonitorDisplay:
 	def __init__(self):
+		self.controls = ControlAccessFactory.getSingleton()
+		self.sensors = SensorAccessFactory.getSingleton()
+		self.vision = VisionAccessFactory.getSingleton()
+		# Get config
+		config = Config()
+		self.points = config.get("display.graph.numpoints", 1500)
+		
 		self.fig, self.ax = plt.subplots()
+		self.x = np.arange(0, self.points, 1)
 
-		self.x = np.arange(0, 500, 1)
 		self.lines = \
 			self.ax.plot(self.x, [0.0]*len(self.x), label="F Joystick")[0], \
 			self.ax.plot(self.x, [0.0]*len(self.x), label="L motor")[0], \
 			self.ax.plot(self.x, [0.0]*len(self.x), label="L speed")[0], \
 			self.ax.plot(self.x, [0.0]*len(self.x), label="R motor")[0], \
 			self.ax.plot(self.x, [0.0]*len(self.x), label="R speed")[0], \
-			self.ax.plot(self.x, [0.0]*len(self.x), label="Heading")[0]
-			
-		plt.ylabel('value')
-		plt.legend(loc=(0.01,0.75))
-
-		self.controls = ControlAccessFactory.getSingleton()
-		self.sensors = SensorAccessFactory.getSingleton()
+			self.ax.plot(self.x, [0.0]*len(self.x), label="Heading")[0], \
+			self.ax.plot(self.x, [0.0]*len(self.x), label="Vision")[0]
 		self.values = \
 			Scaler(self.sensors.joystickAxis(1), scaling=1.0), \
 			Scaler(self.controls.motor(2), scaling=-1.0), \
 			Scaler(self.sensors.rateCounter(0), scaling=0.0012), \
 			Scaler(self.controls.motor(1), scaling=1.0), \
 			Scaler(self.sensors.rateCounter(1), scaling=0.0012), \
-			Scaler(self.sensors.yaw(), scaling=1/180.0)
+			Scaler(self.sensors.yaw(), scaling=1/180.0), \
+			Scaler(self.vision.getLineHeading(), scaling=1/180.0)
+		plt.ylabel('value')
+		plt.legend(loc=(0.01,0.75))
 
 	def init(self):  # only required for blitting to give a clean slate.
 		for line in self.lines:
@@ -48,7 +55,7 @@ class MonitorDisplay:
 	def animate(self, i):
 		# update readings
 		self.sensors.process()
-		print(i) #len(pitch),pitch)
+		#print(i) #len(pitch),pitch)
 		for line, value in zip(self.lines, self.values):
 			line.set_ydata(line.get_ydata()[1:]+[value.getValue()])
 		#if i%100 == 0:

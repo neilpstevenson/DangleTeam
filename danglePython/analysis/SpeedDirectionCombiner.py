@@ -1,4 +1,5 @@
 from interfaces.SensorInterface import SensorInterface
+from interfaces.Config import Config
 
 class SpeedDirectionCombiner(SensorInterface):
 	""" Class to combine a speed with a direction adjustment in a non-linear fasion.  This
@@ -14,20 +15,25 @@ class SpeedDirectionCombiner(SensorInterface):
 		self.max = max
 		self.scaling = scaling
 		self.offset = offset
+		# Get config
+		config = Config()
+		self.speedsteerSlow = config.get("speedsteer.slow", 0.6)
+		self.speedsteerMedDecel = config.get("speedsteer.med.decel", 0.7)
+		config.save()
 	
 	def nonLinearTransform(self, rawForwardTorque, rawSteerTorque):
-		if (rawForwardTorque < 0.30 and rawForwardTorque > -0.30) and (rawSteerTorque > 0.05 or rawSteerTorque < -0.05):
+		if (rawForwardTorque < self.speedsteerSlow and rawForwardTorque > -self.speedsteerSlow) and (rawSteerTorque > 0.05 or rawSteerTorque < -0.05):
 			# Attempting to spin at slow speed or stationary
 			nominal = (rawForwardTorque*rawForwardTorque if rawForwardTorque>=0.0 else -rawForwardTorque*rawForwardTorque) + rawSteerTorque
 			return nominal
 		elif (rawSteerTorque > 0.05 and rawForwardTorque >= 0.0) or (rawSteerTorque < -0.05 and rawForwardTorque <= 0.0):
 			# Attempting to turn at higher speed, same wheel
-			combined = rawForwardTorque*0.5 + rawSteerTorque
+			combined = rawForwardTorque*self.speedsteerMedDecel + rawSteerTorque
 			nominal = combined*combined if combined>=0.0 else -combined*combined
 			return nominal
 		elif (rawSteerTorque > 0.05 and rawForwardTorque < 0.0) or (rawSteerTorque < -0.05 and rawForwardTorque > 0.0):
 			# Attempting to turn at higher speed, different wheel
-			combined = rawForwardTorque*0.5 + rawSteerTorque
+			combined = rawForwardTorque*self.speedsteerMedDecel + rawSteerTorque
 			nominal = combined*combined if combined>=0.0 else -combined*combined
 			return nominal
 		else:
