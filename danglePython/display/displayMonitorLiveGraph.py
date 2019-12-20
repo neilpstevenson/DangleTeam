@@ -22,7 +22,8 @@ class MonitorDisplay:
 		self.vision = VisionAccessFactory.getSingleton()
 		# Get config
 		config = Config()
-		self.points = config.get("display.graph.numpoints", 1500)
+		self.points = config.get("display.graph.numpoints", 500)
+		config.save()
 		
 		self.fig, self.ax = plt.subplots()
 		self.x = np.arange(0, self.points, 1)
