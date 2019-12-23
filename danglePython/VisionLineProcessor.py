@@ -5,6 +5,7 @@ from picamera.array import PiRGBArray
 from picamera import PiCamera
 from interfaces.LineAnalysisSharedIPC import LineAnalysisSharedIPC
 from interfaces.SensorAccessFactory import SensorAccessFactory
+from interfaces.Config import Config
 
 class VisionLineProcessor:
 
@@ -132,6 +133,13 @@ class VisionLineProcessor:
 
 			cv2.waitKey(1)
 			startTime = cv2.getTickCount()
-				
-processor = VisionLineProcessor((320, 240), True, True, True) # Resolution, DisplayAssessment, DisplayGrayscale, SavetoFile
+
+# Get config
+config = Config()
+resolution = config.get("lava.vision.resolution", (320, 240))
+display = config.get("lava.vision.displayresult", True)
+displayGrey = config.get("lava.vision.displaygrey", False)
+savefile = config.get("lava.vision.savefile", True)
+config.save()
+processor = VisionLineProcessor(resolution, display, displayGrey, savefile) # Resolution, DisplayAssessment, DisplayGrayscale, SavetoFile
 processor.captureAndAssess()

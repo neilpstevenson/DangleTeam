@@ -19,5 +19,12 @@
   "redboard.motor.accelmax": 4.0,
   "heading.forward.max": 1.0,
   "heading.manualturn.max": -15.0,
-  "speedsteer.high.decelthresh": 0.05
+  "speedsteer.high.decelthresh": 0.05,
+  "lava.vision.resolution": [
+    320,
+    240
+  ],
+  "lava.vision.displayresult": true,
+  "lava.vision.displaygrey": false,
+  "lava.vision.savefile": true
 }
