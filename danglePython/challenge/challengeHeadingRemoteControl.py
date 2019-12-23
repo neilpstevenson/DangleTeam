@@ -42,10 +42,10 @@ class ChallengeHeadingRemoteControl(ChallengeInterface):
 		self.pidI = config.get("heading.pid.i", 0.001)
 		self.pidD = config.get("heading.pid.d", 0.004)
 		self.proportionalOnMeasure = config.get("heading.pid.pom", False)
-		self.maxForward = config.get("heading.forward.max", -0.9)
+		self.maxForward = config.get("heading.forward.max", 1.0)
 		self.maxManualTurn = config.get("heading.manualturn.max", -15.0)
 		self.maxHeadingTurn = config.get("heading.headingturn.max", 0.5)
-		self.constantSpeed = config.get("lava.speed", 0.5)
+		self.constantSpeed = config.get("lava.speed", 0.7)
 		config.save()
 
 	def createProcesses(self, highPriorityProcesses, medPriorityProcesses):
@@ -58,14 +58,14 @@ class ChallengeHeadingRemoteControl(ChallengeInterface):
 		
 		# Vision
 		self.visionTargetHeading = self.vision.getLineHeading()
-		self.pidVisionHeading = PID(self.pidP, self.pidI, self.pidD, sample_time=0.008, proportional_on_measurement=self.proportionalOnMeasure)
-		self.visionHeadingError = HeadingPIDErrorValue(yaw, self.pidVisionHeading, yaw.getValue(), min = -1.0, max = 1.0, scaling=1.0)
+		#self.pidVisionHeading = PID(self.pidP, self.pidI, self.pidD, sample_time=0.008, proportional_on_measurement=self.proportionalOnMeasure)
+		#self.visionHeadingError = HeadingPIDErrorValue(yaw, self.pidVisionHeading, yaw.getValue(), min = -1.0, max = 1.0, scaling=1.0)
 		# Initialise the PID
-		self.visionHeadingError.getValue()
+		#self.visionHeadingError.getValue()
 
 		# Motors
 		motorsStop = FixedValue(0.0)
-		motorConstant = FixedValue(-self.constantSpeed)
+		motorConstant = FixedValue(self.constantSpeed)
 		self.motorEnable = self.sensors.button(4)
 		self.constantEnable = self.sensors.button(5)
 		self.joystickForward = self.sensors.joystickAxis(1)
@@ -76,8 +76,8 @@ class ChallengeHeadingRemoteControl(ChallengeInterface):
 											#[ValueLambda([Scaler(self.joystickForward, scaling = self.maxForward), Scaler(self.joystickLeftRight, scaling = -self.maxManualTurn), Scaler(self.headingError, scaling = -self.maxHeadingTurn)])]	# Joystick  \
 											#[ValueLambda([Scaler(self.joystickForward, scaling = self.maxForward), Scaler(self.headingError, scaling = -self.maxHeadingTurn)])]	# Joystick  \
 											#[ValueLambda([Scaler(self.joystickForward, scaling = self.maxForward)]), Scaler(self.headingError, scaling = -self.maxHeadingTurn)]	# Joystick  \
-											[SpeedDirectionCombiner(Scaler(self.joystickForward, scaling = self.maxForward), Scaler(self.headingError, scaling = self.maxHeadingTurn))],  \
-											[SpeedDirectionCombiner(motorConstant, Scaler(self.headingError, scaling = self.maxHeadingTurn))]  \
+											[SpeedDirectionCombiner(Scaler(self.joystickForward, scaling = self.maxForward), Scaler(self.headingError, scaling = -self.maxHeadingTurn))],  \
+											[SpeedDirectionCombiner(motorConstant, Scaler(self.headingError, scaling = -self.maxHeadingTurn))]  \
 										   ],
 											self.controls.motor(2), \
 											ValueAdder([self.motorEnable,self.constantEnable], max=2) )
@@ -89,8 +89,8 @@ class ChallengeHeadingRemoteControl(ChallengeInterface):
 											#[ValueLambda([Scaler(self.joystickForward, scaling = -self.maxForward), Scaler(self.joystickLeftRight, scaling = -self.maxManualTurn), Scaler(self.headingError, scaling = -self.maxHeadingTurn)])]	# Joystick  \
 											#[ValueLambda([Scaler(self.joystickForward, scaling = -self.maxForward), Scaler(self.headingError, scaling = -self.maxHeadingTurn)])]	# Joystick  \
 											#[ValueLambda([Scaler(self.joystickForward, scaling = -self.maxForward)]), Scaler(self.headingError, scaling = -self.maxHeadingTurn)]	# Joystick  \
-											[Scaler(SpeedDirectionCombiner(Scaler(self.joystickForward, scaling = self.maxForward), Scaler(self.headingError, scaling = -self.maxHeadingTurn)), scaling = -1.0)],  \
-											[SpeedDirectionCombiner(motorConstant, Scaler(self.headingError, scaling = -self.maxHeadingTurn), scaling =-1.0)]  \
+											[Scaler(SpeedDirectionCombiner(Scaler(self.joystickForward, scaling = self.maxForward), Scaler(self.headingError, scaling = self.maxHeadingTurn)), scaling = 1.0)],  \
+											[SpeedDirectionCombiner(motorConstant, Scaler(self.headingError, scaling = self.maxHeadingTurn), scaling = 1.0)]  \
 										   ],
 											self.controls.motor(1), \
 											ValueAdder([self.motorEnable,self.constantEnable], max=2) )

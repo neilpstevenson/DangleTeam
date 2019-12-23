@@ -5,6 +5,7 @@ from hardware.Motor import Motor
 from interfaces.MotorControlSharedIPC import MotorControlSharedIPC
 from interfaces.ServoControlSharedIPC import ServoControlSharedIPC
 from interfaces.SimpleControlSharedIPC import SimpleControlSharedIPC
+from interfaces.Config import Config
 import atexit
 
 # recommended for auto-disabling motors on shutdown!
@@ -25,26 +26,29 @@ class MotorControlProcess:
 		self.simpleControlsIPC = SimpleControlSharedIPC()
 		self.simpleControlsIPC.create()
 		self.currentSimpleValues = [0]*32
-		
+		# Config
+		config = Config()
+		self.pollrate = (1.0 / config.get("redboard.motor.pollrate", 100))
+		self.delta_torque = self.pollrate * config.get("redboard.motor.accelmax", 4.0)
+		config.save()
+
 	def run(self):
 		done = False
 		running = False
-		motorL = Motor(2)
-		motorR = Motor(1)
+		motorL = Motor(2, delta_torque = self.delta_torque)
+		motorR = Motor(1, delta_torque = self.delta_torque)
 		
 		while not done:
 			if running:
 				# Adjust torque
-				torqueL = self.motorsIPC.getRequiredTorque(2)
+				torqueL = -self.motorsIPC.getRequiredTorque(2)
 				torqueR = self.motorsIPC.getRequiredTorque(1)
 				if torqueL != self.currentMotorValues[2] or torqueR != self.currentMotorValues[1]:
 					self.currentMotorValues[2] = torqueL
 					self.currentMotorValues[1] = torqueR
-					print(f"Left: {torqueL}, Right {torqueR}")
+					#print(f"Left: {torqueL}, Right {torqueR}")
 				motorL.setTorque(torqueL)
 				motorR.setTorque(torqueR)
-				#redboard.M2(torqueL*100.0)
-				#redboard.M1(torqueR*100.0)
 					
 				# Also copy over all of the servo values
 				for servo in MotorControlProcess.managedServos:
@@ -75,20 +79,18 @@ class MotorControlProcess:
 						else:
 							redboard.blue_off()
 
-			time.sleep(0.01)
+			time.sleep(self.pollrate)
 
 			if self.motorsIPC.checkWatchdog() == 0:
 				print("MotorControlProcess: Paused due to watchdog expiry")
 				running = False
-				#redboard.M2(0.0)
-				#redboard.M1(0.0)
 				for servo in MotorControlProcess.managedServos:
 					redboard.servo_off(servo)
-				for i in range(100):
+				for i in range(int(1/self.delta_torque)+1):
 					# Allow the motors to return to idle normally
 					motorL.setTorque(0.0)
 					motorR.setTorque(0.0)
-					time.sleep(0.01)
+					time.sleep(self.pollrate)
 			else:
 				running = True
 

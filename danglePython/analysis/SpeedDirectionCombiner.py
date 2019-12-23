@@ -22,6 +22,7 @@ class SpeedDirectionCombiner(SensorInterface):
 		self.speedMed = config.get("speedsteer.med", 0.8)
 		self.speedMedComp = config.get("speedsteer.med.compensation", 1.0)
 		self.speedHighComp = config.get("speedsteer.high.compensation", 2.0)
+		self.speedHighThresh = config.get("speedsteer.high.decelthresh", 0.05)
 		self.speedHighDecel = config.get("speedsteer.high.decel", 0.6)
 		config.save()
 	
@@ -34,6 +35,11 @@ class SpeedDirectionCombiner(SensorInterface):
 		elif (rawForwardTorque < self.speedMed and rawForwardTorque > -self.speedMed):
 			# Medium speed - turn has to be de-emphasised to stop spins
 			combined = rawForwardTorque + rawSteerTorque*self.speedMedComp
+			nominal = combined*combined if combined>=0.0 else -combined*combined
+			return nominal
+		elif (rawSteerTorque < self.speedHighThresh and rawSteerTorque > -self.speedHighThresh):
+			# High speed - no much turn, let it rip
+			combined = rawForwardTorque + rawSteerTorque*self.speedHighComp
 			nominal = combined*combined if combined>=0.0 else -combined*combined
 			return nominal
 		else:
