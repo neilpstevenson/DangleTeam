@@ -10,6 +10,7 @@ from interfaces.Config import Config
 from analysis.SimplePIDErrorValue import SimplePIDErrorValue
 from analysis.HeadingPIDErrorValue import HeadingPIDErrorValue
 from analysis.OneShotButtonValue import OneShotButtonValue
+from analysis.ToggleButtonValue import ToggleButtonValue
 from analysis.FixedValue import FixedValue
 # Value combination helpers
 from analysis.Scaler import Scaler
@@ -67,7 +68,7 @@ class ChallengeHeadingRemoteControl(ChallengeInterface):
 		motorsStop = FixedValue(0.0)
 		motorConstant = FixedValue(self.constantSpeed)
 		self.motorEnable = self.sensors.button(4)
-		self.constantEnable = self.sensors.button(5)
+		self.constantEnable = ToggleButtonValue(self.sensors.button(5))
 		self.joystickForward = self.sensors.joystickAxis(1)
 		self.joystickLeftRight = self.sensors.joystickAxis(3)
 		motorL = SwitchingControlMediator( [ motorsStop, 								 # Choice 0 = Stopped \
