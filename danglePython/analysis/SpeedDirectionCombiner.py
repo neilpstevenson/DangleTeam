@@ -17,50 +17,30 @@ class SpeedDirectionCombiner(SensorInterface):
 		self.offset = offset
 		# Get config
 		config = Config()
-		self.speedsteerSlow = config.get("speedsteer.slow", 0.6)
-		self.speedsteerMedDecel = config.get("speedsteer.med.decel", 0.7)
+		self.speedSlow = config.get("speedsteer.slow", 0.1)
+		self.speedSlowComp = config.get("speedsteer.slow.compensation", 2.0)
+		self.speedMed = config.get("speedsteer.med", 0.8)
+		self.speedMedComp = config.get("speedsteer.med.compensation", 1.0)
+		self.speedHighComp = config.get("speedsteer.high.compensation", 2.0)
+		self.speedHighDecel = config.get("speedsteer.high.decel", 0.6)
 		config.save()
 	
 	def nonLinearTransform(self, rawForwardTorque, rawSteerTorque):
-		if (rawForwardTorque < self.speedsteerSlow and rawForwardTorque > -self.speedsteerSlow) and (rawSteerTorque > 0.05 or rawSteerTorque < -0.05):
-			# Attempting to spin at slow speed or stationary
-			nominal = (rawForwardTorque*rawForwardTorque if rawForwardTorque>=0.0 else -rawForwardTorque*rawForwardTorque) + rawSteerTorque
+		if (rawForwardTorque < self.speedSlow and rawForwardTorque > -self.speedSlow):
+			# Slow speed or stationary - turn is emphasised
+			combined = rawForwardTorque
+			nominal = (combined*combined if combined>=0.0 else -combined*combined) + rawSteerTorque*self.speedSlowComp
 			return nominal
-		elif (rawSteerTorque > 0.05 and rawForwardTorque >= 0.0) or (rawSteerTorque < -0.05 and rawForwardTorque <= 0.0):
-			# Attempting to turn at higher speed, same wheel
-			combined = rawForwardTorque*self.speedsteerMedDecel + rawSteerTorque
-			nominal = combined*combined if combined>=0.0 else -combined*combined
-			return nominal
-		elif (rawSteerTorque > 0.05 and rawForwardTorque < 0.0) or (rawSteerTorque < -0.05 and rawForwardTorque > 0.0):
-			# Attempting to turn at higher speed, different wheel
-			combined = rawForwardTorque*self.speedsteerMedDecel + rawSteerTorque
+		elif (rawForwardTorque < self.speedMed and rawForwardTorque > -self.speedMed):
+			# Medium speed - turn has to be de-emphasised to stop spins
+			combined = rawForwardTorque + rawSteerTorque*self.speedMedComp
 			nominal = combined*combined if combined>=0.0 else -combined*combined
 			return nominal
 		else:
-			# Not really turning much
-			combined = rawForwardTorque + rawSteerTorque
+			# High speed - turn has to be re-emphasised otherwise it has little effect
+			combined = rawForwardTorque*self.speedHighDecel + rawSteerTorque*self.speedHighComp
 			nominal = combined*combined if combined>=0.0 else -combined*combined
 			return nominal
-		#else:
-		#	# square of both
-		#	nominal += rawSteerTorque*rawSteerTorque if rawSteerTorque>=0.0 else -rawSteerTorque*rawSteerTorque
-		#	return nominal
-		## Apply non-linear transform
-		#nominal = rawForwardTorque + rawSteerTorque
-		## For the speeding up wheel, just use the nominal squared
-		#if rawForwardTorque > 0.02 and nominal >= rawForwardTorque*0.95:
-		#	return nominal*nominal
-		#elif rawForwardTorque < -0.02 and nominal <= rawForwardTorque*0.95:
-		#	return -nominal*nominal
-		## For a slowing wheel, stop the wheel
-		#elif rawForwardTorque > 0.02 and nominal >= 0.0:
-		#	return 0.0
-		#elif rawForwardTorque < -0.02 and nominal <= 0.0:
-		#	return 0.0
-		## Where we are turning in the spot, use the steer value only
-		#else:
-		#	return rawSteerTorque * 1.3
-			
 			
 	def getValue(self):
 		if type(self.forwardTorque) is list:

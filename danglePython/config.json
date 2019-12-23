@@ -6,10 +6,15 @@
   "1heading.pid.i": 0.1,
   "1heading.pid.d": 0.01,
   "heading.pid.pom": false,
-  "heading.forward.max": -0.9,
+  "heading.forward.max": -1.0,
   "heading.manualturn.max": -15.0,
   "heading.headingturn.max": 0.6,
   "lava.speed": 0.7,
-  "speedsteer.slow": 0.6,
-  "speedsteer.med.decel": 0.7
+  "display.graph.numpoints": 300,
+  "speedsteer.slow": 0.1,
+  "speedsteer.slow.compensation": 1.0,
+  "speedsteer.med": 0.8,
+  "speedsteer.med.compensation": 1.0,
+  "speedsteer.high.compensation": 1.5,
+  "speedsteer.high.decel": 0.6
 }
