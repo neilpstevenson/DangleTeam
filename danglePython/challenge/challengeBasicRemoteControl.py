@@ -40,8 +40,8 @@ class ChallengeBasicRemoteControl(ChallengeInterface):
 		joystickLeftRight = self.sensors.joystickAxis(3)
 		motorL = SwitchingControlMediator( [ motorsStop, 								 # Choice 0 = Stopped \
 											  											 # Choice 1 = Controlled
-											#[ValueLambda(Scaler(joystickForward, scaling =  0.9)), ValueLambda(Scaler(joystickLeftRight, scaling = -0.5))]	# Joystick  \
-											[ValueLambda([Scaler(joystickForward, scaling =  0.9), Scaler(joystickLeftRight, scaling = -0.5)])]	# Joystick  \
+											#[ValueLambda(Scaler(joystickForward, scaling =  0.9)), ValueLambda(Scaler(joystickLeftRight, scaling = 0.5))]	# Joystick  \
+											[ValueLambda([Scaler(joystickForward, scaling =  0.9), Scaler(joystickLeftRight, scaling = 0.5)])]	# Joystick  \
 										   ],
 											self.controls.motor(2), \
 											self.motorEnable )
@@ -49,8 +49,8 @@ class ChallengeBasicRemoteControl(ChallengeInterface):
 		highPriorityProcesses.append(motorL)
 		motorR = SwitchingControlMediator( [ motorsStop, 								 # Choice 0 = Stopped \
 																						 # Choice 1 = Controlled
-											#[ValueLambda(Scaler(joystickForward, scaling = -0.9)), ValueLambda(Scaler(joystickLeftRight, scaling = -0.5))]  # Joystick \
-											[ValueLambda([Scaler(joystickForward, scaling = -0.9), Scaler(joystickLeftRight, scaling = -0.5)])]	# Joystick  \
+											#[ValueLambda(Scaler(joystickForward, scaling = 0.9)), ValueLambda(Scaler(joystickLeftRight, scaling = -0.5))]  # Joystick \
+											[ValueLambda([Scaler(joystickForward, scaling = 0.9), Scaler(joystickLeftRight, scaling = -0.5)])]	# Joystick  \
 										   ],
 											self.controls.motor(1), \
 											self.motorEnable )
