@@ -26,5 +26,7 @@
   ],
   "lava.vision.displayresult": true,
   "lava.vision.displaygrey": false,
-  "lava.vision.savefile": true
+  "lava.vision.savefile": true,
+  "lava.vision.filename": "visionCapture.mp4",
+  "lava.vision.threshold": 128
 }
