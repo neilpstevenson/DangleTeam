@@ -47,6 +47,7 @@ class ChallengeHeadingRemoteControl(ChallengeInterface):
 		self.maxManualTurn = config.get("heading.manualturn.max", -15.0)
 		self.maxHeadingTurn = config.get("heading.headingturn.max", 0.5)
 		self.constantSpeed = config.get("lava.speed", 0.7)
+		self.cameraTilt = config.get("lava.camera.tilt", 0.5)
 		config.save()
 
 	def createProcesses(self, highPriorityProcesses, medPriorityProcesses):
@@ -103,7 +104,7 @@ class ChallengeHeadingRemoteControl(ChallengeInterface):
 		
 		# Common controls
 		self.grabberControl.createProcesses(highPriorityProcesses, medPriorityProcesses)
-		self.cameraLevellingControl.createProcesses(highPriorityProcesses, medPriorityProcesses)
+		self.cameraLevellingControl.createProcesses(highPriorityProcesses, medPriorityProcesses, self.cameraTilt)
 		self.zGunControl.createProcesses(highPriorityProcesses, medPriorityProcesses)
 
 	def move(self):

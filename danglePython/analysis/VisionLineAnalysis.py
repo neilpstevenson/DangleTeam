@@ -9,11 +9,12 @@ from interfaces.Config import Config
 
 class VisionLineAnalysis:
 
-	def __init__(self, resolution, threshold, display, displayGrayscale, filename):
+	def __init__(self, resolution, threshold, display, displayGrayscale, filename, blinkers):
 		self.threshold = threshold
 		self.filename = filename
 		self.display = display
 		self.displayGrayscale = displayGrayscale
+		self.blinkers = blinkers # pixels at either side of top
 		
 		# Create/overwrite
 		self.results = LineAnalysisSharedIPC()
@@ -38,11 +39,18 @@ class VisionLineAnalysis:
 		# File capture
 		if self.filename != None:
 			# Define the codec and create VideoWriter object.The output is stored in 'outpy.avi' file.
-			self.captureFile = cv2.VideoWriter(self.filename, cv2.VideoWriter_fourcc(*'MJPG'), 10, self.camera.resolution)
+			self.captureFile = cv2.VideoWriter(self.filename, cv2.VideoWriter_fourcc(*'MJPG'), 20, self.camera.resolution)
 			
 		# Start timer, so we know how long things took
 		startTime = cv2.getTickCount()
 
+		# Blinkers polygons
+		blinkerPolys = np.array([[[0,0], [self.blinkers, 0], [0, self.camera.resolution[1]-1]],
+								 [[self.camera.resolution[0]-1, 0], [self.camera.resolution[0]-1 - self.blinkers, 0], [self.camera.resolution[0]-1, self.camera.resolution[1]-1]]], np.int32)
+		print(f"blinkerPolys: {blinkerPolys}")
+		
+		angle = None
+		
 		# grab the next frame as a numpy array
 		for frame in self.camera.capture_continuous(self.rawCapture, format="bgr", use_video_port=True):
 	
@@ -57,6 +65,10 @@ class VisionLineAnalysis:
 			# Convert to greyscale and apply a Gaussian blur to the image in order 
 			# to make more robust against noise and reflections
 			gray = cv2.cvtColor(original.copy(), cv2.COLOR_BGR2GRAY)
+			
+			# Apply blinkers
+			cv2.fillPoly(gray, blinkerPolys, 0)
+			
 			#gray = cv2.GaussianBlur(gray, (self.radius, self.radius), 0)
 			gray = cv2.blur(gray, (self.radius, self.radius))
 
@@ -78,6 +90,7 @@ class VisionLineAnalysis:
 			
 			if len(points) < 5:
 				print("Too few points - ignoring")
+				hasResult = False
 			else:
 				# Fit a striaght line to the brightest point on each slice
 				vx, vy, x0, y0 = cv2.fitLine(np.array(points), cv2.DIST_HUBER, 0, 0.1, 0.1)
@@ -94,26 +107,36 @@ class VisionLineAnalysis:
 				currentPosition = (self.camera.resolution[0]//2, self.camera.resolution[1])
 				desiredPosition = (int(x0+vx*self.targetLookaheadRatio), int(y0+vy*self.targetLookaheadRatio))
 				angle = np.arctan((currentPosition[0]-desiredPosition[0])/(currentPosition[1]-desiredPosition[1])) * 180.0/3.14159
+				hasResult = True
 
-				endTime = cv2.getTickCount()
-				time = (endTime - startTime) / cv2.getTickFrequency()
-				
+			# Overall capture/analysis time
+			endTime = cv2.getTickCount()
+			time = (endTime - startTime) / cv2.getTickFrequency()
+
+			if hasResult:	
+				# Share the results
 				yawAngle = yaw + angle 
 				if yawAngle > 180.0:
 					yawAngle -= 360.0
 				elif yawAngle < -180.0:
 					yawAngle += 360.0
-					
-				# Share the results
 				self.results.shareResults(startTime, time, angle, yawAngle, ((vx, vy), (x0, y0)), point)
-			
+			elif angle != None:
+				# Ajust angle based on last successful analysis for display only
+				angle += (lastYaw - yaw)
+				if angle > 180.0:
+					angle -= 360.0
+				elif angle < -180.0:
+					angle += 360.0
+			lastYaw = yaw
+				
 			# clear the stream in preparation for the next frame
 			self.rawCapture.truncate(0)
 
 			# display the results
-			if self.display:
+			if self.display and angle != None:
 				# Print the time taken
-				print(f"Took {time:.3f}secs")
+				print(f"Capture & analysis: {time:.3f}secs")
 				# Create an overlayed image
 				assessment = original.copy()
 				for point in points:
@@ -124,7 +147,7 @@ class VisionLineAnalysis:
 				cv2.arrowedLine(assessment, currentPosition, desiredPosition, (0, 255, 0), 3)
 				# Overlay the angle calculated
 				np.set_printoptions(precision=2)
-				cv2.putText(assessment, f"{yaw:.2f}deg => {yawAngle:.2f}deg", (5, self.camera.resolution[1]-4), cv2.FONT_HERSHEY_DUPLEX, 0.4, (0, 255, 0))
+				cv2.putText(assessment, f"{yaw:.2f}deg => {angle:+.2f}deg", (5, self.camera.resolution[1]-4), cv2.FONT_HERSHEY_DUPLEX, 0.4, (0, 255, 0))
 				cv2.imshow(f"assessed direction", assessment)
 				if self.displayGrayscale:
 					cv2.imshow(f"grey", gray)
@@ -135,9 +158,8 @@ class VisionLineAnalysis:
 				
 				displayEndTime = cv2.getTickCount()
 				overalltime = (displayEndTime - startTime) / cv2.getTickFrequency()
-				print(f"Overall {overalltime:.3f}secs")
-				
-			print(f"Assessed angle: {angle}")
+				print(f"Assessed angle: {angle}")
+				print(f"Overall time:   {overalltime:.3f}secs")
 
 			cv2.waitKey(1)
 			startTime = cv2.getTickCount()
