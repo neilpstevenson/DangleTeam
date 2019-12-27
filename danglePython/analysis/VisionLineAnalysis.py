@@ -9,12 +9,13 @@ from interfaces.Config import Config
 
 class VisionLineAnalysis:
 
-	def __init__(self, resolution, threshold, display, displayGrayscale, filename, blinkers):
+	def __init__(self, resolution, threshold, display, displayGrayscale, filename, blinkers, numSlices, ignoreTopSlices = 0):
 		self.threshold = threshold
 		self.filename = filename
 		self.display = display
 		self.displayGrayscale = displayGrayscale
 		self.blinkers = blinkers # pixels at either side of top
+		self.ignoreTopSlices = ignoreTopSlices
 		
 		# Create/overwrite
 		self.results = LineAnalysisSharedIPC()
@@ -22,7 +23,7 @@ class VisionLineAnalysis:
 		
 		# Define the analysis parameters
 		self.radius = resolution[0]//15#31	# ensure radius is odd and slighly bigger than the white line
-		self.numSlices = 20
+		self.numSlices = numSlices
 		self.targetLookaheadRatio = 0.8 # % of screen height that we attempt to head towards
 
 		# initialize the camera and grab a reference to the raw camera capture
@@ -79,15 +80,18 @@ class VisionLineAnalysis:
 			points = []
 			# For each slice, determine the brightest point
 			for bit in range(len(slices)):
-				(minVal, maxVal, minLoc, maxLoc) = cv2.minMaxLoc(slices[bit])
-				point = (maxLoc[0],maxLoc[1]+offset)
-				offset += len(slices[bit])
-				if maxVal < self.threshold:
-					print(f"Ignoring point: {point}, value {maxVal}")
+				if bit >= self.ignoreTopSlices:
+					(minVal, maxVal, minLoc, maxLoc) = cv2.minMaxLoc(slices[bit])
+					point = (maxLoc[0],maxLoc[1]+offset)
+					offset += len(slices[bit])
+					if maxVal < self.threshold:
+						print(f"Ignoring point: {point}, value {maxVal}")
+					else:
+						#print(f"Using point: {point}, value {maxVal}")
+						points.append(point)
 				else:
-					print(f"Using point: {point}, value {maxVal}")
-					points.append(point)
-			
+					offset += len(slices[bit])
+		
 			if len(points) < 5:
 				print("Too few points - ignoring")
 				hasResult = False
@@ -98,8 +102,9 @@ class VisionLineAnalysis:
 				if vy > 0:
 					vy = -vy
 					vx = -vx
+				print(f"vx: {vx}, vy: {vy}, x0: {x0}, y0: {y0}")
 				# Re-origin to stop some jitter
-				y0 = self.camera.resolution[1]*(self.numSlices-1)//self.numSlices//2
+				#y0 = self.camera.resolution[1]*(self.numSlices-1)//self.numSlices//2
 				# scale the vector to approx screen size
 				vx *= self.camera.resolution[1]//2
 				vy *= self.camera.resolution[1]//2

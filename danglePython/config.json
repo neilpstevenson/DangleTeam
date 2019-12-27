@@ -30,5 +30,7 @@
   "lava.vision.filename": "visionCapture.mp4",
   "lava.vision.threshold": 150,
   "lava.vision.blinkers": 80,
-  "lava.camera.tilt": 0.5
+  "lava.camera.tilt": 0.5,
+  "lava.vision.slices": 40,
+  "lava.vision.ignoreTopSlices": 10
 }
