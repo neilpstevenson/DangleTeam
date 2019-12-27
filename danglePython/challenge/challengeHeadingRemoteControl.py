@@ -11,6 +11,7 @@ from analysis.SimplePIDErrorValue import SimplePIDErrorValue
 from analysis.HeadingPIDErrorValue import HeadingPIDErrorValue
 from analysis.OneShotButtonValue import OneShotButtonValue
 from analysis.ToggleButtonValue import ToggleButtonValue
+from analysis.TimedTriggerValue import TimedTriggerValue
 from analysis.FixedValue import FixedValue
 # Value combination helpers
 from analysis.Scaler import Scaler
@@ -60,16 +61,13 @@ class ChallengeHeadingRemoteControl(ChallengeInterface):
 		
 		# Vision
 		self.visionTargetHeading = self.vision.getLineHeading()
-		#self.pidVisionHeading = PID(self.pidP, self.pidI, self.pidD, sample_time=0.008, proportional_on_measurement=self.proportionalOnMeasure)
-		#self.visionHeadingError = HeadingPIDErrorValue(yaw, self.pidVisionHeading, yaw.getValue(), min = -1.0, max = 1.0, scaling=1.0)
-		# Initialise the PID
-		#self.visionHeadingError.getValue()
 
 		# Motors
 		motorsStop = FixedValue(0.0)
 		motorConstant = FixedValue(self.constantSpeed)
 		self.motorEnable = self.sensors.button(4)
 		self.constantEnable = ToggleButtonValue(self.sensors.button(5))
+		#self.constantEnable = TimedTriggerValue(self.sensors.button(5), 1.0, retriggerable = True)
 		self.joystickForward = self.sensors.joystickAxis(1)
 		self.joystickLeftRight = self.sensors.joystickAxis(3)
 		motorL = SwitchingControlMediator( [ motorsStop, 								 # Choice 0 = Stopped \
