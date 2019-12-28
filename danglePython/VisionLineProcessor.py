@@ -14,7 +14,7 @@ class VisionLineProcessor:
 		self.displayGrey = config.get("lava.vision.displaygrey", False)
 		self.threshold = config.get("lava.vision.threshold", 128)
 		self.blinkers = config.get("lava.vision.blinkers", 30) # pixels at either side of top
-		self.savefilename = config.get("lava.vision.filename", 'visionCapture.mp4')
+		self.savefilename = config.get("lava.vision.filename", 'visionCapture.avi')
 		config.save()
 		
 	def run(self):

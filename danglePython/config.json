@@ -27,10 +27,13 @@
   "lava.vision.displayresult": true,
   "lava.vision.displaygrey": true,
   "lava.vision.savefile": true,
-  "lava.vision.filename": "visionCapture.mp4",
+  "lava.vision.filename": "visionCapture.avi",
   "lava.vision.threshold": 150,
   "lava.vision.blinkers": 80,
   "lava.camera.tilt": 0.5,
   "lava.vision.slices": 40,
-  "lava.vision.ignoreTopSlices": 10
+  "lava.vision.ignoreTopSlices": 10,
+  "grabber.open": -0.75,
+  "grabber.closed": 0.25,
+  "grabber.speed": 0.2
 }

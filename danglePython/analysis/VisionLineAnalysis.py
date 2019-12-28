@@ -39,8 +39,9 @@ class VisionLineAnalysis:
 	def captureAndAssess(self):
 		# File capture
 		if self.filename != None:
-			# Define the codec and create VideoWriter object.The output is stored in 'outpy.avi' file.
-			self.captureFile = cv2.VideoWriter(self.filename, cv2.VideoWriter_fourcc(*'MJPG'), 20, self.camera.resolution)
+			print(f"Saving to file: {self.filename}")
+			# Define the codec and create VideoWriter object.
+			self.captureFile = cv2.VideoWriter(self.filename, cv2.VideoWriter_fourcc(*'mp4v'), 10, self.camera.resolution)
 			
 		# Start timer, so we know how long things took
 		startTime = cv2.getTickCount()
@@ -55,7 +56,7 @@ class VisionLineAnalysis:
 		# grab the next frame as a numpy array
 		for frame in self.camera.capture_continuous(self.rawCapture, format="bgr", use_video_port=True):
 	
-			# Get the curretn yaw value
+			# Get the current yaw value
 			self.sensors.process()
 			yaw = self.yaw.getValue()
 			
