@@ -43,25 +43,25 @@ class SensorsProcess:
 			if (distance > 0):
 				print (f"{count} Left(1): {distance}mm")
 				timestamp = time.perf_counter()
-				self.sensorsIPC.setCounterValue(16, distance, timestamp=timestamp)
+				self.sensorsIPC.setAnalogValue(16, distance, timestamp=timestamp)
 			else:
-				self.sensorsIPC.setCounterValue(16, status = 0)
+				self.sensorsIPC.setAnalogValue(16, -1, status = 0)
 			# Front
 			distance = self.tof2.get_distance()
 			if (distance > 0):
 				print (f"{count} Front(4): {distance}mm")
 				timestamp = time.perf_counter()
-				self.sensorsIPC.setCounterValue(17, distance, timestamp=timestamp)
+				self.sensorsIPC.setAnalogValue(17, distance, timestamp=timestamp)
 			else:
-				self.sensorsIPC.setCounterValue(17, status = 0)
+				self.sensorsIPC.setAnalogValue(17, -1, status = 0)
 			# Right
 			distance = self.tof3.get_distance()
 			if (distance > 0):
 				print (f"{count} Right(7): {distance}mm")
 				timestamp = time.perf_counter()
-				self.sensorsIPC.setCounterValue(18, distance, timestamp=timestamp)
+				self.sensorsIPC.setAnalogValue(18, distance, timestamp=timestamp)
 			else:
-				self.sensorsIPC.setCounterValue(18, status = 0)
+				self.sensorsIPC.setAnalogValue(18, -1, status = 0)
 
 			count += 1
 			time.sleep(self.timing)
