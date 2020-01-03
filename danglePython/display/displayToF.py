@@ -6,6 +6,8 @@ from interfaces.SensorAccessFactory import SensorAccessFactory
 class Simulation:
 	def __init__(self, win_width = 640, win_height = 480):
 		pygame.init()
+		self.width = win_width 
+		self.height = win_height
 
 		self.screen = pygame.display.set_mode((win_width, win_height))
 		pygame.display.set_caption("ToF Viewer")
@@ -13,12 +15,15 @@ class Simulation:
 		self.clock = pygame.time.Clock()
 
 		# Simple depiction of the robot as a rectangle
-		width = win_width/4.0
-		height = win_height / 2.0
-		topX = win_width / 2.0
-		topY = win_height * 0.33
-		self.robotVertices = [(topX-width*0.66,topY),(topX+width*0.66,topY),(topX+width,topY+height),(topX-width,topY+height),(topX-width*0.66,topY)]
-		self.robotColor = (255,64,64)
+		#width = win_width/4.0
+		#height = win_height / 2.0
+		#topX = win_width / 2.0
+		#topY = win_height * 0.33
+		#self.robotVertices = [(topX-width*0.66,topY),(topX+width*0.66,topY),(topX+width,topY+height),(topX-width,topY+height),(topX-width*0.66,topY)]
+		#self.robotColor = (255,64,64)
+		# Robot image
+		self.image = pygame.transform.scale(pygame.image.load("display/Dangle_IMG_1351-small.png").convert_alpha(), (320,320))
+		self.imageRect = self.image.get_rect()
 		
 		self.lineColor = (255,255,255)
 		self.labels = ["Left","Forward","Right"]
@@ -31,8 +36,9 @@ class Simulation:
 		font = pygame.font.SysFont('Arial', 12)
 		timestampPrev = 0.0
 		sampleNumberPrev = 0
+		imagePos = (self.imageRect[0]+160,self.imageRect[1]+160)
 		
-		""" Main Loop """
+		# Main Loop
 		while 1:
 			for event in pygame.event.get():
 				if event.type == pygame.QUIT:
@@ -52,7 +58,8 @@ class Simulation:
 					self.distances[s].pop()
 			
 			# Draw the robot
-			pygame.draw.polygon(self.screen, self.robotColor, self.robotVertices)
+			self.screen.blit(self.image, imagePos)
+			#pygame.draw.polygon(self.screen, self.robotColor, self.robotVertices)
 			
 			# Label the sensors
 			#self.screen.blit(font.render(self.labels[face_index], True, (255,255,255)), ((t[f[0]].x+t[f[1]].x+t[f[2]].x+t[f[3]].x)/4, (t[f[0]].y+t[f[1]].y+t[f[2]].y+t[f[3]].y)/4))
