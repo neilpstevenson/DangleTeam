@@ -100,6 +100,12 @@ class ChallengeHeadingRemoteControl(ChallengeInterface):
 		self.ledIndicator = self.controls.led(0)
 		medPriorityProcesses.append(SimpleControlMediator( Scaler(self.motorEnable, scaling=2, offset=2, max=4), self.ledIndicator))
 		
+		# LED eyes
+		self.ledEyeLeft = self.controls.led(20)
+		self.ledEyeRight = self.controls.led(21)
+		medPriorityProcesses.append(SimpleControlMediator( Scaler(self.motorEnable, scaling=255), self.ledEyeLeft))
+		medPriorityProcesses.append(SimpleControlMediator( Scaler(self.constantEnable, scaling=255), self.ledEyeRight))
+		
 		# Common controls
 		self.grabberControl.createProcesses(highPriorityProcesses, medPriorityProcesses)
 		self.cameraLevellingControl.createProcesses(highPriorityProcesses, medPriorityProcesses, self.cameraTilt)

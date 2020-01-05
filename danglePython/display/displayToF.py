@@ -49,7 +49,7 @@ class Simulation:
 			pygame.time.wait(50)
 			
 			# Clear current image
-			self.screen.fill((0,0,0))
+			self.screen.fill((64,64,64))
 
 			# Read the next position from input to front of list
 			for s in range(len(self.sensors)):
