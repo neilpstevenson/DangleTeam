@@ -5,6 +5,7 @@ import atexit
 # Challenge options
 from challenge.challengeBasicRemoteControl import ChallengeBasicRemoteControl
 from challenge.challengeHeadingRemoteControl import ChallengeHeadingRemoteControl
+from challenge.challengeWallFollowControl import ChallengeWallFollowControl
 
 # Factories
 from interfaces.SensorAccessFactory import SensorAccessFactory
@@ -27,7 +28,8 @@ class DangleRun:
 		self.counter = 0
 		# Set up specific challenge instance
 		#self.challenge = ChallengeBasicRemoteControl()
-		self.challenge = ChallengeHeadingRemoteControl()
+		#self.challenge = ChallengeHeadingRemoteControl()
+		self.challenge = ChallengeWallFollowControl()
 
 	def processAll(self, processes):
 		[x.process() for x in processes]
