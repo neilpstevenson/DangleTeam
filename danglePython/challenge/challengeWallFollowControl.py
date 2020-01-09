@@ -50,7 +50,75 @@ class ChallengeWallFollowControl(ChallengeInterface):
 		self.constantSpeed = config.get("lava.speed", 0.7)
 		self.cameraTilt = config.get("lava.camera.tilt", 0.5)
 		config.save()
+		# define the state machine to control our behaviour
+		self.states = { 0: self.moveManual,
+						1: self.moveFindWall,
+						2: self.moveFollowWall,
+						3: self.moveTurnLeft,
+						4: self.moveTurnRight }
+		self.currentState = 1
 
+	def moveManual(self, leftDist, forwardDist, rightDist):
+		pass
+		
+	def moveFindWall(self, leftDist, forwardDist, rightDist):
+		print(f"moveFindWall: {rightDist}")
+		# drift right
+		self.motorConstant.setValue(self.constantSpeed)
+		self.headingError.setTarget(self.sensors.yaw().getValue() - 15.0)
+		
+	def moveFollowWall(self, leftDist, forwardDist, rightDist):
+		print(f"moveFollowWall: {rightDist}")
+		self.motorConstant.setValue(self.constantSpeed)
+		if rightDist > 240:
+			# Move nearer right wall
+			self.headingError.setTarget(self.sensors.yaw().getValue() - 5.0)
+		elif rightDist < 100:
+			# Move away from right wall quickly
+			self.headingError.setTarget(self.sensors.yaw().getValue() + 10.0)
+		elif rightDist < 160:
+			# Move away from right wall
+			self.headingError.setTarget(self.sensors.yaw().getValue() + 5.0)
+		else:
+			# Maintain heading
+			self.headingError.setTarget(self.sensors.yaw().getValue())
+		
+	def moveTurnLeft(self, leftDist, forwardDist, rightDist):
+		self.motorConstant.setValue(0.1)
+		self.headingError.setTarget(self.sensors.yaw().getValue() + 20.0)
+		
+	def moveTurnRight(self, leftDist, forwardDist, rightDist):
+		self.motorConstant.setValue(0.1)
+		self.headingError.setTarget(self.sensors.yaw().getValue() - 20.0)
+	
+		
+	def updateState(self, left, forward, right):
+		if forward > 350 and left > 350 and right > 350:
+			# Nothing in view, find a wall
+			self.currentState = 1
+		elif forward <= 350 and left > 350 and right > 350:
+			# Blocked ahead, turn left and this should become a wall
+			self.currentState = 3
+		elif forward > 350 and left <= 350 and right > 350:
+			# Too far from wall, find it
+			self.currentState = 1
+		elif forward > 350 and left > 350 and right <= 350:
+			# Near wall, follow it
+			self.currentState = 2
+		elif forward > 350 and left <= 350 and right <= 350:
+			# Ahead ok, follow wall
+			self.currentState = 2
+		elif forward <= 350 and left <= 350 and right > 350:
+			# Too far from wall but ahead blocked, turn right (WILL OSCILLATE?)
+			self.currentState = 4
+		elif forward <= 350 and left > 350 and right <= 350:
+			# Only left free, avoid
+			self.currentState = 3
+		elif forward <= 350 and left <= 350 and right <= 350:
+			# Dead end, about turn
+			self.currentState = 3
+		print(f"New state: {self.currentState}")
+	
 	def createProcesses(self, highPriorityProcesses, medPriorityProcesses):
 		# Yaw control
 		yaw = self.sensors.yaw()
@@ -64,7 +132,7 @@ class ChallengeWallFollowControl(ChallengeInterface):
 
 		# Motors
 		motorsStop = FixedValue(0.0)
-		motorConstant = FixedValue(self.constantSpeed)
+		self.motorConstant = FixedValue(self.constantSpeed)
 		self.motorEnable = self.sensors.button(4)
 		self.constantEnable = ToggleButtonValue(self.sensors.button(5))
 		#self.constantEnable = TimedTriggerValue(self.sensors.button(5), 1.0, retriggerable = True)
@@ -77,7 +145,7 @@ class ChallengeWallFollowControl(ChallengeInterface):
 											#[ValueLambda([Scaler(self.joystickForward, scaling = self.maxForward), Scaler(self.headingError, scaling = -self.maxHeadingTurn)])]	# Joystick  \
 											#[ValueLambda([Scaler(self.joystickForward, scaling = self.maxForward)]), Scaler(self.headingError, scaling = -self.maxHeadingTurn)]	# Joystick  \
 											[SpeedDirectionCombiner(Scaler(self.joystickForward, scaling = self.maxForward), Scaler(self.headingError, scaling = -self.maxHeadingTurn))],  \
-											[SpeedDirectionCombiner(motorConstant, Scaler(self.headingError, scaling = -self.maxHeadingTurn))]  \
+											[SpeedDirectionCombiner(self.motorConstant, Scaler(self.headingError, scaling = -self.maxHeadingTurn))]  \
 										   ],
 											self.controls.motor(2), \
 											ValueAdder([self.motorEnable,self.constantEnable], max=2) )
@@ -90,7 +158,7 @@ class ChallengeWallFollowControl(ChallengeInterface):
 											#[ValueLambda([Scaler(self.joystickForward, scaling = -self.maxForward), Scaler(self.headingError, scaling = -self.maxHeadingTurn)])]	# Joystick  \
 											#[ValueLambda([Scaler(self.joystickForward, scaling = -self.maxForward)]), Scaler(self.headingError, scaling = -self.maxHeadingTurn)]	# Joystick  \
 											[Scaler(SpeedDirectionCombiner(Scaler(self.joystickForward, scaling = self.maxForward), Scaler(self.headingError, scaling = self.maxHeadingTurn)), scaling = 1.0)],  \
-											[SpeedDirectionCombiner(motorConstant, Scaler(self.headingError, scaling = self.maxHeadingTurn), scaling = 1.0)]  \
+											[SpeedDirectionCombiner(self.motorConstant, Scaler(self.headingError, scaling = self.maxHeadingTurn), scaling = 1.0)]  \
 										   ],
 											self.controls.motor(1), \
 											ValueAdder([self.motorEnable,self.constantEnable], max=2) )
@@ -108,8 +176,8 @@ class ChallengeWallFollowControl(ChallengeInterface):
 		# LED eyes
 		self.ledEyeLeft = self.controls.led(20)
 		self.ledEyeRight = self.controls.led(21)
-		medPriorityProcesses.append(SimpleControlMediator( Scaler(self.tofLeft, scaling=0.5, min=0.0, max=1.0, offset=-100), self.ledEyeLeft))
-		medPriorityProcesses.append(SimpleControlMediator( Scaler(self.tofRight, scaling=0.5, min=0.0, max=1.0, offset=-100), self.ledEyeRight))
+		medPriorityProcesses.append(SimpleControlMediator( Scaler(self.tofLeft, scaling=-1.0, min=0.0, max=1.0, offset=200), self.ledEyeLeft))
+		medPriorityProcesses.append(SimpleControlMediator( Scaler(self.tofRight, scaling=-1.0, min=0.0, max=1.0, offset=200), self.ledEyeRight))
 		
 		# Common controls
 		self.grabberControl.createProcesses(highPriorityProcesses, medPriorityProcesses)
@@ -121,17 +189,24 @@ class ChallengeWallFollowControl(ChallengeInterface):
 			if not self.pidHeading.auto_mode:
 				self.pidHeading.auto_mode = True
 			# ToF turns
+			leftDist = self.tofLeft.getValue()
 			rightDist = self.tofRight.getValue()
-			print(f"rightDist: {rightDist}")
-			if rightDist > 350:
-				# Move nearer right wall
-				self.headingError.setTarget(self.sensors.yaw().getValue() - 10.0)
-			elif rightDist < 250:
-				# Move away from right wall
-				self.headingError.setTarget(self.sensors.yaw().getValue() + 10.0)
-			else:
-				# Maintain heading
-				self.headingError.setTarget(self.sensors.yaw().getValue())
+			forwardDist = self.tofForward.getValue()
+			# Update and execute state determined
+			self.updateState(leftDist, forwardDist, rightDist)
+			self.states[self.currentState](leftDist, forwardDist, rightDist)
+			
+			#rightDist = self.tofRight.getValue()
+			#print(f"rightDist: {rightDist}")
+			#if rightDist > 350:
+			#	# Move nearer right wall
+			#	self.headingError.setTarget(self.sensors.yaw().getValue() - 10.0)
+			#elif rightDist < 250:
+			#	# Move away from right wall
+			#	self.headingError.setTarget(self.sensors.yaw().getValue() + 10.0)
+			#else:
+			#	# Maintain heading
+			#	self.headingError.setTarget(self.sensors.yaw().getValue())
 		elif self.motorEnable.getValue() > 0:
 			if not self.pidHeading.auto_mode:
 				self.pidHeading.auto_mode = True
