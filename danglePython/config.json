@@ -35,5 +35,17 @@
   "lava.vision.ignoreTopSlices": 10,
   "grabber.open": -0.75,
   "grabber.closed": 0.25,
-  "grabber.speed": 0.2
+  "grabber.speed": 0.2,
+  "wall.speed": 0.6,
+  "wall.camera.tilt": 0.3,
+  "wall.leftright.maxdist": 350,
+  "wall.forward.maxdist": 350,
+  "wall.targetdist": 200,
+  "wall.leewaydist": 40,
+  "wall.mindist": 100,
+  "wall.move.driftangle": 15,
+  "wall.move.turnangle": 20,
+  "wall.move.turnspeed": 0.1,
+  "wall.move.followanglemin": 5,
+  "wall.move.followanglemax": 10
 }
