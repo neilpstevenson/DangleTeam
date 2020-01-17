@@ -15,11 +15,13 @@ from luma.core.virtual import viewport, snapshot, range_overlap
 from luma.core.sprite_system import framerate_regulator
 from PIL import ImageFont
 
-
+# Messages - max length at smallest font is around 24 chars
 welcome = [
-    u"Dangle Team",
-    u"PiWars 🤖",
-    u"Welcome "
+    u"Team\n☸ Dangle ☸",
+    u"⚠ Danger ⚠\nAhead",
+    u"PiWars",
+    u"Welcome",
+    u"Let the\nchallenges begin..."
 ]
 
 def make_font(name, size):
@@ -73,8 +75,9 @@ def make_snapshot(width, height, text, fonts, color="white"):
         for font in fonts:
             size = draw.multiline_textsize(t, font)
             if size[0] > width:
-                t = text.replace(" ", "\n")
-                size = draw.multiline_textsize(t, font)
+                pass
+                #t = text.replace(" ", "\n")
+                #size = draw.multiline_textsize(t, font)
             else:
                 break
 
@@ -100,7 +103,7 @@ def overlapping(pt_a, pt_b, w, h):
 
 def main():
     regulator = framerate_regulator(fps=30)
-    fonts = [make_font("code2000.ttf", sz) for sz in range(24, 8, -2)]
+    fonts = [make_font("code2000.ttf", sz) for sz in range(36, 8, -2)]
     sq = device.width * 2
     virtual = viewport(device, sq, sq)
 
@@ -118,11 +121,12 @@ def main():
         virtual.add_hotspot(widget_a, posn_a)
         virtual.add_hotspot(widget_b, posn_b)
 
+        virtual.set_position(posn_a)
         for _ in range(30):
             with regulator:
-                virtual.set_position(posn_a)
-
-        for posn in lerp_2d(posn_a, posn_b, device.width // 4):
+                pass
+        
+        for posn in lerp_2d(posn_a, posn_b, device.width // 6):
             with regulator:
                 virtual.set_position(posn)
 
