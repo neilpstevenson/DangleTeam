@@ -7,7 +7,7 @@
   "1heading.pid.d": 0.01,
   "heading.pid.pom": false,
   "heading.headingturn.max": 0.6,
-  "lava.speed": 0.5,
+  "lava.speed": 0.6,
   "display.graph.numpoints": 300,
   "speedsteer.slow": 0.1,
   "speedsteer.slow.compensation": 1.0,
@@ -29,10 +29,10 @@
   "lava.vision.savefile": true,
   "lava.vision.filename": "visionCapture.avi",
   "lava.vision.threshold": 150,
-  "lava.vision.blinkers": 80,
+  "lava.vision.blinkers": 60,
   "lava.camera.tilt": 0.5,
   "lava.vision.slices": 40,
-  "lava.vision.ignoreTopSlices": 10,
+  "lava.vision.ignoreTopSlices": 0,
   "grabber.open": -0.75,
   "grabber.closed": 0.25,
   "grabber.speed": 0.2,
@@ -47,5 +47,6 @@
   "wall.move.turnangle": 20,
   "wall.move.turnspeed": 0.1,
   "wall.move.followanglemin": 5,
-  "wall.move.followanglemax": 10
+  "wall.move.followanglemax": 10,
+  "wall.headingturn.max": 0.7
 }
