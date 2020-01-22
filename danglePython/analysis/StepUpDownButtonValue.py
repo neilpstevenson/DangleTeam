@@ -17,8 +17,8 @@ class StepUpDownButtonValue(SensorInterface):
 		self.currentButtonState = 0.0
 		
 	def getValue(self):
-		up = self.sensors.getButton(self.buttonUp)
-		down = self.sensors.getButton(self.buttonDown)
+		up = self.buttonUp.getValue()
+		down = self.buttonDown.getValue()
 		rawValue = up - down
 		if rawValue != self.currentButtonState:
 			self.currentButtonState = rawValue

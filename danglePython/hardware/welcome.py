@@ -17,11 +17,11 @@ from PIL import ImageFont
 
 # Messages - max length at smallest font is around 24 chars
 welcome = [
-    u"Team\n☸ Dangle ☸",
-    u"⚠ Danger ⚠\nAhead",
-    u"PiWars",
-    u"Welcome",
-    u"Let the\nchallenges begin..."
+    [u"Welcome", "white", "black"],
+    [u"Team\n☸ Dangle ☸", "black", "white"],
+    [u"⚠ Danger ⚠\nAhead", "white", "black"],
+    [u"PiWars", "black", "white"],
+    [u"Let the\nchallenges begin...", "black", "white"]
 ]
 
 def make_font(name, size):
@@ -62,28 +62,24 @@ def pairs(generator):
 def infinite_shuffle(arr):
     copy = list(arr)
     while True:
-        random.shuffle(copy)
+        #random.shuffle(copy)
         for elem in copy:
             yield elem
 
 
-def make_snapshot(width, height, text, fonts, color="white"):
+def make_snapshot(width, height, text, fonts, fgcolor="white", bgcolor="black"):
 
     def render(draw, width, height):
-        t = text
-
+        # Try in reducing font size until we find one where the width fits
         for font in fonts:
-            size = draw.multiline_textsize(t, font)
-            if size[0] > width:
-                pass
-                #t = text.replace(" ", "\n")
-                #size = draw.multiline_textsize(t, font)
-            else:
-                break
-
+            size = draw.multiline_textsize(text, font)
+            if size[0] <= width:
+                 break
+        # Render in the center
         left = (width - size[0]) // 2
         top = (height - size[1]) // 2
-        draw.multiline_text((left, top), text=t, font=font, fill=color,
+        draw.rectangle(((left, top), (left+size[0], top+size[1])), fill=bgcolor)
+        s2 = draw.multiline_text((left, top), text=text, font=font, fill=fgcolor,
                             align="center", spacing=-2)
 
     return snapshot(width, height, render, interval=10)
@@ -107,10 +103,11 @@ def main():
     sq = device.width * 2
     virtual = viewport(device, sq, sq)
 
-    for welcome_a, welcome_b in pairs(infinite_shuffle(welcome)):
-        color_a, color_b = "white", "white"
-        widget_a = make_snapshot(device.width, device.height, welcome_a, fonts, color_a)
-        widget_b = make_snapshot(device.width, device.height, welcome_b, fonts, color_b)
+    for msgwelcome_a, msgwelcome_b in pairs(infinite_shuffle(welcome)):
+        welcome_a, fgcolor_a, bgcolor_a = msgwelcome_a
+        welcome_b, fgcolor_b, bgcolor_b = msgwelcome_b
+        widget_a = make_snapshot(device.width, device.height, welcome_a, fonts, fgcolor_a, bgcolor_a)
+        widget_b = make_snapshot(device.width, device.height, welcome_b, fonts, fgcolor_b, bgcolor_b)
 
         posn_a = random_point(virtual.width - device.width, virtual.height - device.height)
         posn_b = random_point(virtual.width - device.width, virtual.height - device.height)
