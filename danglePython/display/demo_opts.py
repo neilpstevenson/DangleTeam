@@ -57,6 +57,7 @@ def get_device(actual_args=None):
         args = parser.parse_args(config + actual_args)
 
     print(display_settings(args))
+    print(args)
 
     # create device
     try:

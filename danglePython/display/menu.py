@@ -1,13 +1,15 @@
-from __future__ import unicode_literals
-import os
 import sys
 import time
 from PIL import ImageFont
-
-from hardware.demo_opts import get_device
 from luma.core.render import canvas
+from luma.core import cmdline, error
+# Interfaces
+from interfaces.Config import Config
+
 
 class MenuDisplay:
+	defaultDisplayConfig = ["--display=ssd1309", "--interface=spi", "--width=128", "--height=64", "--spi-bus-speed=8000000", "--gpio-reset=4", "--gpio-data-command=9"]
+	
 	def __init__(self, title, menuItems, selected):
 		self.titleFont = ImageFont.truetype("Piboto-Bold.ttf", 14)
 		self.unselectedFont = ImageFont.truetype("Piboto-Regular.ttf", 10)
@@ -15,7 +17,17 @@ class MenuDisplay:
 		self.title = title
 		self.menuItems = menuItems
 		self.selected = selected
-		self.device = get_device()
+		# Config
+		config = Config()
+		displayDef = config.get("display.config", MenuDisplay.defaultDisplayConfig)
+		config.save()
+		# create device
+		parser = cmdline.create_parser(description='luma arguments')
+		displayArgs = parser.parse_args(displayDef)		
+		try:
+			self.device = cmdline.create_device(displayArgs)
+		except error.Error as e:
+			parser.error(e)
 	
 	def show(self):
 		top = 0

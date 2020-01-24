@@ -48,5 +48,14 @@
   "wall.move.turnspeed": 0.1,
   "wall.move.followanglemin": 5,
   "wall.move.followanglemax": 10,
-  "wall.headingturn.max": 0.7
+  "wall.headingturn.max": 0.7,
+  "display.config": [
+    "--display=ssd1309",
+    "--interface=spi",
+    "--width=128",
+    "--height=64",
+    "--spi-bus-speed=8000000",
+    "--gpio-reset=4",
+    "--gpio-data-command=9"
+  ]
 }
