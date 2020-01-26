@@ -10,7 +10,7 @@ Unicode font rendering & scrolling.
 
 import os
 import random
-from demo_opts import get_device
+from display.demo_opts import get_device
 from luma.core.virtual import viewport, snapshot, range_overlap
 from luma.core.sprite_system import framerate_regulator
 from PIL import ImageFont
@@ -97,7 +97,7 @@ def overlapping(pt_a, pt_b, w, h):
     return range_overlap(la, ra, lb, rb) and range_overlap(ta, ba, tb, bb)
 
 
-def main():
+def showWelcomeSequence(device, stopButton):
     regulator = framerate_regulator(fps=30)
     fonts = [make_font("code2000.ttf", sz) for sz in range(36, 8, -2)]
     sq = device.width * 2
@@ -121,10 +121,13 @@ def main():
         virtual.set_position(posn_a)
         for _ in range(30):
             with regulator:
-                pass
+                if stopButton.getValue() > 0:
+                    return
         
         for posn in lerp_2d(posn_a, posn_b, device.width // 6):
             with regulator:
+                if stopButton.getValue() > 0:
+                    return
                 virtual.set_position(posn)
 
         virtual.remove_hotspot(widget_a, posn_a)
@@ -133,7 +136,6 @@ def main():
 
 if __name__ == "__main__":
     try:
-        device = get_device()
-        main()
+        showWelcomeSequence(get_device(), 0)
     except KeyboardInterrupt:
         pass

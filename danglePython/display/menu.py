@@ -11,9 +11,9 @@ class MenuDisplay:
 	defaultDisplayConfig = ["--display=ssd1309", "--interface=spi", "--width=128", "--height=64", "--spi-bus-speed=8000000", "--gpio-reset=4", "--gpio-data-command=9"]
 	
 	def __init__(self, title, menuItems, selected):
-		self.titleFont = ImageFont.truetype("Piboto-Bold.ttf", 14)
+		self.titleFont = ImageFont.truetype("FreeSans.ttf", 14)
 		self.unselectedFont = ImageFont.truetype("Piboto-Regular.ttf", 10)
-		self.selectedFont = ImageFont.truetype("Piboto-Bold.ttf", 20)
+		self.selectedFont = ImageFont.truetype("FreeSansBold.ttf", 20)
 		self.title = title
 		self.menuItems = menuItems
 		self.selected = selected
@@ -35,7 +35,7 @@ class MenuDisplay:
 			# Title - inverse text centered
 			w, h = draw.textsize(text=self.title, font=self.titleFont)
 			left = (self.device.width - w) / 2
-			draw.rectangle(((0, top), (self.device.width, h)), fill="white")
+			draw.rectangle(((0, top), (self.device.width, h-2)), fill="white")
 			draw.text((left, top-2), text=self.title, font=self.titleFont, fill="black", spacing=-2)
 			top += h-2
 			# Unselected initial item
@@ -44,7 +44,7 @@ class MenuDisplay:
 				w, h = draw.textsize(text=self.
 				menuItems[item], font=self.unselectedFont)
 				draw.text((10, top), text=self.menuItems[item], font=self.unselectedFont, fill="white", spacing=-2)
-				top += h-4
+				top += h-2
 			# Then the selected item
 			w, h = draw.textsize(text=self.menuItems[self.selected], font=self.selectedFont)
 			draw.text((0, top), text=self.menuItems[self.selected], font=self.selectedFont, fill="white", spacing=-2)
@@ -59,6 +59,9 @@ class MenuDisplay:
 	def select(self, selected):
 		self.selected = selected
 		self.show()
+	
+	def getDevice(self):
+		return self.device
 		
 if __name__ == "__main__":
 	try:
