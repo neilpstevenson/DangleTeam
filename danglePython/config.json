@@ -24,9 +24,9 @@
     320,
     240
   ],
-  "lava.vision.displayresult": true,
-  "lava.vision.displaygrey": true,
-  "lava.vision.savefile": true,
+  "lava.vision.displayresult": false,
+  "lava.vision.displaygrey": false,
+  "lava.vision.savefile": false,
   "lava.vision.filename": "visionCapture.avi",
   "lava.vision.threshold": 150,
   "lava.vision.blinkers": 60,

@@ -73,8 +73,8 @@ def Quit(selected):
 sensors = SensorAccessFactory.getSingleton()
 title = "Select Challenge"
 menus = np.array([
-	["Maze (r-wall)", Run, [['python3','ToFSensorProcess.py'], ['python3','DangleRun.py']]], 
-	["Lava Palaver", Run, [['python3','VisionLineProcessor.py'], ['python3','DangleRun-lava.py']]], 
+	["Maze (r-wall)", Run, [['python3','ToFSensorProcess.py'], ['python3','DangleRun.py', '--challenge', 'ChallengeWallFollowControl']]], 
+	["Lava Palaver", Run, [['python3','VisionLineProcessor.py'], ['python3','DangleRun.py', '--challenge', 'ChallengeHeadingRemoteControl']]], 
 	["Welcome", Display, [['python3', 'display/welcome.py', '--config', 'hardware/ssd1309.conf']]],
 	["Stop", StopAll, []],
 	["Quit", Quit, []]

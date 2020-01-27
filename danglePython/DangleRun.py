@@ -1,6 +1,7 @@
 import time
 import math
 import atexit
+import argparse
 
 # Challenge options
 from challenge.challengeBasicRemoteControl import ChallengeBasicRemoteControl
@@ -21,16 +22,24 @@ atexit.register(stopAtExit)
 class DangleRun:
 
 	def __init__(self):
+		# Parse command-line options
+		ap = argparse.ArgumentParser()
+		ap.add_argument("-c", "--challenge", type=str, default="ChallengeWallFollowControl",
+			help="clas name of the challenge processor")
+		self.args = vars(ap.parse_args())
+		# Factories
 		self.controls = ControlAccessFactory.getSingleton()
 		self.sensors = SensorAccessFactory.getSingleton()
+		# Processing lists
 		self.highPriorityProcesses = []
 		self.medPriorityProcesses = []
 		self.counter = 0
 		# Set up specific challenge instance
 		#self.challenge = ChallengeBasicRemoteControl()
 		#self.challenge = ChallengeHeadingRemoteControl()
-		self.challenge = ChallengeWallFollowControl()
-
+		#self.challenge = ChallengeWallFollowControl()
+		self.challenge = globals()[self.args["challenge"]]()
+		
 	def processAll(self, processes):
 		[x.process() for x in processes]
 	
