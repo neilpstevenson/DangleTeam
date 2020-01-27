@@ -166,10 +166,12 @@ class VisionLineAnalysis:
 				if self.filename != None:
 					# Write the next frame into the file
 					self.captureFile.write(assessment)
+
+			if angle != None:
+				print(f"Assessed angle: {angle:.1f}")
 				
 			displayEndTime = cv2.getTickCount()
 			overalltime = (displayEndTime - startTime) / cv2.getTickFrequency()
-			print(f"Assessed angle: {angle:.1f}")
 			print(f"Overall time:   {overalltime:.3f}secs, {rate:.1f}fps")
 
 			cv2.waitKey(1)

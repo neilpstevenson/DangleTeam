@@ -55,6 +55,20 @@ class MenuDisplay:
 					w, h = draw.textsize(text=self.menuItems[item], font=self.unselectedFont)
 					draw.text((10, top), text=self.menuItems[item], font=self.unselectedFont, fill="white", spacing=-2)
 					top += h
+					
+	def message(self, msg):
+		top = 0
+		with canvas(self.device) as draw:
+			# Title - inverse text centered
+			w, h = draw.textsize(text=self.title, font=self.titleFont)
+			left = (self.device.width - w) / 2
+			draw.rectangle(((0, top), (self.device.width, h-2)), fill="white")
+			draw.text((left, top-2), text=self.title, font=self.titleFont, fill="black", spacing=-2)
+			top += h
+			# Message
+			w, h = draw.textsize(text=msg, font=self.selectedFont)
+			draw.text((0, top), text=msg, font=self.selectedFont, fill="white", spacing=-2)
+			top += h
 
 	def select(self, selected):
 		self.selected = selected
