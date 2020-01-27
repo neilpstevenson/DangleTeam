@@ -45,17 +45,21 @@ class VisionLineAnalysis:
 			
 		# Start timer, so we know how long things took
 		startTime = cv2.getTickCount()
+		rateStartTime = startTime
+		rate = 10.0
 
 		# Blinkers polygons
 		blinkerPolys = np.array([[[0,0], [self.blinkers, 0], [0, self.camera.resolution[1]-1]],
 								 [[self.camera.resolution[0]-1, 0], [self.camera.resolution[0]-1 - self.blinkers, 0], [self.camera.resolution[0]-1, self.camera.resolution[1]-1]]], np.int32)
-		print(f"blinkerPolys: {blinkerPolys}")
+		#print(f"blinkerPolys: {blinkerPolys}")
 		
 		angle = None
+		count = 0
 		
 		# grab the next frame as a numpy array
 		for frame in self.camera.capture_continuous(self.rawCapture, format="bgr", use_video_port=True):
-	
+			count += 1
+			
 			# Get the current yaw value
 			self.sensors.process()
 			yaw = self.yaw.getValue()
@@ -86,7 +90,8 @@ class VisionLineAnalysis:
 					point = (maxLoc[0],maxLoc[1]+offset)
 					offset += len(slices[bit])
 					if maxVal < self.threshold:
-						print(f"Ignoring point: {point}, value {maxVal}")
+						#print(f"Ignoring point: {point}, value {maxVal}")
+						pass
 					else:
 						#print(f"Using point: {point}, value {maxVal}")
 						points.append(point)
@@ -103,7 +108,7 @@ class VisionLineAnalysis:
 				if vy > 0:
 					vy = -vy
 					vx = -vx
-				print(f"vx: {vx}, vy: {vy}, x0: {x0}, y0: {y0}")
+				#print(f"vx: {vx}, vy: {vy}, x0: {x0}, y0: {y0}")
 				# Re-origin to stop some jitter
 				#y0 = self.camera.resolution[1]*(self.numSlices-1)//self.numSlices//2
 				# scale the vector to approx screen size
@@ -162,10 +167,16 @@ class VisionLineAnalysis:
 					# Write the next frame into the file
 					self.captureFile.write(assessment)
 				
-				displayEndTime = cv2.getTickCount()
-				overalltime = (displayEndTime - startTime) / cv2.getTickFrequency()
-				print(f"Assessed angle: {angle}")
-				print(f"Overall time:   {overalltime:.3f}secs")
+			displayEndTime = cv2.getTickCount()
+			overalltime = (displayEndTime - startTime) / cv2.getTickFrequency()
+			print(f"Assessed angle: {angle:.1f}")
+			print(f"Overall time:   {overalltime:.3f}secs, {rate:.1f}fps")
 
 			cv2.waitKey(1)
 			startTime = cv2.getTickCount()
+			
+			if count % 10 == 0:
+				frameTime = (startTime - rateStartTime) / cv2.getTickFrequency()
+				rate = 10.0/frameTime
+				rateStartTime = startTime
+
