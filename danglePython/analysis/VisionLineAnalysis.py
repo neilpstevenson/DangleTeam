@@ -9,7 +9,7 @@ from interfaces.Config import Config
 
 class VisionLineAnalysis:
 
-	def __init__(self, resolution, threshold, display, displayGrayscale, filename, blinkers, numSlices, ignoreTopSlices = 0):
+	def __init__(self, resolution, threshold, display, displayGrayscale, filename, blinkers, numSlices, framerate=30, ignoreTopSlices = 0):
 		self.threshold = threshold
 		self.filename = filename
 		self.display = display
@@ -29,7 +29,7 @@ class VisionLineAnalysis:
 		# initialize the camera and grab a reference to the raw camera capture
 		self.camera = PiCamera()
 		self.camera.resolution = resolution
-		self.camera.framerate = 30
+		self.camera.framerate = framerate
 		self.rawCapture = PiRGBArray(self.camera, size=self.camera.resolution)
 		
 		# Current Yaw reading

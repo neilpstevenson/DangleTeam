@@ -8,6 +8,7 @@ class VisionLineProcessor:
 		# Get config
 		config = Config()
 		self.resolution = config.get("lava.vision.resolution", (320, 240))
+		self.framerate = config.get("lava.vision.framerate", 30)
 		self.numSlices = config.get("lava.vision.slices", 40)
 		self.ignoreTopSlices = config.get("lava.vision.ignoreTopSlices", 10)
 		self.display = config.get("lava.vision.displayresult", True)
@@ -19,7 +20,7 @@ class VisionLineProcessor:
 		
 	def run(self):
 		analyser = VisionLineAnalysis(self.resolution, self.threshold, self.display, 
-						self.displayGrey, self.savefilename, self.blinkers, self.numSlices, self.ignoreTopSlices) 
+						self.displayGrey, self.savefilename, self.blinkers, self.numSlices, self.framerate, self.ignoreTopSlices) 
 		analyser.captureAndAssess()
 
 processor = VisionLineProcessor()

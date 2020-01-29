@@ -57,5 +57,6 @@
     "--spi-bus-speed=8000000",
     "--gpio-reset=4",
     "--gpio-data-command=9"
-  ]
+  ],
+  "lava.vision.framerate": 30
 }
