@@ -22,7 +22,7 @@ args = vars(ap.parse_args())
 # define the lower and upper boundaries of the "green"
 # ball in the HSV color space, then initialize the
 # list of tracked points
-greenLower = (160,96,96)#(29, 86, 6)
+greenLower = (160,128,24)#(29, 86, 6)
 greenUpper = (180,255,255)#(64, 255, 255)
 pts = deque(maxlen=args["buffer"])
 
@@ -36,7 +36,10 @@ else:
 	vs = cv2.VideoCapture(args["video"])
 
 # allow the camera or video file to warm up
-time.sleep(2.0)
+#time.sleep(2.0)
+fpsStart = cv2.getTickCount() / cv2.getTickFrequency()
+fps = None
+count = 0
 
 # keep looping
 while True:
@@ -85,20 +88,37 @@ while True:
 		if radius > 10:
 			# draw the circle and centroid on the frame,
 			# then update the list of tracked points
-			centreHSV = hsv[int(y), int(x)]
-			print(f"({x},{y}) = {centreHSV}")
-			cv2.circle(frame, (int(x), int(y)), int(radius),
-				(0, 255, 255), 2)
-			cv2.circle(frame, center, 5, (0, 0, 255), -1)
+			#centreHSV = hsv[int(y), int(x)]
+			#print(f"({x},{y}) = {centreHSV}")
+			# Show all contours cv2.polylines(frame, cnts,  True, (0, 255, 0), 2, 8)
+			cv2.polylines(frame, [c],  True, (0, 255, 0), 2, 8)
+			#cv2.circle(frame, (int(x), int(y)), int(radius),
+			#	(0, 255, 255), 2)
+			#cv2.circle(frame, center, 5, (0, 0, 255), -1)
 			# Calculate the angle from the bottom centre to the centre
 			ourPosition = (hsv.shape[1]//2, hsv.shape[0])
-			print(f"ourPosition: {ourPosition}, circlecentre: {(x, y)}, momentscentre: {center}")
+			#print(f"ourPosition: {ourPosition}, circlecentre: {(x, y)}, momentscentre: {center}")
 			angleAdjustment = 0.55
 			angle = np.arctan((ourPosition[0]-center[0])/(ourPosition[1]-center[1])) * 180.0/3.14159 * angleAdjustment
 			print(f"angle: {angle}")
 			# Distance approximation
-			distance = (ourPosition[1]-center[1])*(ourPosition[1]-center[1]) * 0.0007
+			distanceAdjustment = 0.0001
+			distanceOffset = 400 # pixels
+			distance = ((ourPosition[1]-center[1]) + distanceOffset) ** 2 * distanceAdjustment
 			print(f"distance: {distance}mm")
+			# Draw an angle from where we are to target
+			cv2.arrowedLine(frame, ourPosition, center, (0, 255, 0), 3)
+			# Overlay the angle calculated
+			np.set_printoptions(precision=2)
+			cv2.putText(frame, f"Heading {angle:+.1f}deg for {distance:.0f}mm", (5, hsv.shape[0]-20), cv2.FONT_HERSHEY_DUPLEX, 0.6, (0, 255, 0))
+			count += 1
+			if count % 10 == 0:
+				fpsEnd = cv2.getTickCount() / cv2.getTickFrequency()
+				fps = int(10 / (fpsEnd - fpsStart))
+				fpsStart = fpsEnd
+			if fps != None:
+				cv2.putText(frame, f"{fps}fps", (hsv.shape[1]-80, hsv.shape[0]-20), cv2.FONT_HERSHEY_DUPLEX, 0.6, (0, 255, 0))
+				print(f"{fps}fps")
 
 	# update the points queue
 	pts.appendleft(center)

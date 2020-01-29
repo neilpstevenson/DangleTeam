@@ -24,7 +24,7 @@
     320,
     240
   ],
-  "lava.vision.displayresult": false,
+  "lava.vision.displayresult": true,
   "lava.vision.displaygrey": false,
   "lava.vision.savefile": false,
   "lava.vision.filename": "visionCapture.avi",
