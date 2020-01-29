@@ -73,6 +73,9 @@ menus = np.array([
 	["Lava Palaver", [
 			[Run, ['python3','VisionLineProcessor.py']], 
 			[Run, ['python3','DangleRun.py', '--challenge', 'ChallengeHeadingRemoteControl']]]], 
+	["Minesweeper", [
+			[Run, ['python3','RedLightProcessor.py']], 
+			[Run, ['python3','DangleRun.py', '--challenge', 'ChallengeHeadingRemoteControl']]]], 
 	["Welcome", [
 			[DisplayScreenSaver, []]]],
 	["Stop", [
