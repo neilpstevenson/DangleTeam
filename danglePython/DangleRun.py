@@ -7,6 +7,7 @@ import argparse
 from challenge.challengeBasicRemoteControl import ChallengeBasicRemoteControl
 from challenge.challengeHeadingRemoteControl import ChallengeHeadingRemoteControl
 from challenge.challengeWallFollowControl import ChallengeWallFollowControl
+from challenge.challengeMinesweeper import ChallengeMinesweeper
 
 # Factories
 from interfaces.SensorAccessFactory import SensorAccessFactory

@@ -59,6 +59,11 @@ def GetSelection(selected):
 		if selectButton.getValue() > 0:
 			break
 		time.sleep(0.05)
+		
+		# Display screensaver if sensors not running
+		if sensors.checkWatchdog() <= 0:
+			DisplayScreenSaver(lastSelected, None)
+			display.select(lastSelected)
 	return lastSelected
 
 def Quit(selected, actionParams):
@@ -75,7 +80,7 @@ menus = np.array([
 			[Run, ['python3','DangleRun.py', '--challenge', 'ChallengeHeadingRemoteControl']]]], 
 	["Minesweeper", [
 			[Run, ['python3','RedLightProcessor.py']], 
-			[Run, ['python3','DangleRun.py', '--challenge', 'ChallengeHeadingRemoteControl']]]], 
+			[Run, ['python3','DangleRun.py', '--challenge', 'ChallengeMinesweeper']]]], 
 	["Welcome", [
 			[DisplayScreenSaver, []]]],
 	["Stop", [

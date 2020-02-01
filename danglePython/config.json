@@ -58,5 +58,7 @@
     "--gpio-reset=4",
     "--gpio-data-command=9"
   ],
-  "lava.vision.framerate": 30
+  "lava.vision.framerate": 30,
+  "minesweeper.speed": 0.6,
+  "minesweeper.camera.tilt": 0.22
 }

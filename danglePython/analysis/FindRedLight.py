@@ -35,8 +35,8 @@ class FindRedLight:
 		# define the lower and upper boundaries of the target 
 		# colour in the HSV color space, then initialize the
 		# list of tracked points
-		self.colourTargetLower = (160,128,24)#(29, 86, 6)
-		self.colourTargetUpper = (180,255,255)#(64, 255, 255)
+		self.colourTargetLower = (155,60,90) #(160,128,24)
+		self.colourTargetUpper = (175,255,255) #(180,255,255)
 		self.trailSize = args["trail"]
 		self.showImage = True
 		
@@ -66,6 +66,7 @@ class FindRedLight:
 		fpsStart = cv2.getTickCount() / cv2.getTickFrequency()
 		fps = None
 		count = 0
+		angle = None
 
 		# keep looping
 		while True:
@@ -122,8 +123,8 @@ class FindRedLight:
 					count += 1
 					hasResult = True
 					# Show contours found
-					#cv2.polylines(frame, cnts,  True, (0, 255, 0), 2, 8)
-					cv2.polylines(frame, [c],  True, (0, 255, 0), 2, 8)
+					cv2.polylines(frame, cnts,  True, (0, 255, 0), 2, 8)
+					#cv2.polylines(frame, [c],  True, (0, 255, 0), 2, 8)
 					
 					# Calculate the angle from the bottom centre to the centre
 					ourPosition = (hsv.shape[1]//2, hsv.shape[0])
@@ -171,6 +172,8 @@ class FindRedLight:
 					angle -= 360.0
 				elif angle < -180.0:
 					angle += 360.0
+				# Inform receiver we had no results
+				self.results.noResults()
 			lastYaw = yaw
 						
 			if self.showImage:

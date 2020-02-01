@@ -1,3 +1,4 @@
+print("VisionLineProcessor starting a")
 from interfaces.LineAnalysisSharedIPC import LineAnalysisSharedIPC
 from interfaces.Config import Config
 from analysis.VisionLineAnalysis import VisionLineAnalysis

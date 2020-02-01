@@ -3,6 +3,7 @@ import numpy as np
 class LineAnalysisSharedIPC:
 	# Structure of the line analysis shared memory
 	line_analysis_shared_dt = np.dtype([
+					('status', np.uint16),	# 0=no value, 1=valid value
 					('timestamp',np.uint64),
 					('elapsed',np.float32),
 					('angle',np.float32),	# Relative
@@ -20,7 +21,8 @@ class LineAnalysisSharedIPC:
 		# Read only
 		self.data  = np.memmap(LineAnalysisSharedIPC.filename, offset=0, dtype=LineAnalysisSharedIPC.line_analysis_shared_dt, mode='r')
 		
-	def shareResults(self, timestamp, elapsed, angle, yaw, vector, points):
+	def shareResults(self, timestamp, elapsed, angle, yaw, vector, points, status = 1):
+		self.data[0]['status'] = status
 		self.data[0]['timestamp'] = timestamp
 		self.data[0]['elapsed'] = elapsed
 		self.data[0]['angle'] = angle
@@ -29,7 +31,13 @@ class LineAnalysisSharedIPC:
 		self.data[0]['numberpoints'] = len(points)
 		for point in range(len(points)):
 			self.data[0]['points'][0][point] = points[point]
+			
+	def noResults(self, status = 0):
+		self.data[0]['status'] = status
 
+	def getStatus(self):
+		return self.data[0]['status']
+	
 	def getTimestamp(self):
 		return self.data[0]['timestamp']
 	

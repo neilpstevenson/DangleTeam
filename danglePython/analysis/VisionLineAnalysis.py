@@ -1,11 +1,19 @@
 import time
+print("numpy")
 import numpy as np
+print("cv2")
 import cv2
+print("picamera")
 from picamera.array import PiRGBArray
+print("picamera b")
 from picamera import PiCamera
+print("picamera c")
 from interfaces.LineAnalysisSharedIPC import LineAnalysisSharedIPC
+print("picamera d")
 from interfaces.SensorAccessFactory import SensorAccessFactory
+print("picamerae ")
 from interfaces.Config import Config
+print("picamera f")
 
 class VisionLineAnalysis:
 

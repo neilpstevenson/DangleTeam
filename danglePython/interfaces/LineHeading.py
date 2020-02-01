@@ -11,3 +11,6 @@ class LineHeading(SensorInterface):
 	def getValue(self):
 		return self.visionIPC.getYaw()
 			
+	def getStatus(self):
+		return self.visionIPC.getStatus()
+			
