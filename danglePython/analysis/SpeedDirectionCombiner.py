@@ -58,7 +58,7 @@ class SpeedDirectionCombiner(SensorInterface):
 		else:
 			rawSteerTorque = self.steerTorque.getValue()	
 		scaledValue = self.nonLinearTransform(rawForwardTorque, rawSteerTorque)*self.scaling + self.offset
-		print(f"forward: {rawForwardTorque:4.2f}, steer: {rawSteerTorque:4.2f}, result: {scaledValue:4.2f}")
+		#print(f"forward: {rawForwardTorque:4.2f}, steer: {rawSteerTorque:4.2f}, result: {scaledValue:4.2f}")
 		if scaledValue > self.max:
 			return self.max
 		elif scaledValue < self.min:
