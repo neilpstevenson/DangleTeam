@@ -28,17 +28,26 @@ class FindRedLight:
 		if self.recordedVideo:
 			self.videoFilenanme = args["video"]
 
+		self.analysis_width = 480
+		self.minSize = 10
+		self.blur_radius = 11		
 		# Scale factors for real-world measures
-		self.angleAdjustment = 1.3#0.55
-		self.distanceAdjustment = 0.0007#0.0013
-		self.distanceOffset = 150 # pixels
-
+		self.angleAdjustment = 2.6#1.3#0.55
+		self.distanceAdjustment = 0.00005#0.0007#0.0013
+		self.distanceOffset = self.analysis_width * 7 // 4 # pixels
+		
 		# define the lower and upper boundaries of the target 
 		# colour in the HSV color space, then initialize the
 		# list of tracked points
-		self.colourTargetLower = (160,128,24)#(158,60,90) #(160,128,24)
-		self.colourTargetUpper = (180,255,255)#(175,255,255) #(180,255,255)
-		self.minSize = 10
+		if False:
+			# For LED:
+			self.colourTargetLower = (155,24,200)#(165,90,100)#(158,60,90) #(160,128,24)
+			self.colourTargetUpper = (175,255,255)#(175,255,255) #(180,255,255)
+		else:
+			# For lid
+			self.colourTargetLower = (165,94,69)
+			self.colourTargetUpper = (180,255,255)
+		
 		self.trailSize = args["trail"]
 		self.showImage = True
 		
@@ -92,9 +101,9 @@ class FindRedLight:
 
 				# resize the frame, blur it, and convert it to the HSV
 				# color space
-				frame = imutils.resize(frame, width=300)
-				blurred = cv2.blur(frame, (11, 11))
-				#blurred = cv2.GaussianBlur(frame, (11, 11), 0)
+				frame = imutils.resize(frame, width=self.analysis_width, inter=cv2.INTER_NEAREST)
+				blurred = cv2.blur(frame, (self.blur_radius, self.blur_radius))
+				#blurred = cv2.GaussianBlur(frame, (self.blur_radius, self.blur_radius), 0)
 				hsv = cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV)
 
 				print(f"blur at: {overall():.3f}")
@@ -131,6 +140,9 @@ class FindRedLight:
 						# Show contours found
 						cv2.polylines(frame, cnts,  True, (0, 255, 0), 2, 8)
 						#cv2.polylines(frame, [c],  True, (0, 255, 0), 2, 8)
+
+					print(f"mid point HSV: {hsv[center[1],center[0]]}")
+					print(f"20 above mid point HSV: {hsv[center[1]-20,center[0]]}")
 						
 					# only proceed if the radius meets a minimum size
 					if radius > self.minSize:
@@ -140,8 +152,7 @@ class FindRedLight:
 						ourPosition = (hsv.shape[1]//2, hsv.shape[0] + self.distanceOffset)
 						angle = np.arctan((ourPosition[0]-center[0])/(ourPosition[1]-center[1])) * 180.0/3.14159 * self.angleAdjustment
 						#print(f"ourPosition: {ourPosition}, circlecentre: {(x, y)}, momentscentre: {center}")
-						print(f"angle: {angle}, radius: {radius}")
-						print(f"mid point HSV: {hsv[center[1],center[0]]}")
+						print(f"angle: {angle}, radius: {radius}, center: {center}")
 						# Distance approximation
 						distance = (ourPosition[1]-center[1]) ** 2 * self.distanceAdjustment
 						print(f"distance: {distance}mm")
@@ -168,7 +179,7 @@ class FindRedLight:
 						yawAngle -= 360.0
 					elif yawAngle < -180.0:
 						yawAngle += 360.0
-					self.results.shareResults(startTime, timestamp, angle, yawAngle, ((0, 0), (0, 0)), center)
+					self.results.shareResults(startTime, timestamp, angle, yawAngle, (ourPosition, center), (0,distance) )
 				elif angle != None:
 					# Ajust angle based on last successful analysis for display only
 					angle += (lastYaw - yaw)
@@ -208,7 +219,7 @@ class FindRedLight:
 					#cv2.imshow("HSV", hsv)
 					#cv2.imshow("mask", mask)
 
-				key = cv2.waitKey(1) & 0xFF
+				key = cv2.waitKey(20) & 0xFF
 
 				# if the 'q' key is pressed, stop the loop
 				if key == ord("q"):

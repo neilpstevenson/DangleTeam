@@ -1,4 +1,5 @@
 from simple_pid import PID
+import time
 
 # Interfaces
 from interfaces.ChallengeInterface import ChallengeInterface
@@ -47,6 +48,7 @@ class ChallengeMinesweeper(ChallengeInterface):
 		self.proportionalOnMeasure = config.get("heading.pid.pom", False)
 		self.maxForward = config.get("heading.forward.max", 1.0)
 		self.maxManualTurn = config.get("heading.manualturn.max", -15.0)
+		self.maxFindLightTurn = config.get("minesweeper.findlightturn.max", -15.0)
 		self.maxHeadingTurn = config.get("heading.headingturn.max", 0.5)
 		self.constantSpeed = config.get("minesweeper.speed", 0.6)
 		self.cameraTilt = config.get("minesweeper.camera.tilt", 0.22)
@@ -67,16 +69,21 @@ class ChallengeMinesweeper(ChallengeInterface):
 			if not self.pidHeading.auto_mode:
 				self.pidHeading.auto_mode = True
 			# Vision turns
-			self.headingError.setTarget(self.sensors.yaw().getValue() + self.maxManualTurn)
+			self.headingError.setTarget(self.sensors.yaw().getValue() + self.maxFindLightTurn)
 			#print(self.pidHeading.components)
 		else:
 			self.stateMachine.changeState("Manual")
 		pass
-		
+	
+	def FindLightAchieved(self):
+		# Switch direction for next attempt.  Should stop us overshooting and going round in 
+		# every faster circles
+		self.maxFindLightTurn = -self.maxFindLightTurn
+				
 	def MoveToLight(self):
 		if self.visionTargetHeading.getStatus() == 0:
 			# Nothing in sight - find it
-			self.stateMachine.changeState("FindLight")
+			self.stateMachine.changeState("Standstill")
 		elif self.constantEnable.getValue() > 0:
 			# Head towards indicated light target
 			if not self.pidHeading.auto_mode:
@@ -103,13 +110,33 @@ class ChallengeMinesweeper(ChallengeInterface):
 		# Switch to auto mode?
 		if self.constantEnable.getValue() > 0:
 			self.stateMachine.changeState("FindLight")
-				
+		
+	def StopAll(self):
+		# stop all motions
+		print("Stopping all")
+		self.pidHeading.auto_mode = False
+		if not self.pidHeading.auto_mode:
+			self.pidHeading.auto_mode = True
+		self.headingError.setTarget(self.sensors.yaw().getValue())
+		self.motorConstant.setValue(0.0)
+		self.standStillStart = time.perf_counter()
+		
+	def StandStill(self):
+		# pause for set period
+		if time.perf_counter() - self.standStillStart > 5.0:
+			# Move on to find next 
+			self.stateMachine.changeState("FindLight")
+		else:
+			# stand still
+			self.headingError.setTarget(self.sensors.yaw().getValue())
+
 	def createProcesses(self, highPriorityProcesses, medPriorityProcesses):
 		# Set up the state machine
 		self.stateMachine = StateMachine("Manual")
 		self.stateMachine.addState("Manual", None, self.ManualControl, None)
-		self.stateMachine.addState("FindLight", self.StopForward, self.FindLight, None)
+		self.stateMachine.addState("FindLight", self.StopForward, self.FindLight, self.FindLightAchieved)
 		self.stateMachine.addState("MoveToLight", self.StartForward, self.MoveToLight, self.StopForward)
+		self.stateMachine.addState("Standstill", self.StopAll, self.StandStill, None)
 
 		# Yaw control
 		yaw = self.sensors.yaw()
