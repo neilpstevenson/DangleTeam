@@ -63,5 +63,7 @@
   "minesweeper.camera.tilt": 0.22,
   "minesweeper.findlightturn.max": -15.0,
   "minesweeper.achieved.stoptime": 5.0,
-  "minesweeper.movement.mintime": 1.0
+  "minesweeper.movement.mintime": 1.0,
+  "remote.camera.tilt": 0.15,
+  "remote.simpleturn.max": 0.4
 }

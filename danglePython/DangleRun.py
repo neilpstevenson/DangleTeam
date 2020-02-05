@@ -8,6 +8,7 @@ from challenge.challengeBasicRemoteControl import ChallengeBasicRemoteControl
 from challenge.challengeHeadingRemoteControl import ChallengeHeadingRemoteControl
 from challenge.challengeWallFollowControl import ChallengeWallFollowControl
 from challenge.challengeMinesweeper import ChallengeMinesweeper
+from challenge.challengeManualControl import ChallengeManualControl
 
 # Factories
 from interfaces.SensorAccessFactory import SensorAccessFactory
@@ -35,10 +36,7 @@ class DangleRun:
 		self.highPriorityProcesses = []
 		self.medPriorityProcesses = []
 		self.counter = 0
-		# Set up specific challenge instance
-		#self.challenge = ChallengeBasicRemoteControl()
-		#self.challenge = ChallengeHeadingRemoteControl()
-		#self.challenge = ChallengeWallFollowControl()
+		# Run the challenge instance
 		self.challenge = globals()[self.args["challenge"]]()
 		
 	def processAll(self, processes):

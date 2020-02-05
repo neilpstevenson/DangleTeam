@@ -72,6 +72,8 @@ def Quit(selected, actionParams):
 sensors = SensorAccessFactory.getSingleton()
 title = "Select Challenge"
 menus = np.array([
+	["Remote control", [ 
+			[Run, ['python3','DangleRun.py', '--challenge', 'ChallengeManualControl']]]], 
 	["Maze (r-wall)", [ 
 			[Run, ['python3','ToFSensorProcess.py']], 
 			[Run, ['python3','DangleRun.py', '--challenge', 'ChallengeWallFollowControl']]]], 
