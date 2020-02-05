@@ -61,5 +61,7 @@
   "lava.vision.framerate": 30,
   "minesweeper.speed": 0.6,
   "minesweeper.camera.tilt": 0.22,
-  "minesweeper.findlightturn.max": -15.0
+  "minesweeper.findlightturn.max": -15.0,
+  "minesweeper.achieved.stoptime": 5.0,
+  "minesweeper.movement.mintime": 1.0
 }

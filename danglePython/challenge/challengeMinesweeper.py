@@ -52,23 +52,48 @@ class ChallengeMinesweeper(ChallengeInterface):
 		self.maxHeadingTurn = config.get("heading.headingturn.max", 0.5)
 		self.constantSpeed = config.get("minesweeper.speed", 0.6)
 		self.cameraTilt = config.get("minesweeper.camera.tilt", 0.22)
+		self.achievedStopTime = config.get("minesweeper.achieved.stoptime", 5.0) # seconds
+		self.MoveTimeMin = config.get("minesweeper.movement.mintime", 1.0) # seconds
 		config.save()
+
+	def ControlOff(self):
+		# Stop the motors
+		self.autoModeForwardSpeed.setValue(0.0)
+		# stop the PID controller
+		self.pidHeading.auto_mode = False
+			
+	def ControlOn(self):
+		# reset the PID controller
+		self.pidHeading.set_auto_mode(True, last_output=0.0)
+		self.headingError.setTarget(self.sensors.yaw().getValue())
+		self.headingError.getValue()
+				
+	def MotorsOffState(self):
+		# Check if entering remote control or auto mode
+		if self.motorEnable.getValue() > 0 or self.autoModeEnable.getValue() > 0:
+			self.stateMachine.changeState("Manual")
+
+	def ManualControl(self):
+		# Simple remote control
+		if self.motorEnable.getValue() > 0:
+			# Manual turns
+			if self.joystickLeftRight.getValue() != 0.0:
+				self.headingError.setTarget(self.sensors.yaw().getValue() + self.joystickLeftRight.getValue() * self.maxManualTurn)
+			print(self.pidHeading.components)
+		elif self.autoModeEnable.getValue() > 0:
+			self.stateMachine.changeState("FindLight")
+		else:
+			self.stateMachine.changeState("MotorsOff")
 		
 	def StopForward(self):
-		self.motorConstant.setValue(0.0)
-		
-	def StartForward(self):
-		self.motorConstant.setValue(self.constantSpeed)
+		self.autoModeForwardSpeed.setValue(0.0)
 		
 	def FindLight(self):
 		if self.visionTargetHeading.getStatus() > 0:
 			# Head towards it
 			self.stateMachine.changeState("MoveToLight")
-		elif self.constantEnable.getValue() > 0:
+		elif self.autoModeEnable.getValue() > 0:
 			# Find light by simple rotation on the spot
-			if not self.pidHeading.auto_mode:
-				self.pidHeading.auto_mode = True
-			# Vision turns
 			self.headingError.setTarget(self.sensors.yaw().getValue() + self.maxFindLightTurn)
 			#print(self.pidHeading.components)
 		else:
@@ -79,51 +104,39 @@ class ChallengeMinesweeper(ChallengeInterface):
 		# Switch direction for next attempt.  Should stop us overshooting and going round in 
 		# every faster circles
 		self.maxFindLightTurn = -self.maxFindLightTurn
+		
+	def StartMoveToLight(self):
+		self.autoModeForwardSpeed.setValue(self.constantSpeed)
+		self.moveToLightStart = time.perf_counter()
 				
 	def MoveToLight(self):
 		if self.visionTargetHeading.getStatus() == 0:
-			# Nothing in sight - find it
-			self.stateMachine.changeState("Standstill")
-		elif self.constantEnable.getValue() > 0:
+			if time.perf_counter() - self.moveToLightStart >= self.MoveTimeMin:
+				# We've been moving for a bit, assume we've arrived if no longer can see target 
+				self.stateMachine.changeState("Standstill")
+			else:
+				# Nothing in sight - find it
+				self.stateMachine.changeState("FindLight")
+		elif self.autoModeEnable.getValue() > 0:
 			# Head towards indicated light target
-			if not self.pidHeading.auto_mode:
-				self.pidHeading.auto_mode = True
-			# Vision turns
 			self.headingError.setTarget(self.visionTargetHeading.getValue())
 			#print(self.pidHeading.components)
 		else:
 			self.stateMachine.changeState("Manual")
 			
-	def ManualControl(self):
-		# Simple remote control
-		if self.motorEnable.getValue() > 0:
-			if not self.pidHeading.auto_mode:
-				self.pidHeading.auto_mode = True
-			# Manual turns
-			if self.joystickLeftRight.getValue() != 0.0:
-				self.headingError.setTarget(self.sensors.yaw().getValue() + self.joystickLeftRight.getValue() * self.maxManualTurn)
-			print(self.pidHeading.components)
-		else:
-			# No change in position
-			self.pidHeading.auto_mode = False
-			self.headingError.setTarget(self.sensors.yaw().getValue())
-		# Switch to auto mode?
-		if self.constantEnable.getValue() > 0:
-			self.stateMachine.changeState("FindLight")
-		
-	def StopAll(self):
+	def StopToStandStill(self):
 		# stop all motions
-		print("Stopping all")
-		self.pidHeading.auto_mode = False
-		if not self.pidHeading.auto_mode:
-			self.pidHeading.auto_mode = True
+		print("StopToStandStill")
 		self.headingError.setTarget(self.sensors.yaw().getValue())
-		self.motorConstant.setValue(0.0)
+		self.autoModeForwardSpeed.setValue(0.0)
 		self.standStillStart = time.perf_counter()
+		# reset the PID controller
+		self.pidHeading.set_auto_mode(False)
+		self.pidHeading.set_auto_mode(True, last_output=0.0)
 		
 	def StandStill(self):
 		# pause for set period
-		if time.perf_counter() - self.standStillStart > 5.0:
+		if time.perf_counter() - self.standStillStart >= self.achievedStopTime:
 			# Move on to find next 
 			self.stateMachine.changeState("FindLight")
 		else:
@@ -132,50 +145,43 @@ class ChallengeMinesweeper(ChallengeInterface):
 
 	def createProcesses(self, highPriorityProcesses, medPriorityProcesses):
 		# Set up the state machine
-		self.stateMachine = StateMachine("Manual")
+		self.stateMachine = StateMachine("MotorsOff")
+		self.stateMachine.addState("MotorsOff", self.ControlOff, self.MotorsOffState, self.ControlOn)
 		self.stateMachine.addState("Manual", None, self.ManualControl, None)
 		self.stateMachine.addState("FindLight", self.StopForward, self.FindLight, self.FindLightAchieved)
-		self.stateMachine.addState("MoveToLight", self.StartForward, self.MoveToLight, self.StopForward)
-		self.stateMachine.addState("Standstill", self.StopAll, self.StandStill, None)
+		self.stateMachine.addState("MoveToLight", self.StartMoveToLight, self.MoveToLight, self.StopForward)
+		self.stateMachine.addState("Standstill", self.StopToStandStill, self.StandStill, None)
 
 		# Yaw control
 		yaw = self.sensors.yaw()
 		self.pidHeading = PID(self.pidP, self.pidI, self.pidD, sample_time=0.008, proportional_on_measurement=self.proportionalOnMeasure)
 		self.headingError = HeadingPIDErrorValue(yaw, self.pidHeading, yaw.getValue(), min = -1.0, max = 1.0, scaling=1.0)
-		# Initialise the PID
-		self.headingError.getValue()
 		
 		# Vision
 		self.visionTargetHeading = self.vision.getLineHeading()
 
 		# Motors
 		motorsStop = FixedValue(0.0)
-		self.motorConstant = FixedValue(0.0)
-		#self.motorConstant = FixedValue(self.constantSpeed)
 		self.motorEnable = self.sensors.button(4)
-		self.constantEnable = ToggleButtonValue(self.sensors.button(5))
-		#self.constantEnable = TimedTriggerValue(self.sensors.button(5), 1.0, retriggerable = True)
+		self.autoModeForwardSpeed = FixedValue(0.0)
+		self.autoModeEnable = ToggleButtonValue(self.sensors.button(5))
 		self.joystickForward = self.sensors.joystickAxis(1)
 		self.joystickLeftRight = self.sensors.joystickAxis(3)
-		motorL = SwitchingControlMediator( [ motorsStop, 								 # Choice 0 = Stopped \
-											  											 # Choice 1 = Controlled
-											[SpeedDirectionCombiner(Scaler(self.joystickForward, scaling = self.maxForward), Scaler(self.headingError, scaling = -self.maxHeadingTurn))],  \
-											[SpeedDirectionCombiner(self.motorConstant, Scaler(self.headingError, scaling = -self.maxHeadingTurn))]  \
-										   ],
-											self.controls.motor(2), \
-		#									self.constantEnable )
-											ValueAdder([self.motorEnable,self.constantEnable], max=2) )
-		self.speedSensorL = self.sensors.counter(0)
+		self.motorLManualSpeed = [SpeedDirectionCombiner(Scaler(self.joystickForward, scaling = self.maxForward), Scaler(self.headingError, scaling = -self.maxHeadingTurn))]
+		self.motorRManualSpeed = [SpeedDirectionCombiner(Scaler(self.joystickForward, scaling = self.maxForward), Scaler(self.headingError, scaling = self.maxHeadingTurn))]
+		self.motorLAutoSpeed = [SpeedDirectionCombiner(self.autoModeForwardSpeed, Scaler(self.headingError, scaling = -self.maxHeadingTurn))]
+		self.motorRAutoSpeed = [SpeedDirectionCombiner(self.autoModeForwardSpeed, Scaler(self.headingError, scaling = self.maxHeadingTurn))]
+		self.motorsSpeedMode = ValueAdder([self.motorEnable, self.autoModeEnable], max=2) # 0=off, 1=manual/auto manual forward, 2=full auto
+		# Switch motor speed calculation depending upone what buttons are pressed
+		motorL = SwitchingControlMediator( [motorsStop, self.motorLManualSpeed, self.motorLAutoSpeed],
+											self.controls.motor(2), self.motorsSpeedMode )
 		highPriorityProcesses.append(motorL)
-		motorR = SwitchingControlMediator( [ motorsStop, 								 # Choice 0 = Stopped \
-																						 # Choice 1 = Controlled
-											[Scaler(SpeedDirectionCombiner(Scaler(self.joystickForward, scaling = self.maxForward), Scaler(self.headingError, scaling = self.maxHeadingTurn)), scaling = 1.0)],  \
-											[SpeedDirectionCombiner(self.motorConstant, Scaler(self.headingError, scaling = self.maxHeadingTurn), scaling = 1.0)]  \
-										   ],
-											self.controls.motor(1), \
-		#									self.constantEnable )
-											ValueAdder([self.motorEnable,self.constantEnable], max=2) )
+		motorR = SwitchingControlMediator( [motorsStop, self.motorRManualSpeed, self.motorRAutoSpeed],
+											self.controls.motor(1), self.motorsSpeedMode )
 		highPriorityProcesses.append(motorR)
+
+		#self.speedSensorL = self.sensors.counter(0)
+		#self.speedSensorR = self.sensors.counter(1)
 
 		# LED display state
 		self.ledIndicator = self.controls.led(0)
@@ -185,7 +191,7 @@ class ChallengeMinesweeper(ChallengeInterface):
 		self.ledEyeLeft = self.controls.led(20)
 		self.ledEyeRight = self.controls.led(21)
 		medPriorityProcesses.append(SimpleControlMediator( Scaler(self.motorEnable, scaling=255), self.ledEyeLeft))
-		medPriorityProcesses.append(SimpleControlMediator( Scaler(self.constantEnable, scaling=255), self.ledEyeRight))
+		medPriorityProcesses.append(SimpleControlMediator( Scaler(self.autoModeEnable, scaling=255), self.ledEyeRight))
 		
 		# Common controls
 		self.grabberControl.createProcesses(highPriorityProcesses, medPriorityProcesses)
@@ -198,5 +204,6 @@ class ChallengeMinesweeper(ChallengeInterface):
 	def stop(self):
 		''' Stop the challenge
 		'''
+		self.stateMachine.changeState("MotorsOff")
 		self.motorEnable.setValue(0, status=0)
 		

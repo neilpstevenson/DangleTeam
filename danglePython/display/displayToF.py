@@ -28,7 +28,7 @@ class Simulation:
 		self.lineColor = (255,255,255)
 		self.labels = ["Left","Forward","Right"]
 		self.sensors = []
-		for s in [16,17,18]:
+		for s in [18,17,16]:
 			self.sensors.append(SensorAccessFactory.getSingleton().analog(s))
 		self.distances = [[40,50,60,70,50,40],[40,50,60,70,50,40],[40,50,60,70,50,40]]
 		
