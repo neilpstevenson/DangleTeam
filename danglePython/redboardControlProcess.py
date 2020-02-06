@@ -81,7 +81,7 @@ class MotorControlProcess:
 				# GPIO 20/21 as simple binary values
 				for gpio in [20,21]:
 					if self.simpleControlsIPC.getType(gpio) > 0:
-						redboard.setPin(gpio, self.simpleControlsIPC.getValue(gpio))
+						redboard.setPin(gpio, 1 if self.simpleControlsIPC.getValue(gpio) > 0.5 else 0)
 
 			time.sleep(self.pollrate)
 
