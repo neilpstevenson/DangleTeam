@@ -14,7 +14,6 @@ from analysis.OneShotButtonValue import OneShotButtonValue
 from analysis.ToggleButtonValue import ToggleButtonValue
 from analysis.TimedTriggerValue import TimedTriggerValue
 from analysis.FixedValue import FixedValue
-from analysis.StateMachine import StateMachine
 # Value combination helpers
 from analysis.Scaler import Scaler
 from analysis.ValueIntegrator import ValueIntegrator
@@ -24,6 +23,7 @@ from analysis.SpeedDirectionCombiner import SpeedDirectionCombiner
 # Control mediators
 from challenge.SimpleControlMediator import SimpleControlMediator
 from challenge.SwitchingControlMediator import SwitchingControlMediator
+from analysis.StateMachine import StateMachine
 # Common controls
 from challenge.grabberControl import GrabberControl
 from challenge.cameraLevellingControl import CameraLevellingControl
@@ -48,9 +48,10 @@ class ChallengeMinesweeper(ChallengeInterface):
 		self.proportionalOnMeasure = config.get("heading.pid.pom", False)
 		self.maxForward = config.get("heading.forward.max", 1.0)
 		self.maxManualTurn = config.get("heading.manualturn.max", -15.0)
-		self.maxFindLightTurn = config.get("minesweeper.findlightturn.max", -15.0)
 		self.maxHeadingTurn = config.get("heading.headingturn.max", 0.5)
-		self.constantSpeed = config.get("minesweeper.speed", 0.6)
+		
+		self.maxFindLightTurn = config.get("minesweeper.findlightturn.max", -15.0)
+		self.autoMaxSpeed = config.get("minesweeper.speed", 0.6)
 		self.cameraTilt = config.get("minesweeper.camera.tilt", 0.22)
 		self.achievedStopTime = config.get("minesweeper.achieved.stoptime", 5.0) # seconds
 		self.MoveTimeMin = config.get("minesweeper.movement.mintime", 1.0) # seconds
@@ -77,9 +78,7 @@ class ChallengeMinesweeper(ChallengeInterface):
 		# Simple remote control
 		if self.motorEnable.getValue() > 0:
 			# Manual turns
-			if self.joystickLeftRight.getValue() != 0.0:
-				self.headingError.setTarget(self.sensors.yaw().getValue() + self.joystickLeftRight.getValue() * self.maxManualTurn)
-			print(self.pidHeading.components)
+			self.headingError.setTarget(self.sensors.yaw().getValue() + self.joystickLeftRight.getValue() * self.maxManualTurn)
 		elif self.autoModeEnable.getValue() > 0:
 			self.stateMachine.changeState("FindLight")
 		else:
@@ -106,7 +105,7 @@ class ChallengeMinesweeper(ChallengeInterface):
 		self.maxFindLightTurn = -self.maxFindLightTurn
 		
 	def StartMoveToLight(self):
-		self.autoModeForwardSpeed.setValue(self.constantSpeed)
+		self.autoModeForwardSpeed.setValue(self.autoMaxSpeed)
 		self.moveToLightStart = time.perf_counter()
 				
 	def MoveToLight(self):
