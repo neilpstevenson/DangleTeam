@@ -14,6 +14,7 @@ from analysis.OneShotButtonValue import OneShotButtonValue
 from analysis.ToggleButtonValue import ToggleButtonValue
 from analysis.TimedTriggerValue import TimedTriggerValue
 from analysis.FixedValue import FixedValue
+from analysis.PeriodicWaveGenerator import PeriodicWaveGenerator
 # Value combination helpers
 from analysis.Scaler import Scaler
 from analysis.ValueIntegrator import ValueIntegrator
@@ -189,8 +190,9 @@ class ChallengeMinesweeper(ChallengeInterface):
 		# LED eyes
 		self.ledEyeLeft = self.controls.led(20)
 		self.ledEyeRight = self.controls.led(21)
-		medPriorityProcesses.append(SimpleControlMediator( Scaler(self.motorEnable, scaling=255), self.ledEyeLeft))
-		medPriorityProcesses.append(SimpleControlMediator( Scaler(self.autoModeEnable, scaling=255), self.ledEyeRight))
+		#medPriorityProcesses.append(SimpleControlMediator( self.motorEnable, self.ledEyeLeft))
+		medPriorityProcesses.append(SimpleControlMediator( PeriodicWaveGenerator(self.motorEnable, 0.2, 0.1), self.ledEyeLeft))
+		medPriorityProcesses.append(SimpleControlMediator( self.autoModeEnable, self.ledEyeRight))
 		
 		# Common controls
 		self.grabberControl.createProcesses(highPriorityProcesses, medPriorityProcesses)

@@ -9,9 +9,11 @@ import argparse
 import cv2
 import imutils
 import time
+# Interfaces
 from interfaces.LineAnalysisSharedIPC import LineAnalysisSharedIPC
 from interfaces.SensorAccessFactory import SensorAccessFactory
 from interfaces.Config import Config
+# Analysis classes
 from analysis.ElapsedTime import elapsedTime
 
 class FindRedLight:
@@ -21,35 +23,40 @@ class FindRedLight:
 		ap = argparse.ArgumentParser()
 		ap.add_argument("-v", "--video",
 			help="path to the (optional) video file")
-		ap.add_argument("-t", "--trail", type=int, default=25,
-			help="max trail size")
 		args = vars(ap.parse_args())
 		self.recordedVideo = args.get("video", False)
 		if self.recordedVideo:
 			self.videoFilenanme = args["video"]
 
-		self.analysis_width = 480
-		self.minSize = 10
-		self.blur_radius = 11		
+		# Get config
+		config = Config()
+		self.analysis_width = config.get("minesweeper.analysis.imagewidth", 480)
+		self.blur_radius = config.get("minesweeper.analysis.burrradius", 11)
+		#self.minSize = config.get("minesweeper.analysis.minsize", 10)
+		self.minWidth = config.get("minesweeper.analysis.minWidth", 15)
+		self.minHeight  = config.get("minesweeper.analysis.minHeight", 10)
 		# Scale factors for real-world measures
-		self.angleAdjustment = 2.6#1.3#0.55
-		self.distanceAdjustment = 0.00005#0.0007#0.0013
-		self.distanceOffset = self.analysis_width * 7 // 4 # pixels
+		self.angleAdjustment = config.get("minesweeper.analysis.anglescale", 2.6)#1.3#0.55
+		self.distanceAdjustment = config.get("minesweeper.analysis.distancescale", 0.00005)#0.0007#0.0013
+		self.distanceOffset = int(self.analysis_width * config.get("minesweeper.analysis.distanceoffset", 1.75)) # relative to width
 		
 		# define the lower and upper boundaries of the target 
 		# colour in the HSV color space, then initialize the
 		# list of tracked points
-		if False:
+		useLEDColours = config.get("minesweeper.analysis.useLEDColours", False)
+		if useLEDColours:
 			# For LED:
-			self.colourTargetLower = (155,24,200)#(165,90,100)#(158,60,90) #(160,128,24)
-			self.colourTargetUpper = (175,255,255)#(175,255,255) #(180,255,255)
+			self.colourTargetLower = tuple(config.get("minesweeper.analysis.colourTargetLowerLED", [155,24,200]))#(165,90,100)#(158,60,90) #(160,128,24)
+			self.colourTargetUpper = tuple(config.get("minesweeper.analysis.colourTargetUpperLED", [175,255,255]))#(175,255,255) #(180,255,255)
 		else:
-			# For lid
-			self.colourTargetLower = (165,94,69)
-			self.colourTargetUpper = (180,255,255)
+			# For test biscuit tin lid
+			self.colourTargetLower = tuple(config.get("minesweeper.analysis.colourTargetLowerTest", [165,94,69]))
+			self.colourTargetUpper = tuple(config.get("minesweeper.analysis.colourTargetUpperTest", [180,255,255]))
 		
-		self.trailSize = args["trail"]
-		self.showImage = True
+		self.showImage = config.get("minesweeper.display.image", True)
+		self.trailSize = config.get("minesweeper.display.trail", 25)
+		self.frameDelayMs = config.get("minesweeper.analysis.frameDelayMs", 20) # delay after each frame analysis
+		config.save()
 		
 		# Results IPC
 		self.results = LineAnalysisSharedIPC()
@@ -127,14 +134,17 @@ class FindRedLight:
 				# only proceed if at least one contour was found
 				hasResult = False
 				if len(cnts) > 0:
-					# find the largest contour in the mask, then use
-					# it to compute the minimum enclosing circle and
-					# centroid
+					# find the largest contour in the mask, 
 					c = max(cnts, key=cv2.contourArea)
-					((x, y), radius) = cv2.minEnclosingCircle(c)
+					# then use it to compute the minimum enclosing circle and
+					# centroid
+					#((x, y), radius) = cv2.minEnclosingCircle(c)
+					# find the best enclosing rectangle
+					x, y, w, h = cv2.boundingRect(c)
 					M = cv2.moments(c)
 					center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
-					print(f"radius: {radius}, center: {center}")
+					#print(f"radius: {radius}, center: {center}")
+					print(f"width: {w}, height: {h}, center: {center}")
 					
 					if self.showImage:
 						# Show contours found
@@ -145,14 +155,14 @@ class FindRedLight:
 					print(f"20 above mid point HSV: {hsv[center[1]-20,center[0]]}")
 						
 					# only proceed if the radius meets a minimum size
-					if radius > self.minSize:
+					if w >= self.minWidth and h >= self.minHeight:
 						hasResult = True
 						
 						# Calculate the angle from the bottom centre to the centre
 						ourPosition = (hsv.shape[1]//2, hsv.shape[0] + self.distanceOffset)
 						angle = np.arctan((ourPosition[0]-center[0])/(ourPosition[1]-center[1])) * 180.0/3.14159 * self.angleAdjustment
 						#print(f"ourPosition: {ourPosition}, circlecentre: {(x, y)}, momentscentre: {center}")
-						print(f"angle: {angle}, radius: {radius}, center: {center}")
+						print(f"angle: {angle}, center: {center}")
 						# Distance approximation
 						distance = (ourPosition[1]-center[1]) ** 2 * self.distanceAdjustment
 						print(f"distance: {distance}mm")
@@ -219,7 +229,7 @@ class FindRedLight:
 					#cv2.imshow("HSV", hsv)
 					#cv2.imshow("mask", mask)
 
-				key = cv2.waitKey(20) & 0xFF
+				key = cv2.waitKey(self.frameDelayMs) & 0xFF
 
 				# if the 'q' key is pressed, stop the loop
 				if key == ord("q"):

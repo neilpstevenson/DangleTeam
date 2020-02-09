@@ -59,11 +59,33 @@
     "--gpio-data-command=9"
   ],
   "lava.vision.framerate": 30,
+  "remote.camera.tilt": 0.15,
+  "remote.simpleturn.max": 0.4,
   "minesweeper.speed": 0.6,
   "minesweeper.camera.tilt": 0.22,
   "minesweeper.findlightturn.max": -15.0,
   "minesweeper.achieved.stoptime": 5.0,
   "minesweeper.movement.mintime": 1.0,
-  "remote.camera.tilt": 0.15,
-  "remote.simpleturn.max": 0.4
+  "minesweeper.analysis.imagewidth": 480,
+  "minesweeper.analysis.burrradius": 11,
+  "minesweeper.analysis.minsize": 10,
+  "minesweeper.analysis.anglescale": 2.6,
+  "minesweeper.analysis.distancescale": 5e-05,
+  "minesweeper.analysis.distanceoffset": 1.75,
+  "minesweeper.analysis.useLEDColours": false,
+  "minesweeper.display.image": true,
+  "minesweeper.display.trail": 25,
+  "minesweeper.analysis.frameDelayMs": 20,
+  "minesweeper.analysis.colourTargetLowerTest": [
+    165,
+    94,
+    69
+  ],
+  "minesweeper.analysis.colourTargetUpperTest": [
+    180,
+    255,
+    255
+  ],
+  "minesweeper.analysis.minWidth": 15,
+  "minesweeper.analysis.minHeight": 10
 }
