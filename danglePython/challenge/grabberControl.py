@@ -23,6 +23,6 @@ class GrabberControl(ChallengeInterface):
 	def createProcesses(self, highPriorityProcesses, medPriorityProcesses):
 		# Grabber hand servo
 		grabberServo = self.controls.servo(5)
-		grabReleaseButtons = ValueIntegrator(self.sensors.upDownButton(1, 3), min = self.min, max = self.max, scaling = self.speed)
+		grabReleaseButtons = ValueIntegrator(self.sensors.upDownButton(16, 15), min = self.min, max = self.max, scaling = self.speed)
 		grabber = SimpleControlMediator( grabReleaseButtons, grabberServo )
 		medPriorityProcesses.append(grabber)

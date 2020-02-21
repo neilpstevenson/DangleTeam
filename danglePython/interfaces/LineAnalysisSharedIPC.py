@@ -14,13 +14,22 @@ class LineAnalysisSharedIPC:
 	filename = '/dev/shm/vision_line_shared.mmf'
 	
 	def create(self):
-		# Create/overwrite
-		self.data  = np.memmap(LineAnalysisSharedIPC.filename, offset=0, dtype=LineAnalysisSharedIPC.line_analysis_shared_dt, mode='w+', shape=(1,1))
+		try:
+			# Try existing file first
+			self.data  = np.memmap(LineAnalysisSharedIPC.filename, offset=0, dtype=LineAnalysisSharedIPC.line_analysis_shared_dt, mode='r+', shape=(1,1))
+		except:
+			# Create/overwrite
+			self.data  = np.memmap(LineAnalysisSharedIPC.filename, offset=0, dtype=LineAnalysisSharedIPC.line_analysis_shared_dt, mode='w+', shape=(1,1))
 	
 	def read(self):
 		# Read only
-		self.data  = np.memmap(LineAnalysisSharedIPC.filename, offset=0, dtype=LineAnalysisSharedIPC.line_analysis_shared_dt, mode='r')
-		
+		try:
+			# Try existing file first
+			self.data  = np.memmap(LineAnalysisSharedIPC.filename, offset=0, dtype=LineAnalysisSharedIPC.line_analysis_shared_dt, mode='r')
+		except:
+			# Need to create first
+			self.data  = np.memmap(LineAnalysisSharedIPC.filename, offset=0, dtype=LineAnalysisSharedIPC.line_analysis_shared_dt, mode='w+', shape=(1,1))
+			
 	def shareResults(self, timestamp, elapsed, angle, yaw, vector, points, status = 1):
 		self.data[0]['status'] = status
 		self.data[0]['timestamp'] = timestamp

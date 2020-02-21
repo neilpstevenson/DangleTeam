@@ -138,8 +138,8 @@ class ChallengeManualControl(ChallengeInterface):
 		self.autoModeEnable = ToggleButtonValue(self.sensors.button(5))
 		self.joystickForward = self.sensors.joystickAxis(1)
 		self.joystickLeftRight = self.sensors.joystickAxis(3)
-		self.left90 = OneShotButtonValue(self.sensors.button(15))
-		self.right90 = OneShotButtonValue(self.sensors.button(16))
+		self.left90 = OneShotButtonValue(self.sensors.button(3))
+		self.right90 = OneShotButtonValue(self.sensors.button(1))
 		self.motorLSimpleManualSpeed = [SpeedDirectionCombiner(Scaler(self.joystickForward, scaling = self.maxForward), Scaler(self.joystickLeftRight, scaling = self.maxSimpleTurn))]
 		self.motorRSimpleManualSpeed = [SpeedDirectionCombiner(Scaler(self.joystickForward, scaling = self.maxForward), Scaler(self.joystickLeftRight, scaling = -self.maxSimpleTurn))]
 		self.motorLMPUAssistedSpeed = [SpeedDirectionCombiner(Scaler(self.joystickForward, scaling = self.maxForward), Scaler(self.headingError, scaling = -self.maxHeadingTurn))]

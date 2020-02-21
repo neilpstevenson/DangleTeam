@@ -48,7 +48,7 @@ while True:
 	maskRed = cv2.dilate(maskRed, None, iterations=2)
 	edgedRed = cv2.Canny(maskRed, 50, 150)
 	
-	maskGreen = cv2.inRange(hsv, (47,74,114), (61,255,255))
+	maskGreen = cv2.inRange(hsv, (40,68,130), (78,255,255))
 	maskGreen = cv2.erode(maskGreen, None, iterations=2)
 	maskGreen = cv2.dilate(maskGreen, None, iterations=2)
 	edgedGreen = cv2.Canny(maskGreen, 50, 150)
@@ -68,9 +68,16 @@ while True:
 	# loop over the contours
 	counts = [0,0]
 	colour = -1
-	for lists in cntsRed,cntsGreen:
+	for cnts in cntsRed,cntsGreen:
 		colour += 1
-		for c in lists:
+		#sortedCnts = sorted(cnts, key=lambda x: -cv2.contourArea(x))
+		# construct the list of bounding boxes and sort them from top to
+		# bottom
+		boundingBoxes = [cv2.boundingRect(c) for c in cnts]
+		(cnts, boundingBoxes) = zip(*sorted(zip(cnts, boundingBoxes),
+			key=lambda b:b[1][1], reverse=True))
+
+		for c in cnts:
 			# approximate the contour
 			peri = cv2.arcLength(c, True)
 			approx = cv2.approxPolyDP(c, 0.01 * peri, True)
@@ -91,9 +98,9 @@ while True:
 				# compute whether or not the width and height, solidity, and
 				# aspect ratio of the contour falls within appropriate bounds
 				keepDims = w > 25 and h > 25
-				keepSolidity = solidity > 0.8 #0.9
+				keepSolidity = solidity > 0.4 #0.8 #0.9
 				#keepAspectRatio = aspectRatio >= 0.8 and aspectRatio <= 1.2
-				keepAspectRatio = aspectRatio >= 0.5 and aspectRatio <= 0.8
+				keepAspectRatio = aspectRatio >= 0.3 and aspectRatio <= 0.8
 				print(f"keep: {keepDims}, {keepSolidity}({solidity}), {keepAspectRatio}({aspectRatio})")
 
 				# ensure that the contour passes all our tests
@@ -104,14 +111,18 @@ while True:
 					counts[colour] += 1
 					print(f"at: {(x,y)}, size: {(w,h)}, aspectRatio: {aspectRatio}, approx: {len(approx)}")
 
+
 					# compute the center of the contour region and draw the
 					# crosshairs
 					M = cv2.moments(approx)
 					(cX, cY) = (int(M["m10"] // M["m00"]), int(M["m01"] // M["m00"]))
 					(startX, endX) = (int(cX - (w * 0.15)), int(cX + (w * 0.15)))
 					(startY, endY) = (int(cY - (h * 0.15)), int(cY + (h * 0.15)))
-					cv2.line(frame, (startX, cY), (endX, cY), (0, 0, 255), 3)
-					cv2.line(frame, (cX, startY), (cX, endY), (0, 0, 255), 3)
+					# Put the count on the barrel
+					cv2.putText(frame, f"{counts[colour]}", (startX, cY), cv2.FONT_HERSHEY_SIMPLEX, 0.6,
+						(0, 0, 0), 2)
+					#cv2.line(frame, (startX, cY), (endX, cY), (0, 0, 255), 3)
+					#cv2.line(frame, (cX, startY), (cX, endY), (0, 0, 255), 3)
 
 	if counts[0]+counts[1] > 0:
 		status = f"{counts[0]} Red Barrels Detected, {counts[1]} Green"

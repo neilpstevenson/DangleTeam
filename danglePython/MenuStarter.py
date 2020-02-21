@@ -72,23 +72,30 @@ def Quit(selected, actionParams):
 sensors = SensorAccessFactory.getSingleton()
 title = "Select Challenge"
 menus = np.array([
-	["Remote control", [ 
+	["Pi Noon", [ 
 			[Run, ['python3','DangleRun.py', '--challenge', 'ChallengeManualControl']]]], 
-	["Maze (r-wall)", [ 
+	["Escape Route", [ 
 			[Run, ['python3','ToFSensorProcess.py']], 
+			[Run, ['python3','displayToF.py']],
 			[Run, ['python3','DangleRun.py', '--challenge', 'ChallengeWallFollowControl']]]], 
-	["Lava Palaver", [
+	["Lava Palava", [
 			[Run, ['python3','VisionLineProcessor.py']], 
 			[Run, ['python3','DangleRun.py', '--challenge', 'ChallengeHeadingRemoteControl']]]], 
 	["Minesweeper", [
 			[Run, ['python3','RedLightProcessor.py']], 
-			[Run, ['python3','DangleRun.py', '--challenge', 'ChallengeMinesweeper']]]], 
-	["Welcome", [
-			[DisplayScreenSaver, []]]],
-	["Stop", [
+			[Run, ['python3','DangleRun.py', '--challenge', 'ChallengeMinesweeper']]]],
+	["Eco-Disaster", [ 
+			[Run, ['python3','DangleRun.py', '--challenge', 'ChallengeManualControl']]]], 
+	["Zombie Apocalypse", [ 
+			[Run, ['python3','DangleRun.py', '--challenge', 'ChallengeManualControl']]]], 
+	["Temple of Doom", [ 
+			[Run, ['python3','DangleRun.py', '--challenge', 'ChallengeManualControl']]]], 
+	["Stop all", [
 			[StopAll, []]]],
 	["Quit", [
-			[Quit, []]]]
+			[Quit, []]]], 
+	["Welcome", [
+			[DisplayScreenSaver, []]]]
 	])
 
 # Enable the menu selected via joystick
