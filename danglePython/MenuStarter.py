@@ -8,6 +8,7 @@ from analysis.StepUpDownButtonValue import StepUpDownButtonValue
 # Menu stuff
 from display.menu import MenuDisplay
 from display.welcome import showWelcomeSequence
+from display.displayPosition import displayPosition
 
 def Run(selected, actionParams):
 	# Attempt to start the sub-process(es)
@@ -48,6 +49,11 @@ def DisplayScreenSaver(selected, actionParams):
 	stopButton = sensors.button(10)
 	showWelcomeSequence(display.getDevice(), stopButton)
 
+def DisplayPositions(selected, actionParams):
+	stopButton = sensors.button(10)
+	disp = displayPosition(display.getDevice(), stopButton)
+	disp.main()
+
 def GetSelection(selected):
 	lastSelected = -1
 	upDownButtons = StepUpDownButtonValue(sensors.button(14), sensors.button(13), min = 0, max = len(menus)-1, offset=selected, scaling = 1)
@@ -73,29 +79,30 @@ sensors = SensorAccessFactory.getSingleton()
 title = "Select Challenge"
 menus = np.array([
 	["Pi Noon", [ 
-			[Run, ['python3','DangleRun.py', '--challenge', 'ChallengeManualControl']]]], 
+			[Run, ['python3','DangleRun.py', '--challenge', 'ChallengeManualControl']],
+			[DisplayPositions, []] ]], 
 	["Escape Route", [ 
 			[Run, ['python3','ToFSensorProcess.py']], 
 			[Run, ['python3','displayToF.py']],
-			[Run, ['python3','DangleRun.py', '--challenge', 'ChallengeWallFollowControl']]]], 
+			[Run, ['python3','DangleRun.py', '--challenge', 'ChallengeWallFollowControl']] ]], 
 	["Lava Palava", [
 			[Run, ['python3','VisionLineProcessor.py']], 
-			[Run, ['python3','DangleRun.py', '--challenge', 'ChallengeHeadingRemoteControl']]]], 
+			[Run, ['python3','DangleRun.py', '--challenge', 'ChallengeHeadingRemoteControl']] ]], 
 	["Minesweeper", [
 			[Run, ['python3','RedLightProcessor.py']], 
-			[Run, ['python3','DangleRun.py', '--challenge', 'ChallengeMinesweeper']]]],
+			[Run, ['python3','DangleRun.py', '--challenge', 'ChallengeMinesweeper']] ]],
 	["Eco-Disaster", [ 
-			[Run, ['python3','DangleRun.py', '--challenge', 'ChallengeManualControl']]]], 
+			[Run, ['python3','DangleRun.py', '--challenge', 'ChallengeManualControl']] ]], 
 	["Zombie Apocalypse", [ 
-			[Run, ['python3','DangleRun.py', '--challenge', 'ChallengeManualControl']]]], 
+			[Run, ['python3','DangleRun.py', '--challenge', 'ChallengeManualControl']] ]], 
 	["Temple of Doom", [ 
-			[Run, ['python3','DangleRun.py', '--challenge', 'ChallengeManualControl']]]], 
+			[Run, ['python3','DangleRun.py', '--challenge', 'ChallengeManualControl']] ]], 
 	["Stop all", [
-			[StopAll, []]]],
+			[StopAll, []] ]],
 	["Quit", [
-			[Quit, []]]], 
+			[Quit, []] ]], 
 	["Welcome", [
-			[DisplayScreenSaver, []]]]
+			[DisplayScreenSaver, []] ]]
 	])
 
 # Enable the menu selected via joystick

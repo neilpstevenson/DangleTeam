@@ -1,44 +1,38 @@
 import time
-print("numpy")
 import numpy as np
-print("cv2")
 import cv2
-print("picamera")
 from picamera.array import PiRGBArray
-print("picamera b")
 from picamera import PiCamera
-print("picamera c")
 from interfaces.LineAnalysisSharedIPC import LineAnalysisSharedIPC
-print("picamera d")
 from interfaces.SensorAccessFactory import SensorAccessFactory
-print("picamerae ")
 from interfaces.Config import Config
-print("picamera f")
 
 class VisionLineAnalysis:
 
-	def __init__(self, resolution, threshold, display, displayGrayscale, filename, blinkers, numSlices, framerate=30, ignoreTopSlices = 0):
+	def __init__(self, resolution, threshold, display, displayGrayscale, filename, blinkers, numSlices, framerate=30, ignoreTopSlices = 0, filterRatio=15, lookahead=0.8, saveRaw=True):
 		self.threshold = threshold
 		self.filename = filename
 		self.display = display
 		self.displayGrayscale = displayGrayscale
 		self.blinkers = blinkers # pixels at either side of top
 		self.ignoreTopSlices = ignoreTopSlices
+		self.saveRaw = saveRaw
 		
 		# Create/overwrite
 		self.results = LineAnalysisSharedIPC()
 		self.results.create()
 		
 		# Define the analysis parameters
-		self.radius = resolution[0]//15#31	# ensure radius is odd and slighly bigger than the white line
+		self.radius = resolution[0]//filterRatio #31	# ensure radius is odd and slighly bigger than the white line
 		self.numSlices = numSlices
-		self.targetLookaheadRatio = 0.8 # % of screen height that we attempt to head towards
+		self.targetLookaheadRatio = lookahead # % of screen height that we attempt to head towards
 
 		# initialize the camera and grab a reference to the raw camera capture
 		self.camera = PiCamera()
 		self.camera.resolution = resolution
+		self.resolution = resolution
 		self.camera.framerate = framerate
-		self.rawCapture = PiRGBArray(self.camera, size=self.camera.resolution)
+		self.rawCapture = PiRGBArray(self.camera, size=self.resolution)
 		
 		# Current Yaw reading
 		self.sensors = SensorAccessFactory.getSingleton()
@@ -57,15 +51,15 @@ class VisionLineAnalysis:
 		rate = 10.0
 
 		# Blinkers polygons
-		blinkerPolys = np.array([[[0,0], [self.blinkers, 0], [0, self.camera.resolution[1]-1]],
-								 [[self.camera.resolution[0]-1, 0], [self.camera.resolution[0]-1 - self.blinkers, 0], [self.camera.resolution[0]-1, self.camera.resolution[1]-1]]], np.int32)
+		blinkerPolys = np.array([[[0,0], [self.blinkers, 0], [0, self.resolution[1]-1]],
+								 [[self.resolution[0]-1, 0], [self.resolution[0]-1 - self.blinkers, 0], [self.resolution[0]-1, self.resolution[1]-1]]], np.int32)
 		#print(f"blinkerPolys: {blinkerPolys}")
 		
 		angle = None
 		count = 0
 		
 		# grab the next frame as a numpy array
-		for frame in self.camera.capture_continuous(self.rawCapture, format="bgr", use_video_port=True):
+		for frame in self.camera.capture_continuous(self.rawCapture, format="bgr", use_video_port=True): #, resize = self.resolution):
 			count += 1
 			
 			# Get the current yaw value
@@ -118,12 +112,12 @@ class VisionLineAnalysis:
 					vx = -vx
 				#print(f"vx: {vx}, vy: {vy}, x0: {x0}, y0: {y0}")
 				# Re-origin to stop some jitter
-				#y0 = self.camera.resolution[1]*(self.numSlices-1)//self.numSlices//2
+				#y0 = self.resolution[1]*(self.numSlices-1)//self.numSlices//2
 				# scale the vector to approx screen size
-				vx *= self.camera.resolution[1]//2
-				vy *= self.camera.resolution[1]//2
+				vx *= self.resolution[1]//2
+				vy *= self.resolution[1]//2
 				# Calculate an angle from where we are to approx mid point
-				currentPosition = (self.camera.resolution[0]//2, self.camera.resolution[1])
+				currentPosition = (self.resolution[0]//2, self.resolution[1])
 				desiredPosition = (int(x0+vx*self.targetLookaheadRatio), int(y0+vy*self.targetLookaheadRatio))
 				angle = np.arctan((currentPosition[0]-desiredPosition[0])/(currentPosition[1]-desiredPosition[1])) * 180.0/3.14159
 				hasResult = True
@@ -166,14 +160,18 @@ class VisionLineAnalysis:
 				cv2.arrowedLine(assessment, currentPosition, desiredPosition, (0, 255, 0), 3)
 				# Overlay the angle calculated
 				np.set_printoptions(precision=2)
-				cv2.putText(assessment, f"{yaw:.2f}deg => {angle:+.2f}deg", (5, self.camera.resolution[1]-4), cv2.FONT_HERSHEY_DUPLEX, 0.4, (0, 255, 0))
+				cv2.putText(assessment, f"{yaw:.2f}deg => {angle:+.2f}deg", (5, self.resolution[1]-4), cv2.FONT_HERSHEY_DUPLEX, 0.4, (0, 255, 0))
+				cv2.putText(assessment, f"{rate:.0f}fps", (self.resolution[0]-40, self.resolution[1]-4), cv2.FONT_HERSHEY_DUPLEX, 0.4, (0, 255, 0))
 				cv2.imshow(f"assessed direction", assessment)
 				if self.displayGrayscale:
 					cv2.imshow(f"grey", gray)
 				
 				if self.filename != None:
 					# Write the next frame into the file
-					self.captureFile.write(assessment)
+					if self.saveRaw:
+						self.captureFile.write(original)
+					else:
+						self.captureFile.write(assessment)
 
 			if angle != None:
 				print(f"Assessed angle: {angle:.1f}")

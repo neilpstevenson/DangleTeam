@@ -17,11 +17,14 @@ class VisionLineProcessor:
 		self.threshold = config.get("lava.vision.threshold", 128)
 		self.blinkers = config.get("lava.vision.blinkers", 30) # pixels at either side of top
 		self.savefilename = config.get("lava.vision.filename", 'visionCapture.avi')
+		self.filterRatio = config.get("lava.vision.filterRatio", 15)
+		self.lookahead = config.get("lava.vision.lookahead", 0.8)
+		self.saveRaw = config.get("lava.vision.saveRaw", False)
 		config.save()
 		
 	def run(self):
 		analyser = VisionLineAnalysis(self.resolution, self.threshold, self.display, 
-						self.displayGrey, self.savefilename, self.blinkers, self.numSlices, self.framerate, self.ignoreTopSlices) 
+						self.displayGrey, self.savefilename, self.blinkers, self.numSlices, self.framerate, self.ignoreTopSlices, self.filterRatio, self.lookahead, self.saveRaw) 
 		analyser.captureAndAssess()
 
 processor = VisionLineProcessor()
