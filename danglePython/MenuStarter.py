@@ -87,7 +87,7 @@ menus = np.array([
 			[Run, ['python3','DangleRun.py', '--challenge', 'ChallengeWallFollowControl']] ]], 
 	["Lava Palava", [
 			[Run, ['python3','VisionLineProcessor.py']], 
-			[Run, ['python3','DangleRun.py', '--challenge', 'ChallengeHeadingRemoteControl']] ]], 
+			[Run, ['python3','DangleRun.py', '--challenge', 'ChallengeLavaPalava']] ]], 
 	["Minesweeper", [
 			[Run, ['python3','RedLightProcessor.py']], 
 			[Run, ['python3','DangleRun.py', '--challenge', 'ChallengeMinesweeper']] ]],

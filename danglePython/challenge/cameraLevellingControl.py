@@ -14,7 +14,7 @@ class CameraLevellingControl(ChallengeInterface):
 		self.controls = ControlAccessFactory.getSingleton()
 		self.sensors = SensorAccessFactory.getSingleton()
 
-	def createProcesses(self, highPriorityProcesses, medPriorityProcesses, cameraTilt = 0.5, scaling = -0.015):
+	def createProcesses(self, highPriorityProcesses, medPriorityProcesses, cameraTilt = 0.5, scaling = 0.012):
 
 		# Camera angle servo
 		cameraTiltServo = self.controls.servo(6)
