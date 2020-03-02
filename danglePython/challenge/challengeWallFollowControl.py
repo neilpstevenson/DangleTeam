@@ -1,4 +1,6 @@
 from simple_pid import PID
+import numpy as np
+import time
 
 # Interfaces
 from interfaces.ChallengeInterface import ChallengeInterface
@@ -51,16 +53,18 @@ class ChallengeWallFollowControl(ChallengeInterface):
 		self.maxHeadingTurn = config.get("wall.headingturn.max", 0.7)
 		self.autoMaxSpeed = config.get("wall.speed", 0.6)
 		self.cameraTilt = config.get("wall.camera.tilt", 0.3)
-		self.leftRightMaxDist = config.get("wall.leftright.maxdist", 350)
-		self.forwardMaxDist = config.get("wall.forward.maxdist", 350)
-		self.wallDistTarget = config.get("wall.targetdist", 200)
-		self.wallDistLeeway = config.get("wall.leewaydist", 40)
-		self.wallDistMin = config.get("wall.mindist", 100)
+		self.leftRightMaxDist = config.get("wall.leftright.maxdist", 600)
+		self.forwardMaxDist = config.get("wall.forward.maxdist", 550)
+		self.wallDistTarget = config.get("wall.targetdist", 335) # 335 ~= 210mm clearance each side
+		#self.wallDistLeeway = config.get("wall.leewaydist", 40)
+		#self.wallDistMin = config.get("wall.mindist", 100)
 		self.wallDriftAngle = config.get("wall.move.driftangle", 15)
 		self.wallTurnAngle = config.get("wall.move.turnangle", 20)
 		self.wallTurnSpeed = config.get("wall.move.turnspeed", 0.1)
 		self.wallFollowAngleMin = config.get("wall.move.followanglemin", 5)
 		self.wallFollowAngleMax = config.get("wall.move.followanglemax", 10)
+		self.wallFollowAdjustmentRate = 300.0
+		self.turnAllowedTime = 1.0
 		config.save()
 
 	def ControlOff(self):
@@ -99,21 +103,22 @@ class ChallengeWallFollowControl(ChallengeInterface):
 		self.autoModeForwardSpeed.setValue(self.autoMaxSpeed)
 		
 	def moveFindWall(self):
-		leftDist, rightDist, forwardDist = self.getCurrentTofReadings()
-		if self.autoModeEnable.getValue() == 0:
-			self.stateMachine.changeState("Manual")
-		elif forwardDist <= self.forwardMaxDist and rightDist > self.leftRightMaxDist:
-			# Blocked ahead, turn right to re-aquire the wall (probably just gone around corner)
-			self.stateMachine.changeState("moveTurnRight")
-		elif forwardDist > self.forwardMaxDist and rightDist <= self.leftRightMaxDist:
-			# Near wall, follow it
-			self.stateMachine.changeState("moveFollowWall")
-		elif forwardDist <= self.forwardMaxDist and rightDist <= self.leftRightMaxDist:
-			# Near wall, but in a corner, turn away to find ahead wall
-			self.stateMachine.changeState("moveTurnLeft")
-		else:
-			# Nothing in view, continue to find a wall by drifting right
-			self.headingError.setTarget(self.sensors.yaw().getValue() - self.wallDriftAngle)
+		self.stateMachine.changeState("moveFollowWall")
+		#leftDist, rightDist, forwardDist = self.getCurrentTofReadings()
+		#if self.autoModeEnable.getValue() == 0:
+		#	self.stateMachine.changeState("Manual")
+		#elif forwardDist <= self.forwardMaxDist and rightDist > self.leftRightMaxDist:
+		#	# Blocked ahead, turn right to re-aquire the wall (probably just gone around corner)
+		#	self.stateMachine.changeState("moveTurnRight")
+		#elif forwardDist > self.forwardMaxDist and rightDist <= self.leftRightMaxDist:
+		#	# Near wall, follow it
+		#	self.stateMachine.changeState("moveFollowWall")
+		#elif forwardDist <= self.forwardMaxDist and rightDist <= self.leftRightMaxDist:
+		#	# Near wall, but in a corner, turn away to find ahead wall
+		#	self.stateMachine.changeState("moveTurnLeft")
+		#else:
+		#	# Nothing in view, continue to find a wall by drifting right
+		#	self.headingError.setTarget(self.sensors.yaw().getValue() - self.wallDriftAngle)
 		
 	def startFollowWall(self):
 		self.autoModeForwardSpeed.setValue(self.autoMaxSpeed)
@@ -124,22 +129,33 @@ class ChallengeWallFollowControl(ChallengeInterface):
 			self.stateMachine.changeState("Manual")
 		elif forwardDist <= self.forwardMaxDist and rightDist > self.leftRightMaxDist:
 			# Blocked ahead, turn right to re-aquire the wall (probably just gone around corner)
-			self.stateMachine.changeState("moveTurnRight")
-		elif forwardDist <= self.forwardMaxDist and rightDist <= self.leftRightMaxDist:
+			self.stateMachine.changeState("90Right")
+		elif forwardDist <= self.forwardMaxDist:
 			# Near wall, but in a corner, turn away to find ahead wall
-			self.stateMachine.changeState("moveTurnLeft")
-		elif rightDist > self.wallDistTarget + self.wallDistLeeway:
-			# Move nearer right wall
-			self.headingError.setTarget(self.sensors.yaw().getValue() - self.wallFollowAngleMin)
-		elif rightDist < self.wallDistMin:
-			# Move away from right wall quickly
-			self.headingError.setTarget(self.sensors.yaw().getValue() + self.wallFollowAngleMax)
-		elif rightDist < self.wallDistTarget - self.wallDistLeeway:
-			# Move away from right wall
-			self.headingError.setTarget(self.sensors.yaw().getValue() + self.wallFollowAngleMin)
+			self.stateMachine.changeState("90Left")
+		elif rightDist > self.leftRightMaxDist:
+			# Found a gap - continue straight for the moment
+			pass
 		else:
-			# Maintain heading
-			self.headingError.setTarget(self.sensors.yaw().getValue())
+			# We're ok ahead, continue to follow wall
+			error = self.wallDistTarget - rightDist
+			adjustmentAngle = np.arctan((error) / self.wallFollowAdjustmentRate) * 180.0/3.14159
+			#if error < 0.0:
+			#	adjustmentAngle = -adjustmentAngle
+			self.headingError.setTarget(self.sensors.yaw().getValue() + adjustmentAngle)
+			print(f"Yaw: {self.sensors.yaw().getValue()}, adjustment: {adjustmentAngle}")
+		#rightDist > self.wallDistTarget + self.wallDistLeeway:
+		#	# Move nearer right wall
+		#	self.headingError.setTarget(self.sensors.yaw().getValue() - self.wallFollowAngleMin)
+		#elif rightDist < self.wallDistMin:
+		#	# Move away from right wall quickly
+		#	self.headingError.setTarget(self.sensors.yaw().getValue() + self.wallFollowAngleMax)
+		#elif rightDist < self.wallDistTarget - self.wallDistLeeway:
+		#	# Move away from right wall
+		#	self.headingError.setTarget(self.sensors.yaw().getValue() + self.wallFollowAngleMin)
+		#else:
+		#	# Maintain heading
+		#	self.headingError.setTarget(self.sensors.yaw().getValue())
 		
 	def startTurnLeft(self):
 		self.autoModeForwardSpeed.setValue(self.wallTurnSpeed)
@@ -159,6 +175,29 @@ class ChallengeWallFollowControl(ChallengeInterface):
 		else:
 			# Keep turning
 			self.headingError.setTarget(self.sensors.yaw().getValue() + self.turnAngle)
+			
+	def turn90DegLeft(self):
+		# MPU direction-assisted remote control - 90 degree turn left
+		self.fastTurnTarget = self.sensors.yaw().getValue() + 90.0
+		self.headingError.setTarget(self.fastTurnTarget)
+		self.turnStartTime = time.perf_counter()
+			
+	def turn90DegRight(self):
+		# MPU direction-assisted remote control - 90 degree turn left
+		self.fastTurnTarget = self.sensors.yaw().getValue() - 90.0
+		self.headingError.setTarget(self.fastTurnTarget)
+		self.turnStartTime = time.perf_counter()
+			
+	def fastTurnState(self):
+		if self.motorEnable.getValue() > 0:
+			# Turn for set period
+			if time.perf_counter() - self.turnStartTime >= self.turnAllowedTime:
+				# Continue the maze
+				self.stateMachine.changeState("moveFollowWall")
+		else:
+			# Done
+			self.stateMachine.changeState("Manual")
+		
 		
 		
 	#def updateState(self, left, forward, right):
@@ -197,6 +236,8 @@ class ChallengeWallFollowControl(ChallengeInterface):
 		self.stateMachine.addState("moveFollowWall", self.startFollowWall, self.moveFollowWall, None)
 		self.stateMachine.addState("moveTurnLeft", self.startTurnLeft, self.moveTurn, None)
 		self.stateMachine.addState("moveTurnRight", self.startTurnRight, self.moveTurn, None)
+		self.stateMachine.addState("90Left", self.turn90DegLeft, self.fastTurnState, None)
+		self.stateMachine.addState("90Right", self.turn90DegRight, self.fastTurnState, None)
 
 		# Yaw control
 		yaw = self.sensors.yaw()

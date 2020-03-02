@@ -26,6 +26,6 @@ class Config:
 	def save(self):
 		if self.configChanged:
 			with open(self.filename, 'w+') as f:
-				json.dump(self.config, f, indent=2)
+				json.dump(self.config, f, indent=2, sort_keys=True)
 			self.configChanged = False
 
