@@ -16,7 +16,15 @@ class SensorsProcess:
 		# Initialise the IPC classes
 		self.sensorsIPC = SensorsSharedIPC()
 		self.sensorsIPC.create()
-
+		
+	def clearAll(self):
+		# Clear all of the buttons, to ensure a clear stop of any robot movements
+		for axis in SensorsProcess.axes:
+			self.sensorsIPC.setAnalogValue(axis[1], 0.0)
+		# Copy over the "held" status of buttons
+		for button in SensorsProcess.buttons:
+			self.sensorsIPC.setDigitalValue(button[1], 0.0)
+		
 	def run(self):
 		while True:
 			try:
@@ -39,10 +47,15 @@ class SensorsProcess:
             
 						# Poll delay
 						time.sleep(0.05)
+						
+					# Joystick diconnected
+					self.clearAll()
             
 			except IOError:
 				# No joystick found, wait for a bit before trying again
 				print("Please connect joystick...")
+				# Joystick diconnected
+				self.clearAll()
 				time.sleep(1.0)
 
 main = SensorsProcess()

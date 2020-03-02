@@ -2,12 +2,10 @@
   "heading.pid.p": 0.015,
   "heading.pid.i": 0.0005,
   "heading.pid.d": 0.0012,
-  "1heading.pid.p": 0.03,
-  "1heading.pid.i": 0.1,
-  "1heading.pid.d": 0.01,
   "heading.pid.pom": false,
   "heading.headingturn.max": 0.6,
-  "lava.speed": 0.6,
+  "heading.forward.max": 1.0,
+  "heading.manualturn.max": -15.0,
   "display.graph.numpoints": 300,
   "speedsteer.slow": 0.1,
   "speedsteer.slow.compensation": 1.0,
@@ -17,9 +15,8 @@
   "speedsteer.high.decel": 0.6,
   "redboard.motor.pollrate": 100,
   "redboard.motor.accelmax": 4.0,
-  "heading.forward.max": 1.0,
-  "heading.manualturn.max": -15.0,
   "speedsteer.high.decelthresh": 0.05,
+  "lava.speed": 0.6,
   "lava.vision.resolution": [
     320,
     240
@@ -90,5 +87,6 @@
     255
   ],
   "minesweeper.analysis.minWidth": 15,
-  "minesweeper.analysis.minHeight": 10
+  "minesweeper.analysis.minHeight": 10,
+  "camera.leveling.scaling": 0.012
 }

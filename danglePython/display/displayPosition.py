@@ -12,6 +12,7 @@ class displayPosition:
 		# Current Yaw reading
 		self.sensors = SensorAccessFactory.getSingleton()
 		self.yaw = self.sensors.yaw()
+		self.pitch = self.sensors.pitch()
 		
 	def showPosition(self, draw):
 		padding = 2
@@ -20,6 +21,8 @@ class displayPosition:
 		msg = f"Yaw: {self.yaw.getValue():.1f}"
 		draw.text((padding, top + 4), 'Current Positions', fill="white")
 		draw.text((padding, top + 16), msg, fill="white")
+		msg = f"Pitch: {self.pitch.getValue():.1f}"
+		draw.text((padding, top + 28), msg, fill="white")
 		self.count += 1
 
 	def main(self):
