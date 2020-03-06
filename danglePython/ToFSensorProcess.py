@@ -20,11 +20,11 @@ class SensorsProcess:
 		self.tof3 = VL53L0X(TCA9548A_Num=7, TCA9548A_Addr=muxAddress)
 
 		# Start ranging on TCA9548A bus 1
-		self.tof1.start_ranging(VL53L0X_GOOD_ACCURACY_MODE) #VL53L0X_HIGH_SPEED_MODE
+		self.tof1.start_ranging(VL53L0X_LONG_RANGE_MODE) #VL53L0X_GOOD_ACCURACY_MODE) #VL53L0X_HIGH_SPEED_MODE
 		# Start ranging on TCA9548A bus 4
-		self.tof2.start_ranging(VL53L0X_GOOD_ACCURACY_MODE)
+		self.tof2.start_ranging(VL53L0X_LONG_RANGE_MODE)
 		# Start ranging on TCA9548A bus 7
-		self.tof3.start_ranging(VL53L0X_GOOD_ACCURACY_MODE)
+		self.tof3.start_ranging(VL53L0X_LONG_RANGE_MODE)
 
 		# Work out how fast to poll
 		self.timing = self.tof1.get_timing()/1000000.00

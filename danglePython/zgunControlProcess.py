@@ -29,7 +29,7 @@ class MotorControlProcess:
 	def run(self):
 		done = False
 		running = False
-		
+		self.zgun.arm()
 		while not done:
 			# Check for quit
 			for event in pygame.event.get(): # User did something.

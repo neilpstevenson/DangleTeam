@@ -31,13 +31,20 @@ MIN=900
 MAX=2000
 
 class Zgun(object):
-    def __init__(self,addr=0x10):
+     def __init__(self,addr=0x10):
         self.addr=addr
         try:
             self.sb=SMBus(1)
-            self.pos=1000
-            self.sb.write_byte_data(self.addr,0x01,0xff)
+            self.pos=1500
+            self.sb.write_byte_data(self.addr,0x01,0xff) #motor speed Max
+            self.sb.write_byte_data(self.addr,0x00,0xff) #Laser Max
+            self.sb.write_byte_data(self.addr,0x02,0x00) #Motor off
+            self.sb.write_byte_data(self.addr,0x03,0x00)
+            self.motor=False
             self.setpos(self.pos)
+            high,low=divmod(50,256)
+            self.sb.write_byte_data(self.addr,6,high)
+            self.sb.write_byte_data(self.addr,7,low)
         except OSError:
             pass
             
@@ -63,5 +70,26 @@ class Zgun(object):
         self.sb.write_byte_data(self.addr,5,low)
         
     def fire(self):
-        self.sb.write_byte_data(self.addr,0x03,0x01)
-
+        if self.motor:
+            high,low=divmod(3000,256)
+            print (high,low)
+            self.sb.write_byte_data(self.addr,6,high)
+            self.sb.write_byte_data(self.addr,7,low)
+            time.sleep(1)
+            high,low=divmod(10,256)
+            self.sb.write_byte_data(self.addr,6,high)
+            self.sb.write_byte_data(self.addr,7,low)
+            
+            time.sleep(.5)
+        
+    def arm(self,state):
+        '''switch on targeting laser & activate Nerf Mechanism'''
+        self.sb.write_byte_data(self.addr,0,0xff) # Max intensity
+        if state:
+            self.sb.write_byte_data(self.addr,2,1) #laser on
+            self.sb.write_byte_data(self.addr,0x03,0x01) #motors on
+            self.motor=True
+        else:
+            self.sb.write_byte_data(self.addr,2,0) #laser off
+            self.sb.write_byte_data(self.addr,0x03,0x0) #motors off
+            self.motor=False
