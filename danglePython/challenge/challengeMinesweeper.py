@@ -55,6 +55,7 @@ class ChallengeMinesweeper(ChallengeInterface):
 		self.autoMaxSpeed = config.get("minesweeper.speed", 0.6)
 		self.cameraTilt = config.get("minesweeper.camera.tilt", 0.22)
 		self.achievedStopTime = config.get("minesweeper.achieved.stoptime", 5.0) # seconds
+		self.minDistanceToStop = config.get("minesweeper.achieved.atdistance", 20.0)
 		self.MoveTimeMin = config.get("minesweeper.movement.mintime", 1.0) # seconds
 		config.save()
 
@@ -110,7 +111,8 @@ class ChallengeMinesweeper(ChallengeInterface):
 		self.moveToLightStart = time.perf_counter()
 				
 	def MoveToLight(self):
-		if self.visionTargetHeading.getStatus() == 0:
+		# Nothing visible?
+		if self.visionTargetHeading.getStatus() == 0 or self.visionTargetHeading.getDistance() < self.minDistanceToStop:
 			if time.perf_counter() - self.moveToLightStart >= self.MoveTimeMin:
 				# We've been moving for a bit, assume we've arrived if no longer can see target 
 				self.stateMachine.changeState("Standstill")
@@ -121,6 +123,7 @@ class ChallengeMinesweeper(ChallengeInterface):
 			# Head towards indicated light target
 			self.headingError.setTarget(self.visionTargetHeading.getValue())
 			#print(self.pidHeading.components)
+			print(f"Distance to target: {self.visionTargetHeading.getDistance()}")
 		else:
 			self.stateMachine.changeState("Manual")
 			
@@ -129,19 +132,15 @@ class ChallengeMinesweeper(ChallengeInterface):
 		print("StopToStandStill")
 		self.headingError.setTarget(self.sensors.yaw().getValue())
 		self.autoModeForwardSpeed.setValue(0.0)
+		self.stateMachine.setTimeout(self.achievedStopTime, "FindLight")
 		self.standStillStart = time.perf_counter()
 		# reset the PID controller
 		self.pidHeading.set_auto_mode(False)
 		self.pidHeading.set_auto_mode(True, last_output=0.0)
 		
 	def StandStill(self):
-		# pause for set period
-		if time.perf_counter() - self.standStillStart >= self.achievedStopTime:
-			# Move on to find next 
-			self.stateMachine.changeState("FindLight")
-		else:
-			# stand still
-			self.headingError.setTarget(self.sensors.yaw().getValue())
+		# stand still
+		self.headingError.setTarget(self.sensors.yaw().getValue())
 
 	def createProcesses(self, highPriorityProcesses, medPriorityProcesses):
 		# Set up the state machine

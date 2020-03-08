@@ -10,7 +10,7 @@ class LineAnalysisSharedIPC:
 					('yaw',np.float32),		# Absolute target at time of image capture
 					('vector',np.float32,(2,2)),
 					('numberpoints',np.uint32),
-					('points',np.float32,(2,32))])
+					('points',np.float32,(32,2))])
 	filename = '/dev/shm/vision_line_shared.mmf'
 	
 	def create(self):
@@ -64,5 +64,5 @@ class LineAnalysisSharedIPC:
 		
 	def getPoints(self):
 		numpoints = self.data[0]['numberpoints']
-		return self.data[0]['points'][0][:numpoints]
+		return self.data[0]['points'][:numpoints]
 	

@@ -38,6 +38,7 @@
   "lava.vision.savefile": true,
   "lava.vision.slices": 40,
   "lava.vision.threshold": 220,
+  "minesweeper.achieved.atdistance": 20.0,
   "minesweeper.achieved.stoptime": 5.0,
   "minesweeper.analysis.anglescale": 2.6,
   "minesweeper.analysis.burrradius": 11,

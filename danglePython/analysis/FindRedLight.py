@@ -189,7 +189,7 @@ class FindRedLight:
 						yawAngle -= 360.0
 					elif yawAngle < -180.0:
 						yawAngle += 360.0
-					self.results.shareResults(startTime, timestamp, angle, yawAngle, (ourPosition, center), (0,distance) )
+					self.results.shareResults(startTime, timestamp, angle, yawAngle, (ourPosition, center), [(0,distance)] )
 				elif angle != None:
 					# Ajust angle based on last successful analysis for display only
 					angle += (lastYaw - yaw)

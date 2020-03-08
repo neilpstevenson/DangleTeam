@@ -14,3 +14,6 @@ class LineHeading(SensorInterface):
 	def getStatus(self):
 		return self.visionIPC.getStatus()
 			
+	def getDistance(self):
+		return self.visionIPC.getPoints()[0,1]
+			
