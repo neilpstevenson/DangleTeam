@@ -31,7 +31,7 @@ MIN=900
 MAX=2000
 
 class Zgun(object):
-     def __init__(self,addr=0x10):
+    def __init__(self,addr=0x10):
         self.addr=addr
         try:
             self.sb=SMBus(1)
@@ -93,3 +93,16 @@ class Zgun(object):
             self.sb.write_byte_data(self.addr,2,0) #laser off
             self.sb.write_byte_data(self.addr,0x03,0x0) #motors off
             self.motor=False
+
+def main(args):
+    zgun=Zgun()
+    while True:
+    
+        zgun.fire()
+        time.sleep(2)
+#            print ('IO Error!')
+    return 0
+
+if __name__ == '__main__':
+    import sys
+    sys.exit(main(sys.argv))

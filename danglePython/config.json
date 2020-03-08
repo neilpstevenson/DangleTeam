@@ -6,7 +6,7 @@
     "--width=128",
     "--height=64",
     "--spi-bus-speed=8000000",
-    "--gpio-reset=4",
+    "--gpio-reset=13",
     "--gpio-data-command=9"
   ],
   "display.graph.numpoints": 300,

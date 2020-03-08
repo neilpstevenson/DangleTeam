@@ -1,15 +1,15 @@
+import time
 # Basic motor control process, using IPC interface
-import pygame
 from hardware.zgun import Zgun
 from interfaces.MotorControlSharedIPC import MotorControlSharedIPC
 from interfaces.ServoControlSharedIPC import ServoControlSharedIPC
 from interfaces.SimpleControlSharedIPC import SimpleControlSharedIPC
 import atexit
 
-pygame.init()
-
 # recommended for auto-disabling motors on shutdown!
-#atexit.register(redboard.Stop)
+def stopAtExit():
+	main.stopAll()
+atexit.register(stopAtExit)
 
 class MotorControlProcess:
 
@@ -26,16 +26,13 @@ class MotorControlProcess:
 		self.currentServoValues = [0.0]*32
 		self.zgun=Zgun()
 
+	def stopAll(self):
+		self.zgun.arm(False)
+		
 	def run(self):
 		done = False
 		running = False
-		self.zgun.arm()
 		while not done:
-			# Check for quit
-			for event in pygame.event.get(): # User did something.
-				if event.type == pygame.QUIT: # If user clicked close.
-					done = True # Flag that we are done so we exit this loop.
-
 			if running:
 				# Adjust the elevation servo
 				for servo in MotorControlProcess.managedServos:
@@ -52,17 +49,21 @@ class MotorControlProcess:
 				
 				# Trigger the motors to fire
 				for motor in MotorControlProcess.managedMotors:
-					torque = self.motorsIPC.getRequiredTorque(motor)
-					if torque > 0.0:
-						# Trigger
-						print("Fire!")
-						self.zgun.fire()
-						# Clear the trigger status
-						self.motorsIPC.setRequiredTorque(motor, 0.0)
-					self.currentMotorValues[motor] = torque
-
-			# This controller is not time-sensitive
-			pygame.time.wait(50) # mS
+					if self.motorsIPC.getMode(motor) > 0:
+						self.zgun.arm(True)
+						torque = self.motorsIPC.getRequiredTorque(motor)
+						if torque > 0.0:
+							# Trigger
+							print("Fire!")
+							self.zgun.fire()
+							# Clear the trigger status
+							self.motorsIPC.setRequiredTorque(motor, 0.0)
+						self.currentMotorValues[motor] = torque
+					else:
+						self.zgun.arm(False)
+						
+				# 20/s
+				time.sleep(0.05)
 
 			if self.motorsIPC.checkWatchdog() == 0:
 				print("MotorControlProcess: Paused due to watchdog expiry")
@@ -73,7 +74,8 @@ class MotorControlProcess:
 				for motor in MotorControlProcess.managedMotors:
 					self.motorsIPC.setRequiredTorque(motor, 0.0)
 					#motor_off(motor)
-				pygame.time.wait(1000) # mS
+				self.zgun.arm(False)
+				time.sleep(1.0)
 			else:
 				running = True
 

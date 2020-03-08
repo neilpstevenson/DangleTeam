@@ -7,7 +7,7 @@ class MotorControlSharedIPC:
 		Watchdog will be decremented on each control loop and if reaches zero, the motors will be stopped.  Set to 100 for 1 second protection.
 	'''
 	motor_dt = np.dtype([
-					('mode',np.uint16),		#0 = Torque controlled, 1 = Speed controlled, 2 = position controlled
+					('mode',np.uint16),		#0 = Off, 1 = Torque controlled, 2 = Speed controlled, 3 = Position controlled
 					('reqtorque',np.float32),
 					('acttorque',np.float32),
 					('reqspeed',np.float32),
@@ -55,6 +55,10 @@ class MotorControlSharedIPC:
 		self.data[0]['motors'][motor]['actposistion'] = value
 	def getCurrentPosition(self, motor):
 		return self.data[0]['motors'][motor]['actposistion'].copy()
+	def setMode(self, motor, mode):
+		self.data[0]['motors'][motor]['mode'] = mode
+	def getMode(self, motor):
+		return self.data[0]['motors'][motor]['mode'].copy()
 		
 	def checkWatchdog(self):
 		if self.data[0]['watchdog'] > 0:
