@@ -1,15 +1,21 @@
 from __future__ import print_function
 import cv2 as cv
 import argparse
+from interfaces.Config import Config
+
+# Get the last known config
+config = Config("calibrationHSV.json")
+low_H, low_S, low_V = config.get("minesweeper.analysis.colourTargetLowerTest", [165,94,69])
+high_H, high_S, high_V = config.get("minesweeper.analysis.colourTargetUpperTest", [180,255,255])
 
 max_value = 255
 max_value_H = 360//2
-low_H = 0
-low_S = 0
-low_V = 0
-high_H = max_value_H
-high_S = max_value
-high_V = max_value
+#low_H = 0
+#low_S = 0
+#low_V = 0
+#high_H = max_value_H
+#high_S = max_value
+#high_V = max_value
 window_capture_name = 'Video Capture'
 window_detection_name = 'Object Detection'
 low_H_name = 'Low H'
@@ -81,5 +87,12 @@ while True:
     cv.imshow(window_detection_name, frame_masked)
     
     key = cv.waitKey(30)
+    if key == ord('s'):
+        config.save()
+        # flash to confirm
+        cv.putText(frame_masked, f"Saved", (frame_masked.shape[0]*2//5, frame_masked.shape[1]*2//6), cv.FONT_HERSHEY_DUPLEX, 2, (255, 255, 255))
+        cv.imshow(window_detection_name, frame_masked)
+        key = cv.waitKey(250)
+        
     if key == ord('q') or key == 27:
         break

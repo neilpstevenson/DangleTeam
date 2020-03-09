@@ -82,12 +82,19 @@ class Simulation:
 					pointlist.append((320+(220-p*10), 160 - self.distances[s][p]/2.0))
 					pygame.draw.lines(self.screen, self.lineColor, False, pointlist, 2)
 
+			# Print up the estimated distances
+ 
 			# Show the basic info
 			#if (sampleNumber - sampleNumberPrev) >= 100 and timestamp > timestampPrev:
 			#	rate = float(sampleNumber - sampleNumberPrev) / (timestamp - timestampPrev)
 			#	timestampPrev = timestamp
 			#	sampleNumberPrev = sampleNumber
-			#	
-			#self.screen.blit(font.render("Elapsed: {:7.3f}s,  Rate: {:5.1f}/s, Yaw: {:5.1f},  Pitch: {:5.1f},  Roll: {:5.1f}".format(timestamp, rate, self.angleYaw,self.anglePitch,self.angleRoll), True, (255,255,255)), (150, 440))
+			#
+			left = self.sensors[2].getValue()
+			centre = self.sensors[1].getValue()
+			right = self.sensors[0].getValue()
+			self.screen.blit(font.render(f"L: {left if left < 8000 else ''}mm", True, (255,255,255)), (32, 32))
+			self.screen.blit(font.render(f"Centre: {centre if centre < 8000 else ''}mm", True, (255,255,255)), (260, 32))
+			self.screen.blit(font.render(f"R: {right if right < 8000 else ''}mm", True, (255,255,255)), (500, 32))
 				
 			pygame.display.flip()
