@@ -94,7 +94,8 @@ menus = np.array([
 	["Eco-Disaster", [ 
 			[Run, ['python3','DangleRun.py', '--challenge', 'ChallengeManualControl']] ]], 
 	["Zombie Apocalypse", [ 
-			[Run, ['python3','DangleRun.py', '--challenge', 'ChallengeManualControl']] ]], 
+			[Run, ['python3','DangleRun.py', '--challenge', 'ChallengeManualControl']], 
+			[Run, ['python3','zgunControlProcess.py']] ]], 
 	["Temple of Doom", [ 
 			[Run, ['python3','DangleRun.py', '--challenge', 'ChallengeManualControl']] ]], 
 	["Stop all", [
