@@ -88,6 +88,8 @@ while True:
     
     key = cv.waitKey(30)
     if key == ord('s'):
+        config.set("minesweeper.analysis.colourTargetLowerTest", [low_H, low_S, low_V])
+        config.set("minesweeper.analysis.colourTargetUpperTest", [high_H, high_S, high_V])
         config.save()
         # flash to confirm
         cv.putText(frame_masked, f"Saved", (frame_masked.shape[0]*2//5, frame_masked.shape[1]*2//6), cv.FONT_HERSHEY_DUPLEX, 2, (255, 255, 255))
