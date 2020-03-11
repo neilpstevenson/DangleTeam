@@ -37,8 +37,8 @@ class FindRedLight:
 		self.minHeight  = config.get("minesweeper.analysis.minHeight", 10)
 		# Scale factors for real-world measures
 		self.angleAdjustment = config.get("minesweeper.analysis.anglescale", 2.6)#1.3#0.55
-		self.distanceAdjustment = config.get("minesweeper.analysis.distancescale", 0.00005)#0.0007#0.0013
-		self.distanceOffset = int(self.analysis_width * config.get("minesweeper.analysis.distanceoffset", 1.75)) # relative to width
+		#self.distanceAdjustment = config.get("minesweeper.analysis.distancescale", 0.00005)#0.0007#0.0013
+		#self.distanceOffset = int(self.analysis_width * config.get("minesweeper.analysis.distanceoffset", 1.75)) # relative to width
 		
 		# define the lower and upper boundaries of the target 
 		# colour in the HSV color space, then initialize the
@@ -58,6 +58,17 @@ class FindRedLight:
 		self.frameDelayMs = config.get("minesweeper.analysis.frameDelayMs", 20) # delay after each frame analysis
 		config.save()
 		
+		# Load calibration values
+		configCal = Config("calibrationMinesweeper.json")
+		self.cameraNearestVisibleDistance = configCal.get("distance.analysis.nearest", 130)
+		self.cameraNearestVisiblePixels = int(self.cameraNearestVisibleDistance * 3.5) # Rough approximation equivallent!!
+		self.cameraFurthestVisiblePixel = configCal.get("distance.analysis.horizon", 500)
+		self.cameraHeightDistance = configCal.get("distance.analysis.cameraHeight", 170)
+		calibrationResolution = configCal.get("distance.analysis.calibrationResolution", [480,640])
+		self.cameraHeightAdjustment = np.sqrt(self.cameraHeightDistance*self.cameraHeightDistance + self.cameraNearestVisibleDistance*self.cameraNearestVisibleDistance) / self.cameraNearestVisibleDistance
+		# Adjust for the analysis picture resolution being different to the calibrator
+		self.cameraFurthestVisiblePixel = self.cameraFurthestVisiblePixel * self.analysis_width // calibrationResolution[1]
+
 		# Results IPC
 		self.results = LineAnalysisSharedIPC()
 		self.results.create()
@@ -159,12 +170,18 @@ class FindRedLight:
 						hasResult = True
 						
 						# Calculate the angle from the bottom centre to the centre
-						ourPosition = (hsv.shape[1]//2, hsv.shape[0] + self.distanceOffset)
+						ourPosition = (hsv.shape[1]//2, hsv.shape[0] + self.cameraNearestVisiblePixels)
 						angle = np.arctan((ourPosition[0]-center[0])/(ourPosition[1]-center[1])) * 180.0/3.14159 * self.angleAdjustment
 						#print(f"ourPosition: {ourPosition}, circlecentre: {(x, y)}, momentscentre: {center}")
 						print(f"angle: {angle}, center: {center}")
+						
 						# Distance approximation
-						distance = (ourPosition[1]-center[1]) ** 2 * self.distanceAdjustment
+						dist_recip = self.cameraFurthestVisiblePixel - (hsv.shape[0] - center[1])
+						if dist_recip > 0:
+							distance = ((((self.cameraFurthestVisiblePixel-1) / dist_recip) - 1) * self.cameraHeightAdjustment + 1) * self.cameraNearestVisibleDistance
+						else:
+							distance = 999
+						#distance = (ourPosition[1]-center[1]) ** 2 * self.distanceAdjustment
 						print(f"distance: {distance}mm")
 						
 						if self.showImage:

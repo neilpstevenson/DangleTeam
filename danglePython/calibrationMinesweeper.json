@@ -1,0 +1,10 @@
+{
+  "distance.analysis.calibrationResolution": [
+    480,
+    640,
+    3
+  ],
+  "distance.analysis.cameraHeight": 170,
+  "distance.analysis.horizon": 490,
+  "distance.analysis.nearest": 130
+}

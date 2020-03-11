@@ -6,10 +6,10 @@ from interfaces.Config import Config
 
 # Get the last known config
 config = Config("calibrationDistance.json")
-nearest = config.get("distance.analysis.nearest", 20)
-horizon = config.get("distance.analysis.horizon", 300)
-#cameraHeight = config.get("distance.analysis.cameraHeight", 170)
-cameraF = config.get("distance.analysis.camera_f", 1.4)
+nearest = config.get("distance.analysis.nearest", 130)
+horizon = config.get("distance.analysis.horizon", 500)
+cameraHeight = config.get("distance.analysis.cameraHeight", 170)
+#cameraF = config.get("distance.analysis.camera_f", 1.4)
 
 max_value_horizon = 640
 window_capture_name = 'Video Capture'
@@ -48,7 +48,7 @@ while True:
     frame_annotated = frame.copy()
 
     
-    #effectiveNearestPont = np.sqrt(cameraHeight*cameraHeight + nearest*nearest)
+    cameraF = np.sqrt(cameraHeight*cameraHeight + nearest*nearest) / nearest
     
     # Draw the graticule
     for height in range(0, horizon, 30):
@@ -67,14 +67,25 @@ while True:
     
     key = cv.waitKey(30)
     if key == ord('s'):
-        config.set("distance.analysis.camera_f", cameraF)
         config.set("distance.analysis.nearest", nearest)
         config.set("distance.analysis.horizon", horizon)
+        config.set("distance.analysis.cameraHeight", cameraHeight)
         config.save()
         # flash to confirm
         cv.putText(frame_annotated, f"Saved", (frame_annotated.shape[0]*2//5, frame_annotated.shape[1]*2//6), cv.FONT_HERSHEY_DUPLEX, 2, (255, 255, 255))
         cv.imshow(window_detection_name, frame_annotated)
-        key = cv.waitKey(250)
+        key = cv.waitKey(500)
+    elif key == ord('m'):
+        configM = Config("calibrationMinesweeper.json")
+        configM.set("distance.analysis.nearest", nearest)
+        configM.set("distance.analysis.horizon", horizon)
+        configM.set("distance.analysis.cameraHeight", cameraHeight)
+        configM.set("distance.analysis.calibrationResolution", frame_annotated.shape)
+        configM.save()
+        # flash to confirm
+        cv.putText(frame_annotated, f"Saved to Minesweeper", (frame_annotated.shape[0]*1//10, frame_annotated.shape[1]*2//6), cv.FONT_HERSHEY_DUPLEX, 1.5, (255, 255, 255))
+        cv.imshow(window_detection_name, frame_annotated)
+        key = cv.waitKey(500)
         
     if key == ord('q') or key == 27:
         break

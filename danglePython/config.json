@@ -40,12 +40,22 @@
   "lava.vision.threshold": 220,
   "minesweeper.achieved.atdistance": 20.0,
   "minesweeper.achieved.stoptime": 5.0,
-  "minesweeper.analysis.anglescale": 2.6,
+  "minesweeper.analysis.anglescale": 2.0,
   "minesweeper.analysis.burrradius": 11,
+  "minesweeper.analysis.colourTargetLowerLED": [
+    155,
+    24,
+    200
+  ],
   "minesweeper.analysis.colourTargetLowerTest": [
     165,
     94,
     69
+  ],
+  "minesweeper.analysis.colourTargetUpperLED": [
+    175,
+    255,
+    255
   ],
   "minesweeper.analysis.colourTargetUpperTest": [
     180,
@@ -59,8 +69,8 @@
   "minesweeper.analysis.minHeight": 10,
   "minesweeper.analysis.minWidth": 15,
   "minesweeper.analysis.minsize": 10,
-  "minesweeper.analysis.useLEDColours": false,
-  "minesweeper.camera.tilt": 0.22,
+  "minesweeper.analysis.useLEDColours": true,
+  "minesweeper.camera.tilt": 0.15,
   "minesweeper.display.image": true,
   "minesweeper.display.trail": 25,
   "minesweeper.findlightturn.max": -15.0,
@@ -78,7 +88,7 @@
   "speedsteer.slow": 0.1,
   "speedsteer.slow.compensation": 1.0,
   "wall.camera.tilt": -0.4,
-  "wall.forward.maxdist": 450,
+  "wall.forward.maxdist": 500,
   "wall.headingturn.max": 0.5,
   "wall.leftright.maxdist": 600,
   "wall.move.followfactor": 300.0,
