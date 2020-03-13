@@ -1,7 +1,5 @@
 import time
-from display.demo_opts import get_device
 from luma.core.render import canvas
-from luma.core import cmdline, error
 from interfaces.SensorAccessFactory import SensorAccessFactory
 
 class displayPosition:
@@ -16,8 +14,7 @@ class displayPosition:
 		
 	def showPosition(self, draw):
 		padding = 2
-		shape_width = 20
-		top = padding
+		top = 2
 		msg = f"Yaw: {self.yaw.getValue():.1f}"
 		draw.text((padding, top + 4), 'Current Positions', fill="white")
 		draw.text((padding, top + 16), msg, fill="white")
@@ -34,11 +31,14 @@ class displayPosition:
 				return
 			time.sleep(0.05)
 
-class testGetValue:
-	def getValue(self):
-		return False			
 
 if __name__ == "__main__":
+	class testGetValue:
+		def getValue(self):
+			return False		
+				
+	from display.demo_opts import get_device
+	from luma.core import cmdline, error
 	try:
 		defaultDisplayConfig = ["--display=ssd1309", "--interface=spi", "--width=128", "--height=64", "--spi-bus-speed=8000000", "--gpio-reset=4", "--gpio-data-command=9"]
 		displayDef = defaultDisplayConfig

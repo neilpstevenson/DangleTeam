@@ -9,6 +9,7 @@ from analysis.StepUpDownButtonValue import StepUpDownButtonValue
 from display.menu import MenuDisplay
 from display.welcome import showWelcomeSequence
 from display.displayPosition import displayPosition
+from display.displayText import displayText
 
 def Run(selected, actionParams):
 	# Attempt to start the sub-process(es)
@@ -26,11 +27,11 @@ def Run(selected, actionParams):
 		print(f"Starting: {actionParams}")
 		display.message(f"Starting\n{pythonName}")
 		psutil.Popen(actionParams)
-		time.sleep(1.5)
+		time.sleep(0.5)
 	else:
 		print(f"Already running: {actionParams}")
 		display.message(f"Running\n{pythonName}")
-		time.sleep(0.5)
+		time.sleep(0.3)
 
 def StopAll(selected, actionParams):
 	# Kill any existing processes
@@ -43,7 +44,7 @@ def StopAll(selected, actionParams):
 					print(f"Stopping: {processCmd}")
 					display.message(f"Stopping\n{pythonName}")
 					process.kill()
-					time.sleep(1)
+					time.sleep(0.2)
 
 def DisplayScreenSaver(selected, actionParams):
 	stopButton = sensors.button(10)
@@ -52,6 +53,12 @@ def DisplayScreenSaver(selected, actionParams):
 def DisplayPositions(selected, actionParams):
 	stopButton = sensors.button(10)
 	disp = displayPosition(display.getDevice(), stopButton)
+	disp.main()
+
+def DisplayText(selected, actionParams):
+	stopButton = sensors.button(10)
+	text = actionParams[0]
+	disp = displayText(display.getDevice(), stopButton, text)
 	disp.main()
 
 def GetSelection(selected):
@@ -83,21 +90,27 @@ menus = np.array([
 			[DisplayPositions, []] ]], 
 	["Escape Route", [ 
 			[Run, ['python3','ToFSensorProcess.py']], 
-			[Run, ['python3','displayToF.py']],
-			[Run, ['python3','DangleRun.py', '--challenge', 'ChallengeWallFollowControl']] ]], 
+			#[Run, ['python3','displayToF.py']],
+			[Run, ['python3','DangleRun.py', '--challenge', 'ChallengeWallFollowControl']],
+			[DisplayText, ['Escape\nRoute']] ]], 
 	["Lava Palava", [
 			[Run, ['python3','VisionLineProcessor.py']], 
-			[Run, ['python3','DangleRun.py', '--challenge', 'ChallengeLavaPalava']] ]], 
+			[Run, ['python3','DangleRun.py', '--challenge', 'ChallengeLavaPalava']],
+			[DisplayText, ['Lava\nPalava']] ]], 
 	["Minesweeper", [
 			[Run, ['python3','RedLightProcessor.py']], 
-			[Run, ['python3','DangleRun.py', '--challenge', 'ChallengeMinesweeper']] ]],
+			[Run, ['python3','DangleRun.py', '--challenge', 'ChallengeMinesweeper']],
+			[DisplayText, ['Minesweeper']] ]],
 	["Eco-Disaster", [ 
-			[Run, ['python3','DangleRun.py', '--challenge', 'ChallengeManualControl']] ]], 
+			[Run, ['python3','DangleRun.py', '--challenge', 'ChallengeManualControl']],
+			[DisplayText, ['Eco-\nDisaster']] ]], 
 	["Zombie Apocalypse", [ 
 			[Run, ['python3','DangleRun.py', '--challenge', 'ChallengeManualControl']], 
-			[Run, ['python3','zgunControlProcess.py']] ]], 
+			[Run, ['python3','zgunControlProcess.py']],
+			[DisplayText, ['Zombie\nApocalypse']] ]], 
 	["Temple of Doom", [ 
-			[Run, ['python3','DangleRun.py', '--challenge', 'ChallengeManualControl']] ]], 
+			[Run, ['python3','DangleRun.py', '--challenge', 'ChallengeManualControl']],
+			[DisplayText, ['Temple\nof Doom']] ]], 
 	["Stop all", [
 			[StopAll, []] ]],
 	["Quit", [

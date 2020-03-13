@@ -23,7 +23,7 @@ class MotorControlProcess:
 		self.currentMotorValues = [0.0]*3
 		self.servosIPC = ServoControlSharedIPC()
 		self.servosIPC.create()
-		self.currentServoValues = [0.0]*32
+		self.currentServoValues = [0]*32
 		self.zgun=Zgun()
 
 	def stopAll(self):
@@ -38,7 +38,7 @@ class MotorControlProcess:
 				for servo in MotorControlProcess.managedServos:
 					if self.servosIPC.getStatus(servo) > 0:
 						# Active
-						newPosition = self.servosIPC.getPosition(servo) * 500.0 + 1500.0 # 1000-2000 is allowed range
+						newPosition = int(self.servosIPC.getPosition(servo) * 500.0 + 1500.0) # 1000-2000 is allowed range
 						if self.currentServoValues[servo] != newPosition:
 							self.currentServoValues[servo] = newPosition
 							self.zgun.setpos(newPosition)
@@ -63,7 +63,7 @@ class MotorControlProcess:
 						self.zgun.arm(False)
 						
 				# 20/s
-				time.sleep(0.05)
+				time.sleep(0.03)
 
 			if self.motorsIPC.checkWatchdog() == 0:
 				print("MotorControlProcess: Paused due to watchdog expiry")
