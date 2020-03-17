@@ -95,6 +95,7 @@ class MotorControlProcess:
 					motorL.setTorque(0.0)
 					motorR.setTorque(0.0)
 					time.sleep(self.pollrate)
+				time.sleep(1.0)
 			else:
 				running = True
 
