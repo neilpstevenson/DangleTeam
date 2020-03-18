@@ -1,8 +1,7 @@
-import hardware.redboard as redboard
 import time
 
 class Motor:
-	def __init__(self, motor, max_torque = 1.0, delta_torque = 0.025):
+	def __init__(self, motor, redboardSetFn, max_torque = 1.0, delta_torque = 0.025):
 		self.motor = motor
 		self.max_torque = max_torque
 		self.delta_torque = delta_torque
@@ -11,10 +10,7 @@ class Motor:
 		self.actual_speed = 0.0
 		self.pwmCount = 0
 		self.last_speed = 999
-		if self.motor == 1:
-			self.redboardM = redboard.M1
-		elif self.motor == 2:
-			self.redboardM = redboard.M2
+		self.redboardM = redboardSetFn
 	
 	def updateMotor(self):
 		required_torque = self.current_torque * 100.0

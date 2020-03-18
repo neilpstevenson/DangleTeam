@@ -2,7 +2,7 @@
 # python3 FrindRedLight.py [--video recording.mp4]
 
 # import the necessary packages
-from collections import deque
+from collections import deque, namedtuple
 from imutils.video import VideoStream
 import numpy as np
 import argparse
@@ -10,7 +10,7 @@ import cv2
 import imutils
 import time
 # Interfaces
-from interfaces.LineAnalysisSharedIPC import LineAnalysisSharedIPC
+from interfaces.ImageAnalysisSharedIPC import ImageAnalysisSharedIPC
 from interfaces.SensorAccessFactory import SensorAccessFactory
 from interfaces.Config import Config
 # Analysis classes
@@ -70,7 +70,7 @@ class FindRedLight:
 		self.cameraFurthestVisiblePixel = self.cameraFurthestVisiblePixel * self.analysis_width // calibrationResolution[1]
 
 		# Results IPC
-		self.results = LineAnalysisSharedIPC()
+		self.results = ImageAnalysisSharedIPC()
 		self.results.create()
 		
 		# Current Yaw reading
@@ -206,7 +206,9 @@ class FindRedLight:
 						yawAngle -= 360.0
 					elif yawAngle < -180.0:
 						yawAngle += 360.0
-					self.results.shareResults(startTime, timestamp, angle, yawAngle, (ourPosition, center), [(0,distance)] )
+					ImageResult = namedtuple('ImageResult', 'status typename name confidence distance size yaw angle')
+					result0 = ImageResult(1, 'Area', 'Red', 100.0, distance, [0,0], yawAngle, angle)
+					self.results.shareResults(startTime, timestamp, [result0] )
 				elif angle != None:
 					# Ajust angle based on last successful analysis for display only
 					angle += (lastYaw - yaw)

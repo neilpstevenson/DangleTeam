@@ -1,5 +1,7 @@
 from interfaces.LineAnalysisSharedIPC import LineAnalysisSharedIPC
+from interfaces.ImageAnalysisSharedIPC import ImageAnalysisSharedIPC
 from interfaces.LineHeading import LineHeading
+from interfaces.ImageResult import ImageResult
 
 class VisionAccessFactory:
 
@@ -7,6 +9,8 @@ class VisionAccessFactory:
 		# Initialise the IPC classes
 		self.lineIPC = LineAnalysisSharedIPC()
 		self.lineIPC.read()
+		self.imageIPC = ImageAnalysisSharedIPC()
+		self.imageIPC.read()
 
 	__instance = None
 	@classmethod
@@ -24,3 +28,6 @@ class VisionAccessFactory:
 	# These are the primary methods used to access the IPC values
 	def getLineHeading(self):
 		return LineHeading(self.lineIPC)
+
+	def getImageResult(self):
+		return ImageResult(self.imageIPC)

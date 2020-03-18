@@ -13,7 +13,7 @@ atexit.register(redboard.Stop)
 
 class MotorControlProcess:
 
-	managedServos = (5,6,13,27,20,21,22)
+	managedServos = (5,6,27,20,21,22) #13,
 	
 	def __init__(self):
 		# Initialise the IPC classes
@@ -35,9 +35,15 @@ class MotorControlProcess:
 	def run(self):
 		done = False
 		running = False
-		motorL = Motor(2, delta_torque = self.delta_torque)
-		motorR = Motor(1, delta_torque = self.delta_torque)
-		
+		motorL = Motor(2, redboard.M2, delta_torque = self.delta_torque)
+		motorR = Motor(1, redboard.M1, delta_torque = self.delta_torque)
+
+		# Set names
+		self.motorsIPC.setName(2, "Left Motor")
+		self.motorsIPC.setName(1, "Right Motor")
+		print(f"2: {self.motorsIPC.getName(2)}")
+		print(f"1: {self.motorsIPC.getName(1)}")
+
 		while not done:
 			if running:
 				# Adjust torque

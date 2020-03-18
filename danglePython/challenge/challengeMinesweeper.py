@@ -157,7 +157,7 @@ class ChallengeMinesweeper(ChallengeInterface):
 		self.headingError = HeadingPIDErrorValue(yaw, self.pidHeading, yaw.getValue(), min = -1.0, max = 1.0, scaling=1.0)
 		
 		# Vision
-		self.visionTargetHeading = self.vision.getLineHeading()
+		self.visionTargetHeading = self.vision.getImageResult()
 
 		# Motors
 		motorsStop = FixedValue(0.0)
