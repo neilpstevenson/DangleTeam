@@ -16,7 +16,7 @@ from interfaces.Config import Config
 # Analysis classes
 from analysis.ElapsedTime import elapsedTime
 
-class FindRedLight:
+class MinesweeperImageCaptureAndAnalysis:
 	
 	def __init__(self):
 		# construct the argument parse and parse the arguments
