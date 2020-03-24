@@ -128,8 +128,8 @@ class ChallengeManualControl(ChallengeInterface):
 
 		# Yaw control
 		yaw = self.sensors.yaw()
-		self.pidHeading = PID(self.pidP, self.pidI, self.pidD, sample_time=0.008, proportional_on_measurement=self.proportionalOnMeasure)
-		self.headingError = HeadingPIDErrorValue(yaw, self.pidHeading, yaw.getValue(), min = -1.0, max = 1.0, scaling=1.0)
+		self.pidHeading = PID(self.pidP, self.pidI, self.pidD, sample_time=0.008, proportional_on_measurement=self.proportionalOnMeasure, output_limits=(-1.0, 1.0))
+		self.headingError = HeadingPIDErrorValue(yaw, self.pidHeading, yaw.getValue())
 		
 		# Motors
 		motorsStop = FixedValue(0.0)

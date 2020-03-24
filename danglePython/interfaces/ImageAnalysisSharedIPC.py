@@ -1,12 +1,13 @@
 import numpy as np
+from collections import namedtuple
 
 class ImageAnalysisSharedIPC:
 	# Structure of the image analysis shared memory
 	image_analysis_dt = np.dtype([
 					('status', np.uint16),	# 0=no value, 1=valid value
-					('typename', np.unicode_, (32)),	# E.g. "Person"
-					('name', np.unicode_, (32)),		# E.g. "Fred bloggs"
-					('confidence',np.float32),			# Match confidence 1-100%
+					('typename', np.dtype('U32')),	# E.g. "Person"
+					('name', np.dtype('U32')),		# E.g. "Fred bloggs"
+					('confidence',np.float32),		# Match confidence 1-100%
 					('distance',np.float32),# Estimated distance to nearest point of object (in mm)
 					('size',np.float32,(2)),# Estimated size of bounding rectangle of object (in mm)
 					('yaw',np.float32),		# Absolute yaw to centre of object at time of image capture
@@ -19,6 +20,9 @@ class ImageAnalysisSharedIPC:
 					('numberimages',np.uint16),
 					('images',image_analysis_dt, (64))])
 	filename = '/dev/shm/image_analysis_shared.mmf'
+
+	# Interface class to set the results array
+	ImageResult = namedtuple('ImageResult', 'status typename name confidence distance size yaw angle')
 	
 	def create(self):
 		try:

@@ -62,10 +62,12 @@
     255,
     255
   ],
+  "minesweeper.analysis.debugPrint": false,
   "minesweeper.analysis.frameDelayMs": 20,
   "minesweeper.analysis.imagewidth": 480,
   "minesweeper.analysis.minHeight": 10,
   "minesweeper.analysis.minWidth": 15,
+  "minesweeper.analysis.useCalibrationColours": true,
   "minesweeper.analysis.useLEDColours": true,
   "minesweeper.camera.tilt": 0.15,
   "minesweeper.display.image": true,

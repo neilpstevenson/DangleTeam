@@ -54,8 +54,8 @@ class ChallengeLavaPalava(ChallengeInterface):
 	def createProcesses(self, highPriorityProcesses, medPriorityProcesses):
 		# Yaw control
 		yaw = self.sensors.yaw()
-		self.pidHeading = PID(self.pidP, self.pidI, self.pidD, sample_time=0.008, proportional_on_measurement=self.proportionalOnMeasure)
-		self.headingError = HeadingPIDErrorValue(yaw, self.pidHeading, yaw.getValue(), min = -1.0, max = 1.0, scaling=1.0)
+		self.pidHeading = PID(self.pidP, self.pidI, self.pidD, sample_time=0.008, proportional_on_measurement=self.proportionalOnMeasure, output_limits=(-1.0, 1.0))
+		self.headingError = HeadingPIDErrorValue(yaw, self.pidHeading, yaw.getValue())
 		# Initialise the PID
 		self.headingError.getValue()
 		

@@ -20,7 +20,7 @@ class RedLightProcessor:
 		
 	def run(self):
 		analyser = FindRedLight()
-		analyser.capture()
+		analyser.captureContinuous()
 
 processor = RedLightProcessor()
 processor.run()

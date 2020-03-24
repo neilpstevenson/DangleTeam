@@ -12,8 +12,8 @@ class SensorsProcess:
 		self.sensorsIPC.create()
 		
 	def initialiseVL53L0XSensors(self, muxAddress):
-		# Create a VL53L0X object for device on TCA9548A bus 1
-		self.tof1 = VL53L0X(TCA9548A_Num=1, TCA9548A_Addr=muxAddress)
+		# Create a VL53L0X object for device on TCA9548A bus 2
+		self.tof1 = VL53L0X(TCA9548A_Num=2, TCA9548A_Addr=muxAddress)
 		# Create a VL53L0X object for device on TCA9548A bus 4
 		self.tof2 = VL53L0X(TCA9548A_Num=4, TCA9548A_Addr=muxAddress)
 		# Create a VL53L0X object for device on TCA9548A bus 7

@@ -123,7 +123,7 @@ class ChallengeMinesweeper(ChallengeInterface):
 			# Head towards indicated light target
 			self.headingError.setTarget(self.visionTargetHeading.getValue())
 			#print(self.pidHeading.components)
-			print(f"Distance to target: {self.visionTargetHeading.getDistance()}")
+			print(f"Distance to target: {self.visionTargetHeading.getDistance():.0f}mm at {self.visionTargetHeading.getValue():.1f}deg")
 		else:
 			self.stateMachine.changeState("Manual")
 			
@@ -153,8 +153,8 @@ class ChallengeMinesweeper(ChallengeInterface):
 
 		# Yaw control
 		yaw = self.sensors.yaw()
-		self.pidHeading = PID(self.pidP, self.pidI, self.pidD, sample_time=0.008, proportional_on_measurement=self.proportionalOnMeasure)
-		self.headingError = HeadingPIDErrorValue(yaw, self.pidHeading, yaw.getValue(), min = -1.0, max = 1.0, scaling=1.0)
+		self.pidHeading = PID(self.pidP, self.pidI, self.pidD, sample_time=0.008, proportional_on_measurement=self.proportionalOnMeasure, output_limits=(-1.0, 1.0))
+		self.headingError = HeadingPIDErrorValue(yaw, self.pidHeading, yaw.getValue())
 		
 		# Vision
 		self.visionTargetHeading = self.vision.getImageResult()

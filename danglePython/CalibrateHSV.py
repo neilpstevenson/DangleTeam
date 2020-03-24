@@ -94,7 +94,16 @@ while True:
         # flash to confirm
         cv.putText(frame_masked, f"Saved", (frame_masked.shape[0]*2//5, frame_masked.shape[1]*2//6), cv.FONT_HERSHEY_DUPLEX, 2, (255, 255, 255))
         cv.imshow(window_detection_name, frame_masked)
-        key = cv.waitKey(250)
+        key = cv.waitKey(500)
+    elif key == ord('m'):
+        configM = Config("calibrationMinesweeper.json")
+        configM.set("minesweeper.analysis.colourTargetLower", [low_H, low_S, low_V])
+        configM.set("minesweeper.analysis.colourTargetUpper", [high_H, high_S, high_V])
+        configM.save()
+        # flash to confirm
+        cv.putText(frame_masked, f"Saved to Minesweeper", (frame_masked.shape[0]*2//5, frame_masked.shape[1]*2//6), cv.FONT_HERSHEY_DUPLEX, 2, (255, 255, 255))
+        cv.imshow(window_detection_name, frame_masked)
+        key = cv.waitKey(500)
         
     if key == ord('q') or key == 27:
         break
