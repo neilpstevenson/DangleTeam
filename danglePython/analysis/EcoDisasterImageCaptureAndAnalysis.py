@@ -16,7 +16,7 @@ from interfaces.Config import Config
 # Analysis classes
 from analysis.ElapsedTime import elapsedTime
 
-class MinesweeperImageCaptureAndAnalysis:
+class EcoDisasterImageCaptureAndAnalysis:
 	
 	def __init__(self):
 		# construct the argument parse and parse the arguments
@@ -80,9 +80,6 @@ class MinesweeperImageCaptureAndAnalysis:
 		self.sensors = SensorAccessFactory.getSingleton()
 		self.yawAccessor = self.sensors.yaw()
 		
-		# list of tracked points
-		self.trail = deque(maxlen=self.trailSize)
-
 	#
 	# Print a checkpoint time for an analysis stage
 	#
@@ -94,27 +91,109 @@ class MinesweeperImageCaptureAndAnalysis:
 	# Generate the filtered/masked frames that we are to analyse
 	#
 	def preprocessImage(self, frame):
-		# Blur the frame to get rid of some noise, and convert it to the HSV
-		# color space
-		blurred = cv2.blur(frame, (self.blur_radius, self.blur_radius))
+		blurred = cv2.GaussianBlur(frame, (self.blur_radius, self.blur_radius), 0)
 		hsv = cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV)
-		self.timedCheckpoint("blur")
-
 		# construct a mask for the color range required, then perform
 		# a series of dilations and erosions to remove any small
 		# blobs left in the mask
-		self.maskedFrame = cv2.inRange(hsv, self.colourTargetLower, self.colourTargetUpper)
-		self.maskedFrame = cv2.erode(self.maskedFrame, None, iterations=2)
-		self.maskedFrame = cv2.dilate(self.maskedFrame, None, iterations=2)
-		self.timedCheckpoint("mask created")
+		mask = cv2.inRange(hsv, (165,94,69), (180,255,255))
+		mask = cv2.erode(mask, None, iterations=2)
+		mask = cv2.dilate(mask, None, iterations=2)
+		self.edgedRed = cv2.Canny(mask, 50, 150)
+		
+		mask = cv2.inRange(hsv, (40,68,130), (78,255,255))
+		mask = cv2.erode(mask, None, iterations=2)
+		mask = cv2.dilate(mask, None, iterations=2)
+		self.edgedGreen = cv2.Canny(mask, 50, 150)
 
-	#
-	# Analyse the filtered/masked frames to produce the required results
-	#
-	def analyseImage(self):
+		# And simplier threshholds for the target regions
+		mask = cv2.inRange(hsv, (112,58,54), (141,255,255))
+		mask = cv2.erode(mask, None, iterations=2)
+		self.maskedBlue = cv2.dilate(mask, None, iterations=2)
+		
+		mask = cv2.inRange(hsv, (7,53,138), (29,255,255))
+		mask = cv2.erode(mask, None, iterations=2)
+		self.maskedYellow = cv2.dilate(mask, None, iterations=2)
+		
+		self.timedCheckpoint("edges created")
+
+	def analyseContours(self, cnts, frame, colour):
+		count = 0
+		for c in cnts:
+			# approximate the contour
+			peri = cv2.arcLength(c, True)
+			approx = cv2.approxPolyDP(c, 0.01 * peri, True)
+
+			# ensure that the approximated contour is "roughly" rectangular
+			if len(approx) >= 4 and len(approx) <= 16:
+				# compute the bounding box of the approximated contour and
+				# use the bounding box to compute the aspect ratio
+				(x, y, w, h) = cv2.boundingRect(approx)
+				aspectRatio = w / float(h)
+				#print(f"at: {(x,y)}, size: {(w,h)}, aspectRatio: {aspectRatio}, approx: {len(approx)}")
+
+				# compute the solidity of the original contour
+				#print(f"{c}")
+				area = cv2.contourArea(c)
+				hullArea = cv2.contourArea(cv2.convexHull(c))
+				solidity = area / float(hullArea)
+
+				# compute whether or not the width and height, solidity, and
+				# aspect ratio of the contour falls within appropriate bounds
+				keepDims = w > 15 and h > 25
+				keepSolidity = solidity > 0.4 #0.8 #0.9
+				#keepAspectRatio = aspectRatio >= 0.8 and aspectRatio <= 1.2
+				keepAspectRatio = aspectRatio >= 0.3 and aspectRatio <= 0.8
+
+				# ensure that the contour passes all our tests
+				if keepDims and keepSolidity and keepAspectRatio:
+					print(f"keep at: {(x,y)}: {len(approx)}, {keepDims}, {keepSolidity}({solidity:0.3f}), {keepAspectRatio}({aspectRatio:0.3f}), area: {area:0.3f}/{hullArea}")
+					# draw an outline around the target and update the status
+					# text
+					cv2.drawContours(frame, [approx], -1, (0, 0, 255), 4)
+					count += 1
+					#print(f"at: {(x,y)}, size: {(w,h)}, aspectRatio: {aspectRatio}, approx: {len(approx)}")
+
+
+					# compute the center of the contour region and draw the
+					# crosshairs
+					M = cv2.moments(approx)
+					(cX, cY) = (int(M["m10"] // M["m00"]), int(M["m01"] // M["m00"]))
+					(startX, endX) = (int(cX - (w * 0.15)), int(cX + (w * 0.15)))
+					(startY, endY) = (int(cY - (h * 0.15)), int(cY + (h * 0.15)))
+					# Put the count on the barrel
+					cv2.putText(frame, f"{count}", (startX, cY), cv2.FONT_HERSHEY_SIMPLEX, 0.6,
+						(0, 0, 0), 2)
+					#cv2.line(frame, (startX, cY), (endX, cY), (0, 0, 255), 3)
+					#cv2.line(frame, (cX, startY), (cX, endY), (0, 0, 255), 3)
+				else:
+					print(f"reject at: {(x,y)}, {len(approx)}, {keepDims}, {keepSolidity}({solidity:0.3f}), {keepAspectRatio}({aspectRatio:0.3f}), area: {area:0.3f}/{hullArea}")
+					# compute the center of the contour region and draw the
+					# crosshairs
+					cv2.drawContours(frame, [approx], -1, (0, 0, 0), 1)
+					M = cv2.moments(approx)
+					if M["m00"] != 0.0:
+						(cX, cY) = (int(M["m10"] // M["m00"]), int(M["m01"] // M["m00"]))
+						(startX, endX) = (int(cX - (w * 0.15)), int(cX + (w * 0.15)))
+						(startY, endY) = (int(cY - (h * 0.15)), int(cY + (h * 0.15)))
+						# Put the discount reason on the region
+						if not keepDims:
+							reason = "small"
+						elif not keepSolidity:
+							reason = "!solid"
+						elif not keepAspectRatio:
+							reason = "!rectangle"
+						cv2.putText(frame, f"{reason}", (startX, cY), cv2.FONT_HERSHEY_SIMPLEX, 0.6,
+							(0, 0, 0), 2)
+					
+			else:
+				print(f"reject cnts {len(approx)}")
+		return count
+		
+	def analyseRegions(self, maskedFrame):
 		# find contours in the mask and initialize the current
 		# (x, y) center of the ball
-		cnts = cv2.findContours(self.maskedFrame, cv2.RETR_EXTERNAL,
+		cnts = cv2.findContours(maskedFrame, cv2.RETR_EXTERNAL,
 			cv2.CHAIN_APPROX_SIMPLE)
 		cnts = imutils.grab_contours(cnts)
 		self.center = None
@@ -124,24 +203,22 @@ class MinesweeperImageCaptureAndAnalysis:
 		if len(cnts) > 0:
 			# find the largest contour in the mask, 
 			c = max(cnts, key=cv2.contourArea)
-			# find the best minimum enclosing circle and centroid
-			#((x, y), radius) = cv2.minEnclosingCircle(c)
 			# find the best enclosing rectangle
 			x, y, w, h = cv2.boundingRect(c)
 			M = cv2.moments(c)
 			self.center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
-			self.displayContours = cnts # to display only - for all, use: [c]
+			self.displayContours = [c] # to display - for all, use: cnts largest:[c]
 				
 			# only proceed if the radius meets a minimum size
 			if w >= self.minWidth and h >= self.minHeight:
 				self.hasResult = True
 				
 				# Calculate the angle from the bottom centre to the centre
-				self.ourPosition = (self.maskedFrame.shape[1]//2, self.maskedFrame.shape[0] + self.cameraNearestVisiblePixels)
+				self.ourPosition = (maskedFrame.shape[1]//2, maskedFrame.shape[0] + self.cameraNearestVisiblePixels)
 				self.angle = np.arctan((self.ourPosition[0]-self.center[0])/(self.ourPosition[1]-self.center[1])) * 180.0/3.14159 * self.angleAdjustment
 				
 				# Distance approximation
-				dist_recip = self.cameraFurthestVisiblePixel - (self.maskedFrame.shape[0] - self.center[1])
+				dist_recip = self.cameraFurthestVisiblePixel - (maskedFrame.shape[0] - self.center[1])
 				if dist_recip > 0:
 					self.distance = ((((self.cameraFurthestVisiblePixel-1) / dist_recip) - 1) * self.cameraHeightAdjustment + 1) * self.cameraNearestVisibleDistance
 				else:
@@ -157,76 +234,77 @@ class MinesweeperImageCaptureAndAnalysis:
 				print(f"distance: {self.distance}mm, angle: {self.angle}, center: {self.center}")
 			else:
 				print(f"no result")
+	#
+	# Analyse the filtered/masked frames to produce the required results
+	#
+	def analyseImage(self, frame):
+		# find contours in the edge map
+		cntsRed = cv2.findContours(self.edgedRed, cv2.RETR_EXTERNAL,
+			cv2.CHAIN_APPROX_SIMPLE)
+		cntsRed = imutils.grab_contours(cntsRed)
+		cntsGreen = cv2.findContours(self.edgedGreen, cv2.RETR_EXTERNAL,
+			cv2.CHAIN_APPROX_SIMPLE)
+		cntsGreen = imutils.grab_contours(cntsGreen)
+		
+		# Overlay everything detected
+		#cv2.polylines(frame, cnts,  True, (0, 255, 0), 2, 8)
+
+		# loop over the contours
+		counts = [0,0]
+		colour = -1
+		for cnts in cntsRed,cntsGreen:
+			colour += 1
+			#sortedCnts = sorted(cnts, key=lambda x: -cv2.contourArea(x))
+			# construct the list of bounding boxes and sort them from top to
+			# bottom
+			if len(cnts) > 1:
+				boundingBoxes = [cv2.boundingRect(c) for c in cnts]
+				(cnts, boundingBoxes) = zip(*sorted(zip(cnts, boundingBoxes),
+					key=lambda b:b[1][1], reverse=True))
+
+			counts[colour] = self.analyseContours(cnts, frame, colour)
+			
+		if sum(counts) > 0:
+			status = f"{counts[0]} Red Barrels Detected, {counts[1]} Green"
+		else:
+			status = "No barrels detected"
+			
+		# Work out the target regions
+		self.analyseRegions(self.maskedBlue)
+		if self.hasResult:
+			# Show contours found
+			cv2.polylines(frame, self.displayContours,  True, (255, 0, 0), 2, 8)		
+			cv2.putText(frame, "Clean Target", self.center, cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
+		self.analyseRegions(self.maskedYellow)
+		if self.hasResult:
+			# Show contours found
+			cv2.polylines(frame, self.displayContours,  True, (0, 255, 255), 2, 8)
+			cv2.putText(frame, "Dirty Target", self.center, cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 255), 2)
+				
+		# draw the status text on the frame
+		cv2.putText(frame, status, (20, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6,
+			(0, 0, 255), 2)
 
 	#
 	# Display an annotated image of the results
 	#		
 	def displayResults(self, frame):
-		# Draw an angle from where we are to target
-		if self.hasResult:
-			cv2.arrowedLine(frame, self.ourPosition, self.center, (0, 255, 0), 3)
-		# Display the results as text overlay
-		if self.ourPosition != None:
-			# Overlay the angle calculated
-			np.set_printoptions(precision=2)
-			cv2.putText(frame, f"Head {self.angle:+.1f}deg for {self.distance:.0f}mm", (5, frame.shape[0]-20), cv2.FONT_HERSHEY_DUPLEX, 0.5, (0, 255, 0), 1, cv2.LINE_AA)
 		if self.fps != None:
 			cv2.putText(frame, f"{self.fps}fps", (frame.shape[1]-60, frame.shape[0]-20), cv2.FONT_HERSHEY_DUPLEX, 0.5, (0, 255, 0), 1, cv2.LINE_AA)
-		# Show a trail of recent points
-		if self.hasResult:
-			self.trail.appendleft(self.center)
-		elif len(self.trail) > 0:
-			self.trail.pop()
-		for i in range(1, len(self.trail)):
-			# if either of the tracked points are None, ignore
-			# them
-			if self.trail[i - 1] is None or self.trail[i] is None:
-				continue
-			# Recent lines thicker than older lines
-			thickness = int(np.sqrt(self.trailSize / float(i + 1)) * 2.0)
-			cv2.line(frame, self.trail[i - 1], self.trail[i], (0, 0, 255), thickness)
-			
-		if self.hasResult:
-			# Show contours found
-			cv2.polylines(frame, self.displayContours,  True, (0, 255, 0), 2, 8)
-			
 		# show the frame to our screen
 		cv2.imshow("Frame", frame)
+		
+		cv2.imshow("EdgedRed", self.edgedRed)
+		cv2.imshow("EdgedGreen", self.edgedGreen)
+		cv2.imshow("Blue", self.maskedBlue)
+		cv2.imshow("Yellow", self.maskedYellow)
 
 	#
 	# Share the results for robot code consumption
 	#
 	def publishResults(self):
-		if self.hasResult:	
-			# self.overall capture/analysis time
-			endTime = cv2.getTickCount()
-			timestamp = (endTime - self.startTime) / cv2.getTickFrequency()
-			
-			yawHeading = self.yaw + self.angle 
-			if yawHeading > 180.0:
-				yawHeading -= 360.0
-			elif yawHeading < -180.0:
-				yawHeading += 360.0
-			result0 = ImageAnalysisSharedIPC.ImageResult(
-			 status = 1,
-			 typename = 'Area',
-			 name = 'Red',
-			 confidence = 90.0,
-			 distance = self.distance,
-			 size = [0,0],
-			 yaw = yawHeading,
-			 angle = self.angle )
-			self.results.shareResults(self.startTime, timestamp, [result0] )
-		elif self.angle != None:
-			# Ajust angle based on last successful analysis for display only
-			self.angle += (self.lastYaw - self.yaw)
-			if self.angle > 180.0:
-				self.angle -= 360.0
-			elif self.angle < -180.0:
-				self.angle += 360.0
-			# Inform receiver we had no results
-			self.results.noResults()
-
+		pass
+		
 	#
 	# Debug stuff	
 	#	
@@ -286,7 +364,7 @@ class MinesweeperImageCaptureAndAnalysis:
 				self.preprocessImage(frame)
 				
 				# Analyse the frame for artifacts of interest
-				self.analyseImage()
+				self.analyseImage(frame)
 				
 				# Display the results		
 				if self.showImage:

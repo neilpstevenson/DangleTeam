@@ -101,7 +101,7 @@ while True:
         configM.set("minesweeper.analysis.colourTargetUpper", [high_H, high_S, high_V])
         configM.save()
         # flash to confirm
-        cv.putText(frame_masked, f"Saved to Minesweeper", (frame_masked.shape[0]*2//5, frame_masked.shape[1]*2//6), cv.FONT_HERSHEY_DUPLEX, 2, (255, 255, 255))
+        cv.putText(frame_masked, f"Saved to Minesweeper", (frame_masked.shape[0]*1//10, frame_masked.shape[1]*2//6), cv.FONT_HERSHEY_DUPLEX, 1.5, (255, 255, 255))
         cv.imshow(window_detection_name, frame_masked)
         key = cv.waitKey(500)
         

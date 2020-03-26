@@ -19,6 +19,8 @@ if recordedVideo:
 else:
 	camera = VideoStream(src=0).start()
 
+count = 0
+
 # keep looping
 while True:
 	# grab the current frame and initialize the status text
@@ -33,6 +35,9 @@ while True:
 		
 	status = "No Barrels"
 
+	print(f"Frame {count}")
+	count += 1
+	
 	# convert the frame to grayscale, blur it, and detect edges
 	#gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 	#blurred = cv2.GaussianBlur(gray, (7, 7), 0)
@@ -58,7 +63,7 @@ while True:
 	cntsRed = cv2.findContours(edgedRed.copy(), cv2.RETR_EXTERNAL,
 		cv2.CHAIN_APPROX_SIMPLE)
 	cntsRed = imutils.grab_contours(cntsRed)
-	cntsGreen = cv2.findContours(maskGreen.copy(), cv2.RETR_EXTERNAL,
+	cntsGreen = cv2.findContours(edgedGreen.copy(), cv2.RETR_EXTERNAL,
 		cv2.CHAIN_APPROX_SIMPLE)
 	cntsGreen = imutils.grab_contours(cntsGreen)
 	
@@ -83,7 +88,7 @@ while True:
 			approx = cv2.approxPolyDP(c, 0.01 * peri, True)
 
 			# ensure that the approximated contour is "roughly" rectangular
-			if len(approx) >= 4 and len(approx) <= 16:
+			if len(approx) >= 6:# and len(approx) <= 16:
 				# compute the bounding box of the approximated contour and
 				# use the bounding box to compute the aspect ratio
 				(x, y, w, h) = cv2.boundingRect(approx)
@@ -91,6 +96,7 @@ while True:
 				#print(f"at: {(x,y)}, size: {(w,h)}, aspectRatio: {aspectRatio}, approx: {len(approx)}")
 
 				# compute the solidity of the original contour
+				#print(f"{c}")
 				area = cv2.contourArea(c)
 				hullArea = cv2.contourArea(cv2.convexHull(c))
 				solidity = area / float(hullArea)
@@ -100,16 +106,16 @@ while True:
 				keepDims = w > 25 and h > 25
 				keepSolidity = solidity > 0.4 #0.8 #0.9
 				#keepAspectRatio = aspectRatio >= 0.8 and aspectRatio <= 1.2
-				keepAspectRatio = aspectRatio >= 0.3 and aspectRatio <= 0.8
-				print(f"keep: {keepDims}, {keepSolidity}({solidity}), {keepAspectRatio}({aspectRatio})")
+				keepAspectRatio = aspectRatio >= 0.3 and aspectRatio <= 1.0
 
 				# ensure that the contour passes all our tests
 				if keepDims and keepSolidity and keepAspectRatio:
+					print(f"keep at: {(x,y)}: {keepDims}, {keepSolidity}({solidity:0.3f}), {keepAspectRatio}({aspectRatio:0.3f}), area: {area:0.3f}/{hullArea}")
 					# draw an outline around the target and update the status
 					# text
 					cv2.drawContours(frame, [approx], -1, (0, 0, 255), 4)
 					counts[colour] += 1
-					print(f"at: {(x,y)}, size: {(w,h)}, aspectRatio: {aspectRatio}, approx: {len(approx)}")
+					#print(f"at: {(x,y)}, size: {(w,h)}, aspectRatio: {aspectRatio}, approx: {len(approx)}")
 
 
 					# compute the center of the contour region and draw the
@@ -123,6 +129,26 @@ while True:
 						(0, 0, 0), 2)
 					#cv2.line(frame, (startX, cY), (endX, cY), (0, 0, 255), 3)
 					#cv2.line(frame, (cX, startY), (cX, endY), (0, 0, 255), 3)
+				else:
+					print(f"reject at: {(x,y)}, keep: {keepDims}, {keepSolidity}({solidity:0.3f}), {keepAspectRatio}({aspectRatio:0.3f}), area: {area:0.3f}/{hullArea}")
+					# compute the center of the contour region and draw the
+					# crosshairs
+					cv2.drawContours(frame, [approx], -1, (0, 0, 0), 1)
+					M = cv2.moments(approx)
+					if M["m00"] != 0.0:
+						(cX, cY) = (int(M["m10"] // M["m00"]), int(M["m01"] // M["m00"]))
+						(startX, endX) = (int(cX - (w * 0.15)), int(cX + (w * 0.15)))
+						(startY, endY) = (int(cY - (h * 0.15)), int(cY + (h * 0.15)))
+						# Put the discount reason on the region
+						if not keepDims:
+							reason = "jagged"
+						elif not keepSolidity:
+							reason = "!solid"
+						elif not keepAspectRatio:
+							reason = "!rectangle"
+						cv2.putText(frame, f"{reason}", (startX, cY), cv2.FONT_HERSHEY_SIMPLEX, 0.5,
+							(0, 0, 0), 2)
+					
 
 	if counts[0]+counts[1] > 0:
 		status = f"{counts[0]} Red Barrels Detected, {counts[1]} Green"
