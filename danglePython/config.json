@@ -17,7 +17,7 @@
   "heading.headingturn.max": 0.6,
   "heading.manualturn.max": -15.0,
   "heading.pid.d": 0.0012,
-  "heading.pid.i": 0.0005,
+  "heading.pid.i": 0.001,
   "heading.pid.p": 0.015,
   "heading.pid.pom": false,
   "lava.camera.tilt": 0.5,
@@ -95,5 +95,5 @@
   "wall.move.turnaheadspeed": 0.4,
   "wall.move.turnspeed": 1.0,
   "wall.speed": 0.6,
-  "wall.targetdist": 305
+  "wall.targetdist": 275
 }

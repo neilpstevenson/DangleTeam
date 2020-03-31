@@ -101,7 +101,7 @@ class EcoDisasterImageCaptureAndAnalysis:
 		mask = cv2.dilate(mask, None, iterations=2)
 		self.edgedRed = cv2.Canny(mask, 50, 150)
 		
-		mask = cv2.inRange(hsv, (40,68,130), (78,255,255))
+		mask = cv2.inRange(hsv, (40,63,27), (84,255,255))
 		mask = cv2.erode(mask, None, iterations=2)
 		mask = cv2.dilate(mask, None, iterations=2)
 		self.edgedGreen = cv2.Canny(mask, 50, 150)
@@ -166,6 +166,21 @@ class EcoDisasterImageCaptureAndAnalysis:
 						(0, 0, 0), 2)
 					#cv2.line(frame, (startX, cY), (endX, cY), (0, 0, 255), 3)
 					#cv2.line(frame, (cX, startY), (cX, endY), (0, 0, 255), 3)
+					
+					# Calculate distance and angle to bottom of barrel
+					self.calculateDistanceAngle(frame, x+w//2, y+h-1)
+				
+					# Add result to end list
+					result = ImageAnalysisSharedIPC.ImageResult(
+						 status = 1,
+						 typename = 'Barrel',
+						 name = colour,
+						 confidence = 90.0,
+						 distance = self.distance,
+						 size = [0,0],
+						 yaw = self.yawHeading,
+						 angle = self.angle )
+					self.results.append(result)
 				else:
 					print(f"reject at: {(x,y)}, {len(approx)}, {keepDims}, {keepSolidity}({solidity:0.3f}), {keepAspectRatio}({aspectRatio:0.3f}), area: {area:0.3f}/{hullArea}")
 					# compute the center of the contour region and draw the
@@ -189,8 +204,27 @@ class EcoDisasterImageCaptureAndAnalysis:
 			else:
 				print(f"reject cnts {len(approx)}")
 		return count
+
+	def calculateDistanceAngle(self, frame, x, y):
+		# Calculate the angle from the bottom centre to the lowest point
+		self.ourPosition = (frame.shape[1]//2, frame.shape[0] + self.cameraNearestVisiblePixels)
+		self.angle = np.arctan((self.ourPosition[0]-x)/(self.ourPosition[1]-y)) * 180.0/3.14159 * self.angleAdjustment
 		
-	def analyseRegions(self, maskedFrame):
+		# Distance approximation
+		dist_recip = self.cameraFurthestVisiblePixel - (frame.shape[0] - y)
+		if dist_recip > 0:
+			self.distance = ((((self.cameraFurthestVisiblePixel-1) / dist_recip) - 1) * self.cameraHeightAdjustment + 1) * self.cameraNearestVisibleDistance
+		else:
+			self.distance = 999
+
+		self.yawHeading = self.yaw + self.angle 
+		if self.yawHeading > 180.0:
+			self.yawHeading -= 360.0
+		elif self.yawHeading < -180.0:
+			self.yawHeading += 360.0
+		
+
+	def analyseRegions(self, maskedFrame, colour):
 		# find contours in the mask and initialize the current
 		# (x, y) center of the ball
 		cnts = cv2.findContours(maskedFrame, cv2.RETR_EXTERNAL,
@@ -213,16 +247,20 @@ class EcoDisasterImageCaptureAndAnalysis:
 			if w >= self.minWidth and h >= self.minHeight:
 				self.hasResult = True
 				
-				# Calculate the angle from the bottom centre to the centre
-				self.ourPosition = (maskedFrame.shape[1]//2, maskedFrame.shape[0] + self.cameraNearestVisiblePixels)
-				self.angle = np.arctan((self.ourPosition[0]-self.center[0])/(self.ourPosition[1]-self.center[1])) * 180.0/3.14159 * self.angleAdjustment
+				# Calculate the angle and distances
+				self.calculateDistanceAngle(maskedFrame, x+w//2, y+h-1)
 				
-				# Distance approximation
-				dist_recip = self.cameraFurthestVisiblePixel - (maskedFrame.shape[0] - self.center[1])
-				if dist_recip > 0:
-					self.distance = ((((self.cameraFurthestVisiblePixel-1) / dist_recip) - 1) * self.cameraHeightAdjustment + 1) * self.cameraNearestVisibleDistance
-				else:
-					self.distance = 999
+				# Add result to end list
+				result = ImageAnalysisSharedIPC.ImageResult(
+					 status = 1,
+					 typename = 'Region',
+					 name = colour,
+					 confidence = 90.0,
+					 distance = self.distance,
+					 size = [0,0],
+					 yaw = self.yawHeading,
+					 angle = self.angle )
+				self.results.append(result)
 					
 		# Debug output	
 		if self.debugPrint:
@@ -252,6 +290,7 @@ class EcoDisasterImageCaptureAndAnalysis:
 		# loop over the contours
 		counts = [0,0]
 		colour = -1
+		colours = ['Red','Green']
 		for cnts in cntsRed,cntsGreen:
 			colour += 1
 			#sortedCnts = sorted(cnts, key=lambda x: -cv2.contourArea(x))
@@ -262,7 +301,7 @@ class EcoDisasterImageCaptureAndAnalysis:
 				(cnts, boundingBoxes) = zip(*sorted(zip(cnts, boundingBoxes),
 					key=lambda b:b[1][1], reverse=True))
 
-			counts[colour] = self.analyseContours(cnts, frame, colour)
+			counts[colour] = self.analyseContours(cnts, frame, colours[colour])
 			
 		if sum(counts) > 0:
 			status = f"{counts[0]} Red Barrels Detected, {counts[1]} Green"
@@ -270,12 +309,12 @@ class EcoDisasterImageCaptureAndAnalysis:
 			status = "No barrels detected"
 			
 		# Work out the target regions
-		self.analyseRegions(self.maskedBlue)
+		self.analyseRegions(self.maskedBlue, 'Blue')
 		if self.hasResult:
 			# Show contours found
 			cv2.polylines(frame, self.displayContours,  True, (255, 0, 0), 2, 8)		
 			cv2.putText(frame, "Clean Target", self.center, cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
-		self.analyseRegions(self.maskedYellow)
+		self.analyseRegions(self.maskedYellow, 'Yellow')
 		if self.hasResult:
 			# Show contours found
 			cv2.polylines(frame, self.displayContours,  True, (0, 255, 255), 2, 8)
@@ -284,6 +323,10 @@ class EcoDisasterImageCaptureAndAnalysis:
 		# draw the status text on the frame
 		cv2.putText(frame, status, (20, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6,
 			(0, 0, 255), 2)
+			
+		# Overall time taken
+		endTime = cv2.getTickCount()
+		self.elapsed = (endTime - self.startTime) / cv2.getTickFrequency()
 
 	#
 	# Display an annotated image of the results
@@ -298,6 +341,13 @@ class EcoDisasterImageCaptureAndAnalysis:
 		cv2.imshow("EdgedGreen", self.edgedGreen)
 		cv2.imshow("Blue", self.maskedBlue)
 		cv2.imshow("Yellow", self.maskedYellow)
+		
+		# Print up the results found
+		print(f"Total time taken {self.elapsed}")
+		print(f"Result count {len(self.results)}")
+		for result in self.results:
+			print(f"{result.typename}.{result.name}")
+			print(f"  d={result.distance:.0f}mm, size={result.size}, yaw={result.yaw:.1f}, angle={result.angle:.1f}")
 
 	#
 	# Share the results for robot code consumption
@@ -323,7 +373,11 @@ class EcoDisasterImageCaptureAndAnalysis:
 		# if a video path was not supplied, grab the reference
 		# to the webcam
 		if not self.recordedVideo:
-			vs = VideoStream(src=0).start()
+			vs = VideoStream(src=0)
+			vs.stream.stream.set( cv2.CAP_PROP_WHITE_BALANCE_BLUE_U, 7.5)
+			vs.stream.stream.set( cv2.CAP_PROP_WHITE_BALANCE_RED_V, 7.5)
+			vs.stream.stream.set( cv2.CAP_PROP_AUTO_WB, 0)
+			vs.start()
 		# otherwise, grab a reference to the video file
 		else:
 			vs = cv2.VideoCapture(self.videoFilenanme)
@@ -339,6 +393,8 @@ class EcoDisasterImageCaptureAndAnalysis:
 		
 		# keep looping
 		while True:
+			self.results = []
+			
 			with elapsedTime("Overall", printAtEnd = self.debugPrint) as self.overall:
 				self.startTime = cv2.getTickCount()
 				
