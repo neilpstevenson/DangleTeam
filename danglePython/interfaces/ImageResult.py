@@ -1,7 +1,7 @@
 from interfaces.SensorInterface import SensorInterface
 
 class ImageResult(SensorInterface):
-	""" Class to get the resuts of a vision-based heading analysis.  
+	""" Class to get the resuts of a vision-based image analysis.  
 	"""
 	
 	def __init__(self, visionIPC):
@@ -19,4 +19,20 @@ class ImageResult(SensorInterface):
 	def getDistance(self):
 		#print(f"distance: {self.visionIPC.getDistance(0)}")
 		return self.visionIPC.getDistance(0)
-			
+		
+	def updateSnapshot(self):
+		self.imageResults = self.visionIPC.getImageResults()
+		self.timestamp = self.visionIPC.getTimestamp()
+		self.elapsed = self.visionIPC.getElapsed()
+		return self.imageResults,self.timestamp,self.elapsed
+	
+	# These methods work on the last snapshot taken
+	def getImageResults(self):
+		return self.imageResults
+		
+	def getTimestamp(self):
+		return self.timestamp
+		
+	def getElapsed(self):
+		return self.elapsed
+		

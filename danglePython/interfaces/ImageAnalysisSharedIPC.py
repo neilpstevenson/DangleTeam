@@ -47,7 +47,7 @@ class ImageAnalysisSharedIPC:
 		self.data[0]['numberimages'] = len(results)
 		for result in range(len(results)):
 			res = self.data[0]['images'][result]
-			res['status'] = 1	# Valid
+			res['status'] = results[result].status
 			res['typename'] = results[result].typename
 			res['name'] = results[result].name
 			res['confidence'] = results[result].confidence
@@ -61,13 +61,29 @@ class ImageAnalysisSharedIPC:
 			
 	def noResults(self, status = 0):
 		for result in range(len(self.data[0]['images'])):
-			self.data[0]['images'][result]['status'] = status	# Invalid
+			self.data[0]['images'][result]['status'] = status	# Set Invalid
 
+	def getImageResults(self):
+		results = []
+		for result in range(self.data[0]['numberimages']):
+			res = self.data[0]['images'][result]
+			results.append(
+				ImageAnalysisSharedIPC.ImageResult(
+					status = res['status'].copy(),
+					typename = res['typename'].copy(),
+					name = res['name'].copy(),
+					confidence = res['confidence'].copy(),
+					distance = res['distance'].copy(),
+					size = res['size'].copy(),
+					yaw = res['yaw'].copy(),
+					angle = res['angle'].copy() ))
+		return results
+			
 	def getTimestamp(self):
-		return self.data[0]['timestamp']
+		return self.data[0]['timestamp'].copy()
 	
 	def getElapsed(self):
-		return self.data[0]['elapsed'] 
+		return self.data[0]['elapsed'].copy()
 		
 	def getStatus(self, result):
 		return self.data[0]['images'][result]['status']

@@ -73,8 +73,8 @@ class EcoDisasterImageCaptureAndAnalysis:
 		self.cameraFurthestVisiblePixel = self.cameraFurthestVisiblePixel * self.analysis_width // calibrationResolution[1]
 
 		# Results IPC
-		self.results = ImageAnalysisSharedIPC()
-		self.results.create()
+		self.resultsIpc = ImageAnalysisSharedIPC()
+		self.resultsIpc.create()
 		
 		# Yaw reading accessor
 		self.sensors = SensorAccessFactory.getSingleton()
@@ -353,7 +353,7 @@ class EcoDisasterImageCaptureAndAnalysis:
 	# Share the results for robot code consumption
 	#
 	def publishResults(self):
-		pass
+		self.resultsIpc.shareResults(self.startTime, self.elapsed, self.results )
 		
 	#
 	# Debug stuff	
