@@ -111,7 +111,7 @@ class EcoDisasterImageCaptureAndAnalysis:
 		mask = cv2.erode(mask, None, iterations=2)
 		self.maskedBlue = cv2.dilate(mask, None, iterations=2)
 		
-		mask = cv2.inRange(hsv, (7,53,138), (29,255,255))
+		mask = cv2.inRange(hsv, (6,64,80), (16,255,155))
 		mask = cv2.erode(mask, None, iterations=2)
 		self.maskedYellow = cv2.dilate(mask, None, iterations=2)
 		

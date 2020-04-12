@@ -29,6 +29,12 @@ class ImageResult(SensorInterface):
 	# These methods work on the last snapshot taken
 	def getImageResults(self):
 		return self.imageResults
+
+	def getImageResultByType(self, typeName):
+		return list(filter(lambda i: i.typename == typeName, self.imageResults))
+				
+	def getImageResultByNameAndType(self, name, typeName):
+		return list(filter(lambda i: i.name == name and i.typename == typeName, self.imageResults))
 		
 	def getTimestamp(self):
 		return self.timestamp
