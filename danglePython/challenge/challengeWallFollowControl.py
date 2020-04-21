@@ -43,12 +43,12 @@ class ChallengeWallFollowControl(ChallengeInterface):
 		self.zGunControl = ZGunControl()
 		# Get config
 		config = Config()
-		self.pidP = config.get("heading.pid.p", 0.06)
-		self.pidI = config.get("heading.pid.i", 0.001)
-		self.pidD = config.get("heading.pid.d", 0.004)
-		self.proportionalOnMeasure = config.get("heading.pid.pom", False)
-		self.maxForward = config.get("heading.forward.max", 1.0)
-		self.maxManualTurn = config.get("heading.manualturn.max", -15.0)
+		self.pidP = config.get("wall.pid.p", 0.015)
+		self.pidI = config.get("wall.pid.i", 0.0) #0.001)
+		self.pidD = config.get("wall.pid.d", 0.0012)
+		self.proportionalOnMeasure = config.get("wall.pid.pom", False)
+		self.maxForward = config.get("wall.forward.max", 1.0)
+		self.maxManualTurn = config.get("wall.manualturn.max", -15.0)
 		
 		self.maxHeadingTurn = config.get("wall.headingturn.max", 0.5)
 		self.autoMaxSpeed = config.get("wall.speed", 0.6)
