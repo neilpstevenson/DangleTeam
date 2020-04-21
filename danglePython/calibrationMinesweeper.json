@@ -8,13 +8,13 @@
   "distance.analysis.horizon": 490,
   "distance.analysis.nearest": 130,
   "minesweeper.analysis.colourTargetLower": [
-    173,
-    43,
-    195
+    159,
+    50,
+    114
   ],
   "minesweeper.analysis.colourTargetUpper": [
-    180,
-    95,
+    170,
+    255,
     255
   ]
 }

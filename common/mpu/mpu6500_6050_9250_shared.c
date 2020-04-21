@@ -347,6 +347,7 @@ int main(int argc, char**argv)
 	/* Push both gyro and accel data into the FIFO. */
 	mpu_configure_fifo(INV_XYZ_GYRO | INV_XYZ_ACCEL);
 	mpu_set_sample_rate(DEFAULT_MPU_HZ);
+	mpu_set_gyro_fsr(1000); //default is 2000, min is 250
 	/* Read back configuration in case it was set improperly. */
 	mpu_get_sample_rate(&gyro_rate);
 	mpu_get_gyro_fsr(&gyro_fsr);
