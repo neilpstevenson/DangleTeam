@@ -56,10 +56,11 @@ pi = pigpio.pi()
  
 pi.set_mode(dira, pigpio.OUTPUT)
 pi.set_mode(pwma, pigpio.OUTPUT)
+pi.set_PWM_range(pwma,255)
 
 pi.set_mode(dirb, pigpio.OUTPUT)
 pi.set_mode(pwmb, pigpio.OUTPUT)
- 
+pi.set_PWM_range(pwmb,255)
 
 pi.write(dira, 0)
 pi.write(dirb, 0)

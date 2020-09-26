@@ -101,6 +101,9 @@ class MotorControlProcess:
 					motorL.setTorque(0.0)
 					motorR.setTorque(0.0)
 					time.sleep(self.pollrate)
+				redboard.red_off()
+				redboard.green_off()
+				redboard.blue_off()
 				time.sleep(1.0)
 			else:
 				running = True
