@@ -87,7 +87,7 @@ static struct hal_s hal = { 0 };
  * board at Invensense. If needed, please modify the matrices to match the
  * chip-to-body matrix for your particular set up.
  */
-#define HORIZONTAL_ORIENTATION
+//#define HORIZONTAL_ORIENTATION
 #if defined HORIZONTAL_ORIENTATION
 static signed char gyro_orientation[9] = { -1,  0,  0,
 										    0, -1,  0,
