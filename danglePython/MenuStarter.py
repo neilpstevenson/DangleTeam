@@ -120,7 +120,7 @@ menus = np.array([
 	])
 
 # Enable the menu selected via joystick
-display = MenuDisplay(title, menus[:,0], 0)
+display = MenuDisplay(title, menus[:,0], 0, 3)
 
 # Stop everything first
 StopAll(-1, [])

@@ -10,10 +10,10 @@ from interfaces.Config import Config
 class MenuDisplay:
 	defaultDisplayConfig = ["--display=ssd1309", "--interface=spi", "--width=128", "--height=64", "--spi-bus-speed=8000000", "--gpio-reset=4", "--gpio-data-command=9"]
 	
-	def __init__(self, title, menuItems, selected):
-		self.titleFont = ImageFont.truetype("FreeSans.ttf", 14)
-		self.unselectedFont = ImageFont.truetype("Piboto-Regular.ttf", 10)
-		self.selectedFont = ImageFont.truetype("FreeSansBold.ttf", 20)
+	def __init__(self, title, menuItems, selected, scale = 1):
+		self.titleFont = ImageFont.truetype("FreeSans.ttf", 14*scale)
+		self.unselectedFont = ImageFont.truetype("Piboto-Regular.ttf", 10*scale)
+		self.selectedFont = ImageFont.truetype("FreeSansBold.ttf", 20*scale)
 		self.title = title
 		self.menuItems = menuItems
 		self.selected = selected

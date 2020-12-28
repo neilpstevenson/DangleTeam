@@ -9,7 +9,7 @@ from interfaces.Config import Config
 
 class VisionLineAnalysis:
 
-	def __init__(self, resolution, threshold, display, displayGrayscale, filename, blinkers, numSlices, framerate=30, ignoreTopSlices = 0, filterRatio=15, lookahead=0.8, saveRaw=True):
+	def __init__(self, resolution, threshold, display, displayGrayscale, filename, blinkers, numSlices, framerate=30, ignoreTopSlices = 0, filterRatio=15, lookahead=0.8, saveRaw=True, blackLine=True):
 		self.threshold = threshold
 		self.filename = filename
 		self.display = display
@@ -17,6 +17,7 @@ class VisionLineAnalysis:
 		self.blinkers = blinkers # pixels at either side of top
 		self.ignoreTopSlices = ignoreTopSlices
 		self.saveRaw = saveRaw
+		self.blackLine = blackLine
 		
 		# Create/overwrite
 		self.results = LineAnalysisSharedIPC()
@@ -75,8 +76,11 @@ class VisionLineAnalysis:
 			gray = cv2.cvtColor(original.copy(), cv2.COLOR_BGR2GRAY)
 			
 			# Apply blinkers
-			cv2.fillPoly(gray, blinkerPolys, 0)
-			
+			if self.blackLine:
+				cv2.fillPoly(gray, blinkerPolys, 255)
+			else:
+				cv2.fillPoly(gray, blinkerPolys, 0)
+				
 			#gray = cv2.GaussianBlur(gray, (self.radius, self.radius), 0)
 			gray = cv2.blur(gray, (self.radius, self.radius))
 
@@ -89,14 +93,24 @@ class VisionLineAnalysis:
 			for bit in range(len(slices)):
 				if bit >= self.ignoreTopSlices:
 					(minVal, maxVal, minLoc, maxLoc) = cv2.minMaxLoc(slices[bit])
-					point = (maxLoc[0],maxLoc[1]+offset)
 					offset += len(slices[bit])
-					if maxVal < self.threshold:
-						#print(f"Ignoring point: {point}, value {maxVal}")
-						pass
+					
+					if self.blackLine:
+						if minVal > self.threshold:
+							print(f"Ignoring point: {point}, min value {minVal}")
+							pass
+						else:
+							point = (minLoc[0],minLoc[1]+offset)
+							print(f"Using point: {point}, value {minVal}")
+							points.append(point)
 					else:
-						#print(f"Using point: {point}, value {maxVal}")
-						points.append(point)
+						if maxVal < self.threshold:
+							print(f"Ignoring point: {point}, max value {maxVal}")
+							pass
+						else:
+							point = (maxLoc[0],maxLoc[1]+offset)
+							print(f"Using point: {point}, value {maxVal}")
+							points.append(point)
 				else:
 					offset += len(slices[bit])
 		

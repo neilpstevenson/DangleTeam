@@ -124,6 +124,7 @@ class ChallengeLavaPalava(ChallengeInterface):
 			# Manual turns
 			if self.joystickLeftRight.getValue() != 0.0:
 				self.headingError.setTarget(self.sensors.yaw().getValue() + self.joystickLeftRight.getValue() * self.maxManualTurn)
+			print(f"Err: {self.headingError.getValue()}")
 			print(self.pidHeading.components)
 		else:
 			# No change in position
