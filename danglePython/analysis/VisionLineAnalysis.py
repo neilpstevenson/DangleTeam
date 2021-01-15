@@ -77,7 +77,24 @@ class VisionLineAnalysis:
 			
 			# Apply blinkers
 			if self.blackLine:
-				cv2.fillPoly(gray, blinkerPolys, 255)
+				#overlay = gray.copy()
+				#cv2.fillPoly(overlay, blinkerPolys, 255)
+				# Draw 5 vertical stripes for increasing whiteness
+				print(f"{gray.shape}")
+				overlay = np.zeros(gray.shape, np.uint8)
+				for v in range(5):
+					if count % 100 < 33:
+						# Left mask
+						cv2.rectangle(overlay, (self.blinkers*v*2//5, 0), (self.blinkers*(v*2+2)//5, self.resolution[1]-1), (5*20)-v*20, -1)
+					elif count % 100 < 67:
+						# Right mask
+						cv2.rectangle(overlay, (self.resolution[0]-1-self.blinkers*v*2//5, 0), (self.resolution[0]-1-self.blinkers*(v*2+2)//5, self.resolution[1]-1), (5*20)-v*20, -1)
+					else:
+						# Edge mask
+						cv2.rectangle(overlay, (self.blinkers*v//5, 0), (self.blinkers*(v+1)//5, self.resolution[1]-1), (5*20)-v*20, -1)
+						cv2.rectangle(overlay, (self.resolution[0]-1-self.blinkers*v//5, 0), (self.resolution[0]-1-self.blinkers*(v+1)//5, self.resolution[1]-1), 255-v*63, -1)
+				#cv2.addWeighted(overlay, 0.5, gray, 1, 0, gray)
+				gray = cv2.add(overlay, gray)
 			else:
 				cv2.fillPoly(gray, blinkerPolys, 0)
 				

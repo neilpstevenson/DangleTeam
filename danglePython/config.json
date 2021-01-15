@@ -28,7 +28,7 @@
   "lava.pid.p": 0.015,
   "lava.pid.pom": false,
   "lava.speed": 0.3,
-  "lava.vision.blinkers": 0,
+  "lava.vision.blinkers": 150,
   "lava.vision.displaygrey": true,
   "lava.vision.displayresult": true,
   "lava.vision.filename": "visionCapture.avi",
