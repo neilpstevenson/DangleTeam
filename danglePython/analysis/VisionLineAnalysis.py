@@ -80,13 +80,13 @@ class VisionLineAnalysis:
 				#overlay = gray.copy()
 				#cv2.fillPoly(overlay, blinkerPolys, 255)
 				# Draw 5 vertical stripes for increasing whiteness
-				print(f"{gray.shape}")
+				print(f"{self.resolution}")
 				overlay = np.zeros(gray.shape, np.uint8)
 				for v in range(5):
-					if count % 100 < 33:
+					if count % 100 in range(0,25):
 						# Left mask
 						cv2.rectangle(overlay, (self.blinkers*v*2//5, 0), (self.blinkers*(v*2+2)//5, self.resolution[1]-1), (5*20)-v*20, -1)
-					elif count % 100 < 67:
+					elif count % 100 in range(50,75):
 						# Right mask
 						cv2.rectangle(overlay, (self.resolution[0]-1-self.blinkers*v*2//5, 0), (self.resolution[0]-1-self.blinkers*(v*2+2)//5, self.resolution[1]-1), (5*20)-v*20, -1)
 					else:
