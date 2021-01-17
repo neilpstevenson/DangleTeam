@@ -70,12 +70,12 @@ class VoiceRecognitionSharedIPC:
 	def getWord(self, result):
 		return self.data[0]['words'][result]['word']
 
-	def getWords(self, result):
+	def getWords(self):
 		results = []
 		for result in range(self.data[0]['numberwords']):
 			res = self.data[0]['words'][result]
 			results.append(res['word'].copy())
-		return results
+		return self.getStatus(0), results
 		
 	def getConfidence(self, result):
 		return self.data[0]['words'][result]['confidence']

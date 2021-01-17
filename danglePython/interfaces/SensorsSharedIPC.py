@@ -35,14 +35,20 @@ class SensorsSharedIPC:
 	
 	def create(self):
 		try:
-			self.open()
+			# Try existing file first
+			self.data  = np.memmap(SensorsSharedIPC.filename, offset=0, dtype=SensorsSharedIPC.servos_shared_dt, mode='r+', shape=(1))
 		except:
 			# Create/overwrite
 			self.data  = np.memmap(SensorsSharedIPC.filename, offset=0, dtype=SensorsSharedIPC.servos_shared_dt, mode='w+', shape=(1))
 	
 	def open(self):
-		# Read/write (no create)
-		self.data  = np.memmap(SensorsSharedIPC.filename, offset=0, dtype=SensorsSharedIPC.servos_shared_dt, mode='r+')
+		# Read only
+		try:
+			# Try existing file first
+			self.data  = np.memmap(SensorsSharedIPC.filename, offset=0, dtype=SensorsSharedIPC.servos_shared_dt, mode='r')
+		except:
+			# Need to create first
+			self.data  = np.memmap(SensorsSharedIPC.filename, offset=0, dtype=SensorsSharedIPC.servos_shared_dt, mode='w+', shape=(1))
 
 	def checkWatchdog(self):
 		if self.data[0]['watchdog'] > 0:

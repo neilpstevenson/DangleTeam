@@ -4,7 +4,7 @@ from vosk import Model, KaldiRecognizer
 import pyaudio
 import os
 import sys
-import time
+import time, datetime
 import json
 
 from interfaces.Config import Config
@@ -32,14 +32,16 @@ class VoiceRecognitionProcessor:
     def run(self):
         print("Opening stream...")
         p = pyaudio.PyAudio()
-        stream = p.open(format=pyaudio.paInt16, channels=1, rate=16000, input=True, frames_per_buffer=8000)
+        stream = p.open(format=pyaudio.paInt16, channels=1, rate=16000, input=True, frames_per_buffer=4000)
         stream.start_stream()
 
         print("Ready")
 
         last_text = "x"
         while True:
-            data = stream.read(2000, False)
+            start_time = datetime.datetime.now()
+            data = stream.read(4000, False)
+            read_time = datetime.datetime.now()
             if len(data) == 0:
                 break
             if self.recognizer.AcceptWaveform(data):
@@ -53,14 +55,18 @@ class VoiceRecognitionProcessor:
                 text = result['partial']
                 full_result = False
             print(result_json)
+            stream_elapsed = read_time - start_time 
+            anal_elapsed = datetime.datetime.now() - read_time 
+            print (f"{start_time.strftime('%H:%M:%S.%f')} - {stream_elapsed} / {anal_elapsed} - {text}")
 
             if full_result or last_text != text:
                 last_text = text
 
-                # Update the share IPC
+                # Update the shared IPC
                 words = []
                 if full_result and text != "":
                     for res in result['result']:
+                        #print(f"result2d: {res['word']}")
                         words.append(
                             VoiceRecognitionSharedIPC.VoiceRecognitionResult(
                                 status = 2,
@@ -68,13 +74,16 @@ class VoiceRecognitionProcessor:
                                 confidence = res['conf'],
                                 timestamp = res['start']))
                 else:
-                    words.append(
-                        VoiceRecognitionSharedIPC.VoiceRecognitionResult(
-                            status = 1,
-                            word = text,
-                            confidence = 0.5,
-                            timestamp = 0))
-                            
+                    textwords = text.split(" ")
+                    for res in textwords:
+                        #print(f"result1: {text}")
+                        words.append(
+                            VoiceRecognitionSharedIPC.VoiceRecognitionResult(
+                                status = 1,
+                                word = res,
+                                confidence = 0.5,
+                                timestamp = 0))
+                                
                 self.results.shareResults(words)
 
 if __name__ == "__main__":
