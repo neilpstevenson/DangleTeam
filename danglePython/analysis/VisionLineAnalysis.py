@@ -4,6 +4,7 @@ import cv2
 from picamera.array import PiRGBArray
 from picamera import PiCamera
 from interfaces.LineAnalysisSharedIPC import LineAnalysisSharedIPC
+from interfaces.VoiceRecognitionSharedIPC import VoiceRecognitionSharedIPC
 from interfaces.SensorAccessFactory import SensorAccessFactory
 from interfaces.Config import Config
 
@@ -38,6 +39,11 @@ class VisionLineAnalysis:
 		# Current Yaw reading
 		self.sensors = SensorAccessFactory.getSingleton()
 		self.yaw = self.sensors.yaw()
+		
+		# Voice command
+		self.voice = VoiceRecognitionSharedIPC()
+		self.voice.read()
+		
 		
 	def captureAndAssess(self):
 		# File capture
@@ -82,11 +88,14 @@ class VisionLineAnalysis:
 				# Draw 5 vertical stripes for increasing whiteness
 				print(f"{self.resolution}")
 				overlay = np.zeros(gray.shape, np.uint8)
+				
+				voiceCommand = self.voice.findLastSpokenWord(['left','right','go'])
+				print(f"voiceCommand: {voiceCommand}")
 				for v in range(5):
-					if count % 100 in range(0,25):
+					if voiceCommand == 'right':
 						# Left mask
 						cv2.rectangle(overlay, (self.blinkers*v*2//5, 0), (self.blinkers*(v*2+2)//5, self.resolution[1]-1), (5*20)-v*20, -1)
-					elif count % 100 in range(50,75):
+					elif voiceCommand == 'left':
 						# Right mask
 						cv2.rectangle(overlay, (self.resolution[0]-1-self.blinkers*v*2//5, 0), (self.resolution[0]-1-self.blinkers*(v*2+2)//5, self.resolution[1]-1), (5*20)-v*20, -1)
 					else:

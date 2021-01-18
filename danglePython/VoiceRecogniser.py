@@ -32,7 +32,7 @@ class VoiceRecognitionProcessor:
     def run(self):
         print("Opening stream...")
         p = pyaudio.PyAudio()
-        stream = p.open(format=pyaudio.paInt16, channels=1, rate=16000, input=True, frames_per_buffer=4000)
+        stream = p.open(format=pyaudio.paInt16, channels=1, rate=16000, input=True, frames_per_buffer=2000)
         stream.start_stream()
 
         print("Ready")
@@ -40,7 +40,7 @@ class VoiceRecognitionProcessor:
         last_text = "x"
         while True:
             start_time = datetime.datetime.now()
-            data = stream.read(4000, False)
+            data = stream.read(2000, False)
             read_time = datetime.datetime.now()
             if len(data) == 0:
                 break
@@ -65,26 +65,28 @@ class VoiceRecognitionProcessor:
                 # Update the shared IPC
                 words = []
                 if full_result and text != "":
+                    status = 2
                     for res in result['result']:
                         #print(f"result2d: {res['word']}")
                         words.append(
                             VoiceRecognitionSharedIPC.VoiceRecognitionResult(
-                                status = 2,
                                 word = res['word'],
                                 confidence = res['conf'],
                                 timestamp = res['start']))
-                else:
+                elif text != "":
+                    status = 1
                     textwords = text.split(" ")
                     for res in textwords:
                         #print(f"result1: {text}")
                         words.append(
                             VoiceRecognitionSharedIPC.VoiceRecognitionResult(
-                                status = 1,
                                 word = res,
                                 confidence = 0.5,
                                 timestamp = 0))
-                                
-                self.results.shareResults(words)
+                else :
+                    status = 0
+                               
+                self.results.shareResults(status, words)
 
 if __name__ == "__main__":
     vp = VoiceRecognitionProcessor()

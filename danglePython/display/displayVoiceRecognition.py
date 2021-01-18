@@ -16,6 +16,7 @@ class DisplayVoiceRecognition:
         # Read result shared memory
         self.results = VoiceRecognitionSharedIPC()
         self.results.read()
+        #self.results.clearCurrentResults()
         
         windowInfo = pygame.display.Info()
         self.width = windowInfo.current_w
@@ -32,7 +33,7 @@ class DisplayVoiceRecognition:
 
         last_text = "x"
         last_status = -1
-        while True:
+        while last_text != "quit quit quit" :
             for event in pygame.event.get():
                 if event.type == pygame.QUIT or \
                     (event.type == pygame.KEYDOWN and (event.key == pygame.K_ESCAPE or event.key == pygame.K_q)):
@@ -41,11 +42,11 @@ class DisplayVoiceRecognition:
                     sys.exit()
 
             # Get the next word
-            status, words = self.results.getWords()
+            status, words = self.results.getLastWords()
             # Create as a single string
             sentence = " ".join(words)
             final = (status == 2)
-            print(f"({final} {status}) {sentence}")
+            #print(f"({final} {status}) {sentence}")
             if last_text != sentence or last_status != status:
                 last_text = sentence
                 last_status = status
