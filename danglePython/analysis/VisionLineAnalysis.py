@@ -1,8 +1,8 @@
-import time
+import time as t
 import numpy as np
 import cv2
-from picamera.array import PiRGBArray
-from picamera import PiCamera
+#from picamera.array import PiRGBArray
+#from picamera import PiCamera
 from interfaces.LineAnalysisSharedIPC import LineAnalysisSharedIPC
 from interfaces.VoiceRecognitionSharedIPC import VoiceRecognitionSharedIPC
 from interfaces.SensorAccessFactory import SensorAccessFactory
@@ -16,6 +16,7 @@ class VisionLineAnalysis:
 		self.display = display
 		self.displayGrayscale = displayGrayscale
 		self.blinkers = blinkers # pixels at either side of top
+		self.blinkerWeight = 25
 		self.ignoreTopSlices = ignoreTopSlices
 		self.saveRaw = saveRaw
 		self.blackLine = blackLine
@@ -30,11 +31,16 @@ class VisionLineAnalysis:
 		self.targetLookaheadRatio = lookahead # % of screen height that we attempt to head towards
 
 		# initialize the camera and grab a reference to the raw camera capture
-		self.camera = PiCamera()
-		self.camera.resolution = resolution
+		#self.camera = PiCamera()
+		#self.camera.resolution = resolution
+		self.cap = cv2.VideoCapture(0)
+		self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, resolution[0])#320)
+		self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, resolution[1])#240)
+		self.cap.set(cv2.CAP_PROP_FPS, framerate)
+
 		self.resolution = resolution
-		self.camera.framerate = framerate
-		self.rawCapture = PiRGBArray(self.camera, size=self.resolution)
+		#self.camera.framerate = framerate
+		#self.rawCapture = PiRGBArray(self.camera, size=self.resolution)
 		
 		# Current Yaw reading
 		self.sensors = SensorAccessFactory.getSingleton()
@@ -50,7 +56,7 @@ class VisionLineAnalysis:
 		if self.filename != None:
 			print(f"Saving to file: {self.filename}")
 			# Define the codec and create VideoWriter object.
-			self.captureFile = cv2.VideoWriter(self.filename, cv2.VideoWriter_fourcc(*'mp4v'), 10, self.camera.resolution)
+			self.captureFile = cv2.VideoWriter(self.filename, cv2.VideoWriter_fourcc(*'mp4v'), 10, self.resolution[0])
 			
 		# Start timer, so we know how long things took
 		startTime = cv2.getTickCount()
@@ -61,12 +67,27 @@ class VisionLineAnalysis:
 		blinkerPolys = np.array([[[0,0], [self.blinkers, 0], [0, self.resolution[1]-1]],
 								 [[self.resolution[0]-1, 0], [self.resolution[0]-1 - self.blinkers, 0], [self.resolution[0]-1, self.resolution[1]-1]]], np.int32)
 		#print(f"blinkerPolys: {blinkerPolys}")
+		# Create 3 version of the mask for preferred direction
+		left_mask = np.zeros((self.resolution[1], self.resolution[0]), np.uint8)
+		right_mask = np.zeros((self.resolution[1], self.resolution[0]), np.uint8)
+		edge_mask = np.zeros((self.resolution[1], self.resolution[0]), np.uint8)
+		for v in range(5):
+			# Left mask
+			cv2.rectangle(left_mask, (self.blinkers*v*2//5, 0), (self.blinkers*(v*2+2)//5, self.resolution[1]-1), (5-v)*self.blinkerWeight, -1)
+			# Right mask
+			cv2.rectangle(right_mask, (self.resolution[0]-1-self.blinkers*v*2//5, 0), (self.resolution[0]-1-self.blinkers*(v*2+2)//5, self.resolution[1]-1), (5-v)*self.blinkerWeight, -1)
+			# Edge mask
+			cv2.rectangle(edge_mask, (self.blinkers*v//5, 0), (self.blinkers*(v+1)//5, self.resolution[1]-1), (5-v)*self.blinkerWeight, -1)
+			cv2.rectangle(edge_mask, (self.resolution[0]-1-self.blinkers*v//5, 0), (self.resolution[0]-1-self.blinkers*(v+1)//5, self.resolution[1]-1), (5-v)*self.blinkerWeight, -1)
 		
 		angle = None
 		count = 0
 		
 		# grab the next frame as a numpy array
-		for frame in self.camera.capture_continuous(self.rawCapture, format="bgr", use_video_port=True): #, resize = self.resolution):
+		#stream = self.camera.capture_continuous(self.rawCapture, format="bgr", use_video_port=True) #, resize = self.resolution)
+		#t.sleep(2.0)
+		#for frame in stream:
+		while True:
 			count += 1
 			
 			# Get the current yaw value
@@ -75,7 +96,8 @@ class VisionLineAnalysis:
 			
 			# grab the raw NumPy array representing the image, then initialize the timestamp
 			# and occupied/unoccupied text
-			original = frame.array
+			#original = frame.array
+			ret, original = self.cap.read()
 
 			# Convert to greyscale and apply a Gaussian blur to the image in order 
 			# to make more robust against noise and reflections
@@ -86,24 +108,20 @@ class VisionLineAnalysis:
 				#overlay = gray.copy()
 				#cv2.fillPoly(overlay, blinkerPolys, 255)
 				# Draw 5 vertical stripes for increasing whiteness
-				print(f"{self.resolution}")
-				overlay = np.zeros(gray.shape, np.uint8)
+				print(f"{self.resolution} {gray.shape}")
+				#overlay = np.zeros(gray.shape, np.uint8)
 				
 				voiceCommand = self.voice.findLastSpokenWord(['left','right','go'])
 				print(f"voiceCommand: {voiceCommand}")
-				for v in range(5):
-					if voiceCommand == 'right':
-						# Left mask
-						cv2.rectangle(overlay, (self.blinkers*v*2//5, 0), (self.blinkers*(v*2+2)//5, self.resolution[1]-1), (5*20)-v*20, -1)
-					elif voiceCommand == 'left':
-						# Right mask
-						cv2.rectangle(overlay, (self.resolution[0]-1-self.blinkers*v*2//5, 0), (self.resolution[0]-1-self.blinkers*(v*2+2)//5, self.resolution[1]-1), (5*20)-v*20, -1)
-					else:
-						# Edge mask
-						cv2.rectangle(overlay, (self.blinkers*v//5, 0), (self.blinkers*(v+1)//5, self.resolution[1]-1), (5*20)-v*20, -1)
-						cv2.rectangle(overlay, (self.resolution[0]-1-self.blinkers*v//5, 0), (self.resolution[0]-1-self.blinkers*(v+1)//5, self.resolution[1]-1), 255-v*63, -1)
-				#cv2.addWeighted(overlay, 0.5, gray, 1, 0, gray)
-				gray = cv2.add(overlay, gray)
+				if voiceCommand == 'right':
+					# Left mask
+					gray = cv2.add(left_mask, gray)
+				elif voiceCommand == 'left':
+					# Right mask
+					gray = cv2.add(right_mask, gray)
+				else:
+					# Edge mask
+					gray = cv2.add(edge_mask, gray)
 			else:
 				cv2.fillPoly(gray, blinkerPolys, 0)
 				
@@ -123,6 +141,7 @@ class VisionLineAnalysis:
 					
 					if self.blackLine:
 						if minVal > self.threshold:
+							point = (minLoc[0],minLoc[1]+offset)
 							print(f"Ignoring point: {point}, min value {minVal}")
 							pass
 						else:
@@ -131,6 +150,7 @@ class VisionLineAnalysis:
 							points.append(point)
 					else:
 						if maxVal < self.threshold:
+							point = (minLoc[0],minLoc[1]+offset)
 							print(f"Ignoring point: {point}, max value {maxVal}")
 							pass
 						else:
@@ -144,6 +164,11 @@ class VisionLineAnalysis:
 				print("Too few points - ignoring")
 				hasResult = False
 			else:
+				# Add a few points where we are, to prevent the line going to extreme angles
+				for p in range(-4,5):
+					point = (self.resolution[0]//2 + p * 20, self.resolution[1])
+					points.append(point)
+				
 				# Fit a striaght line to the brightest point on each slice
 				vx, vy, x0, y0 = cv2.fitLine(np.array(points), cv2.DIST_HUBER, 0, 0.1, 0.1)
 				# ensure the arrow is always pointing forwards (up the image)
@@ -184,7 +209,7 @@ class VisionLineAnalysis:
 			lastYaw = yaw
 				
 			# clear the stream in preparation for the next frame
-			self.rawCapture.truncate(0)
+			#self.rawCapture.truncate(0)
 
 			# display the results
 			if self.display and angle != None:
@@ -220,7 +245,10 @@ class VisionLineAnalysis:
 			overalltime = (displayEndTime - startTime) / cv2.getTickFrequency()
 			print(f"Overall time:   {overalltime:.3f}secs, {rate:.1f}fps")
 
-			cv2.waitKey(1)
+			key = cv2.waitKey(1)
+			if key == 27 or key == 'q':
+				quit()
+				
 			startTime = cv2.getTickCount()
 			
 			if count % 10 == 0:
