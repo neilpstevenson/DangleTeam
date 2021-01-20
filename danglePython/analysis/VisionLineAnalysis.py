@@ -245,8 +245,8 @@ class VisionLineAnalysis:
 			overalltime = (displayEndTime - startTime) / cv2.getTickFrequency()
 			print(f"Overall time:   {overalltime:.3f}secs, {rate:.1f}fps")
 
-			key = cv2.waitKey(1)
-			if key == 27 or key == 'q':
+			key = cv2.waitKey(1) & 0xff
+			if key == 27 or key == ord('q'):
 				quit()
 				
 			startTime = cv2.getTickCount()

@@ -40,14 +40,15 @@ class ChallengeLavaPalava(ChallengeInterface):
 		self.zGunControl = ZGunControl()
 		# Get config
 		config = Config()
-		self.pidP = config.get("lava.pid.p", 0.015)
+		self.pidP = config.get("lava.pid.p", 0.015)	# Note: PID output is also limited ot +/-1.0
 		self.pidI = config.get("lava.pid.i", 0.0) #0.001)
 		self.pidD = config.get("lava.pid.d", 0.0012)
 		self.proportionalOnMeasure = config.get("lava.pid.pom", False)
-		self.maxForward = config.get("lava.forward.max", 1.0)
-		self.maxManualTurn = config.get("lava.manualturn.max", -15.0)
-		self.maxHeadingTurn = config.get("lava.headingturn.max", 0.6)
-		self.constantSpeed = config.get("lava.speed", 0.6)
+		self.maxForward = config.get("lava.forward.max", 1.0)	# Joystick-controlled max speed
+		self.maxManualTurn = config.get("lava.manualturn.max", -15.0) # Joystick-controlled max turn angle (mpu heading relative)
+		self.maxHeadingTurn = config.get("lava.headingturn.max", 0.6) # PID output scaling (manual mode)
+		self.maxAutoTurn = config.get("lava.autoturn.max", 0.3) # PID output scaling (full auto mode)
+		self.constantSpeed = config.get("lava.speed", 0.6) # Speed in full auto mode
 		self.cameraTilt = config.get("lava.camera.tilt", 0.5)
 		config.save()
 
@@ -64,36 +65,33 @@ class ChallengeLavaPalava(ChallengeInterface):
 
 		# Motors
 		motorsStop = FixedValue(0.0)
-		motorConstant = FixedValue(self.constantSpeed)
+		fullAutoForwardSpeed = FixedValue(self.constantSpeed)
 		self.motorEnable = self.sensors.button(4)
-		self.constantEnable = ToggleButtonValue(self.sensors.button(5))
-		#self.constantEnable = TimedTriggerValue(self.sensors.button(5), 1.0, retriggerable = True)
+		self.fullAutoEnable = ToggleButtonValue(self.sensors.button(5), triggeredValue = 2)
 		self.joystickForward = self.sensors.joystickAxis(1)
 		self.joystickLeftRight = self.sensors.joystickAxis(3)
 		motorL = SwitchingControlMediator( [ motorsStop, 								 # Choice 0 = Stopped \
 											  											 # Choice 1 = Controlled
-											#[ValueLambda(Scaler(self.joystickForward, scaling =  0.9)), ValueLambda(Scaler(self.joystickLeftRight, scaling = -0.5))]	# Joystick  \
-											#[ValueLambda([Scaler(self.joystickForward, scaling = self.maxForward), Scaler(self.joystickLeftRight, scaling = -self.maxManualTurn), Scaler(self.headingError, scaling = -self.maxHeadingTurn)])]	# Joystick  \
-											#[ValueLambda([Scaler(self.joystickForward, scaling = self.maxForward), Scaler(self.headingError, scaling = -self.maxHeadingTurn)])]	# Joystick  \
-											#[ValueLambda([Scaler(self.joystickForward, scaling = self.maxForward)]), Scaler(self.headingError, scaling = -self.maxHeadingTurn)]	# Joystick  \
 											[SpeedDirectionCombiner(Scaler(self.joystickForward, scaling = self.maxForward), Scaler(self.headingError, scaling = -self.maxHeadingTurn))],  \
-											[SpeedDirectionCombiner(motorConstant, Scaler(self.headingError, scaling = -self.maxHeadingTurn))]  \
+																						 # Choice 2 = Auto mode, but manual forward speed
+											[SpeedDirectionCombiner(Scaler(self.joystickForward, scaling = self.maxForward), Scaler(self.headingError, scaling = -self.maxAutoTurn))],  \
+																						 # Choice 3 = Full Auto mode
+											[SpeedDirectionCombiner(fullAutoForwardSpeed, Scaler(self.headingError, scaling = -self.maxAutoTurn))]  \
 										   ],
 											self.controls.motor(2), \
-											ValueAdder([self.motorEnable,self.constantEnable], max=2) )
+											ValueAdder([self.motorEnable,self.fullAutoEnable], max=3) )
 		self.speedSensorL = self.sensors.counter(0)
 		highPriorityProcesses.append(motorL)
 		motorR = SwitchingControlMediator( [ motorsStop, 								 # Choice 0 = Stopped \
-																						 # Choice 1 = Controlled
-											#[ValueLambda(Scaler(self.joystickForward, scaling = -0.9)), ValueLambda(Scaler(self.joystickLeftRight, scaling = -0.5))]  # Joystick \
-											#[ValueLambda([Scaler(self.joystickForward, scaling = -self.maxForward), Scaler(self.joystickLeftRight, scaling = -self.maxManualTurn), Scaler(self.headingError, scaling = -self.maxHeadingTurn)])]	# Joystick  \
-											#[ValueLambda([Scaler(self.joystickForward, scaling = -self.maxForward), Scaler(self.headingError, scaling = -self.maxHeadingTurn)])]	# Joystick  \
-											#[ValueLambda([Scaler(self.joystickForward, scaling = -self.maxForward)]), Scaler(self.headingError, scaling = -self.maxHeadingTurn)]	# Joystick  \
+																						 # Choice 1 = Manual Controlled only
 											[Scaler(SpeedDirectionCombiner(Scaler(self.joystickForward, scaling = self.maxForward), Scaler(self.headingError, scaling = self.maxHeadingTurn)), scaling = 1.0)],  \
-											[SpeedDirectionCombiner(motorConstant, Scaler(self.headingError, scaling = self.maxHeadingTurn), scaling = 1.0)]  \
+																						 # Choice 2 = Auto mode, but manual forward speed
+											[Scaler(SpeedDirectionCombiner(Scaler(self.joystickForward, scaling = self.maxForward), Scaler(self.headingError, scaling = self.maxAutoTurn)), scaling = 1.0)],  \
+																						 # Choice 3 = Full Auto mode
+											[SpeedDirectionCombiner(fullAutoForwardSpeed, Scaler(self.headingError, scaling = self.maxAutoTurn), scaling = 1.0)]  \
 										   ],
 											self.controls.motor(1), \
-											ValueAdder([self.motorEnable,self.constantEnable], max=2) )
+											ValueAdder([self.motorEnable,self.fullAutoEnable], max=3) )
 		highPriorityProcesses.append(motorR)
 
 		# LED display state
@@ -104,7 +102,7 @@ class ChallengeLavaPalava(ChallengeInterface):
 		self.ledEyeLeft = self.controls.led(20)
 		self.ledEyeRight = self.controls.led(21)
 		medPriorityProcesses.append(SimpleControlMediator( Scaler(self.motorEnable, scaling=255), self.ledEyeLeft))
-		medPriorityProcesses.append(SimpleControlMediator( Scaler(self.constantEnable, scaling=255), self.ledEyeRight))
+		medPriorityProcesses.append(SimpleControlMediator( Scaler(self.fullAutoEnable, scaling=255), self.ledEyeRight))
 		
 		# Common controls
 		self.grabberControl.createProcesses(highPriorityProcesses, medPriorityProcesses)
@@ -112,7 +110,7 @@ class ChallengeLavaPalava(ChallengeInterface):
 		self.zGunControl.createProcesses(highPriorityProcesses, medPriorityProcesses)
 
 	def move(self):
-		if self.constantEnable.getValue() > 0:
+		if self.fullAutoEnable.getValue() > 0:
 			if not self.pidHeading.auto_mode:
 				self.pidHeading.auto_mode = True
 			# Vision turns
