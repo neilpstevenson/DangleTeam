@@ -39,7 +39,7 @@ class VisionLineAnalysis:
 		self.cap.set(cv2.CAP_PROP_FPS, framerate)
 
 		self.resolution = resolution
-		#self.camera.framerate = framerate
+		self.framerate = framerate
 		#self.rawCapture = PiRGBArray(self.camera, size=self.resolution)
 		
 		# Current Yaw reading
@@ -56,7 +56,7 @@ class VisionLineAnalysis:
 		if self.filename != None:
 			print(f"Saving to file: {self.filename}")
 			# Define the codec and create VideoWriter object.
-			self.captureFile = cv2.VideoWriter(self.filename, cv2.VideoWriter_fourcc(*'mp4v'), 10, self.resolution[0])
+			self.captureFile = cv2.VideoWriter(self.filename, cv2.VideoWriter_fourcc(*'mp4v'), self.framerate, (self.resolution[0],self.resolution[1]))
 			
 		# Start timer, so we know how long things took
 		startTime = cv2.getTickCount()
@@ -165,26 +165,38 @@ class VisionLineAnalysis:
 				hasResult = False
 			else:
 				# Add a few points where we are, to prevent the line going to extreme angles
-				for p in range(-4,5):
-					point = (self.resolution[0]//2 + p * 20, self.resolution[1])
-					points.append(point)
+				#for p in range(-4,5):
+				#	point = (self.resolution[0]//2 + p * 20, self.resolution[1])
+				#	points.append(point)
+				
+				# Alternative - simple average
+				vx = sum([p[0] for p in points]) // len(points)
+				vy = points[0][1] #len(points)-1][1]
+				currentPosition = (self.resolution[0]//2, self.resolution[1])
+				desiredPosition = (int((vx-self.resolution[0]//2)*self.targetLookaheadRatio+self.resolution[0]//2), int(self.resolution[1]*(1-self.targetLookaheadRatio)))
+				angle = np.arctan((currentPosition[0]-desiredPosition[0])/(currentPosition[1]-desiredPosition[1])) * 180.0/3.14159
+
+				x0 = self.resolution[0]//2
+				y0 = self.resolution[1]
+				print(f"av = {(vx, vy)} {(x0,y0)}")
 				
 				# Fit a striaght line to the brightest point on each slice
-				vx, vy, x0, y0 = cv2.fitLine(np.array(points), cv2.DIST_HUBER, 0, 0.1, 0.1)
+				#vx, vy, x0, y0 = cv2.fitLine(np.array(points), cv2.DIST_HUBER, 0, 0.1, 0.1)
 				# ensure the arrow is always pointing forwards (up the image)
-				if vy > 0:
-					vy = -vy
-					vx = -vx
+				#if vy > 0:
+				#	vy = -vy
+				#	vx = -vx
+					
 				#print(f"vx: {vx}, vy: {vy}, x0: {x0}, y0: {y0}")
 				# Re-origin to stop some jitter
 				#y0 = self.resolution[1]*(self.numSlices-1)//self.numSlices//2
 				# scale the vector to approx screen size
-				vx *= self.resolution[1]//2
-				vy *= self.resolution[1]//2
+				#vx *= self.resolution[1]//2
+				#vy *= self.resolution[1]//2
 				# Calculate an angle from where we are to approx mid point
-				currentPosition = (self.resolution[0]//2, self.resolution[1])
-				desiredPosition = (int(x0+vx*self.targetLookaheadRatio), int(y0+vy*self.targetLookaheadRatio))
-				angle = np.arctan((currentPosition[0]-desiredPosition[0])/(currentPosition[1]-desiredPosition[1])) * 180.0/3.14159
+				#currentPosition = (self.resolution[0]//2, self.resolution[1])
+				#desiredPosition = (int(x0+vx*self.targetLookaheadRatio), int(y0+vy*self.targetLookaheadRatio))
+				#angle = np.arctan((currentPosition[0]-desiredPosition[0])/(currentPosition[1]-desiredPosition[1])) * 180.0/3.14159
 				hasResult = True
 
 			# Overall capture/analysis time
@@ -220,7 +232,8 @@ class VisionLineAnalysis:
 				for point in points:
 					cv2.circle(assessment, point, 5, (0,0,255), 1)
 				# Draw an arrow representing the brightest points
-				cv2.arrowedLine(assessment, (x0-vx, y0-vy), (x0+vx, y0+vy), (255, 255, 0), 2)
+				#cv2.arrowedLine(assessment, (x0-vx, y0-vy), (x0+vx, y0+vy), (255, 255, 0), 2)
+				cv2.arrowedLine(assessment, (x0, y0), (vx, vy), (255, 255, 0), 2)
 				# Draw an angle from where we are to target
 				cv2.arrowedLine(assessment, currentPosition, desiredPosition, (0, 255, 0), 3)
 				# Overlay the angle calculated
