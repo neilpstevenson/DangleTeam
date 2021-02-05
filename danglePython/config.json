@@ -19,7 +19,7 @@
   "heading.pid.i": 0.001,
   "heading.pid.p": 0.015,
   "heading.pid.pom": false,
-  "lava.autoturn.max": 0.3,
+  "lava.autoturn.max": 0.5,
   "lava.camera.tilt": 0.5,
   "lava.forward.max": 0.5,
   "lava.headingturn.max": 0.7,
@@ -36,7 +36,7 @@
   "lava.vision.filterRatio": 15,
   "lava.vision.framerate": 40,
   "lava.vision.ignoreTopSlices": 8,
-  "lava.vision.lookahead": 0.8,
+  "lava.vision.lookahead": 1.0,
   "lava.vision.resolution": [
     320,
     240
@@ -44,7 +44,7 @@
   "lava.vision.saveRaw": false,
   "lava.vision.savefile": true,
   "lava.vision.slices": 40,
-  "lava.vision.threshold": 100,
+  "lava.vision.threshold": 95,
   "manual.camera.tilt": 0.15,
   "manual.forward.max": 1.0,
   "manual.headingturn.max": 0.6,

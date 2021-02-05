@@ -65,36 +65,84 @@ class VisionLineAnalysis:
 		
 	def analyseImage(self, image):
 		# Chop the image into a number of horizontal slices
-		slices = np.array_split(image, self.numSlices)
-
+		#slices = np.array_split(image, self.numSlices)
+		total_height = len(image)
+		total_width = len(image[0])
+		slice_size = total_height // self.numSlices
+		
 		points = []
 		# For each slice, determine the brightest point
-		offset = 0
-		for bit in range(len(slices)):
-			if bit >= self.ignoreTopSlices:
-				(minVal, maxVal, minLoc, maxLoc) = cv2.minMaxLoc(slices[bit])
-				offset += len(slices[bit])
-				
-				if self.blackLine:
-					if minVal > self.threshold:
-						point = (minLoc[0],minLoc[1]+offset)
-						print(f"Ignoring point: {point}, min value {minVal}")
-						pass
-					else:
-						point = (minLoc[0],minLoc[1]+offset)
-						print(f"Using point: {point}, value {minVal}")
-						points.append(point)
+		#offset = 0
+		for bit in range(self.ignoreTopSlices, self.numSlices):
+			slice_top = bit * slice_size
+			slice_bottom = (bit+1) * slice_size - 1
+			(minVal, maxVal, minLoc, maxLoc) = cv2.minMaxLoc(image[slice_top:slice_bottom,:])
+			#offset += len(slices[bit])
+			
+			# Ignore any at extreme edges, as these are likely to be contrast-related artefacts
+			if self.blackLine:
+				if minVal > self.threshold or minLoc[0] < self.radius or minLoc[0] > (total_width - self.radius):
+					point = (minLoc[0],minLoc[1]+slice_top)
+					print(f"Ignoring point: {point}, min value {minVal}")
+					pass
 				else:
-					if maxVal < self.threshold:
-						point = (minLoc[0],minLoc[1]+offset)
-						print(f"Ignoring point: {point}, max value {maxVal}")
-						pass
-					else:
-						point = (maxLoc[0],maxLoc[1]+offset)
-						print(f"Using point: {point}, value {maxVal}")
-						points.append(point)
+					point = (minLoc[0],minLoc[1]+slice_top)
+					print(f"Using point: {point}, value {minVal}")
+					points.append(point)
 			else:
-				offset += len(slices[bit])
+				if maxVal < self.threshold or minLoc[0] < self.radius or minLoc[0] > (total_width - self.radius):
+					point = (minLoc[0],minLoc[1]+slice_top)
+					print(f"Ignoring point: {point}, max value {maxVal}")
+					pass
+				else:
+					point = (maxLoc[0],maxLoc[1]+slice_top)
+					print(f"Using point: {point}, value {maxVal}")
+					points.append(point)
+					
+		# And the same as vertical slices
+		if self.voiceCommand == "left":
+			first_slice = 0
+			last_slice = self.numSlices//2
+		elif self.voiceCommand == "right":
+			first_slice = self.numSlices//2
+			last_slice = self.numSlices
+		elif self.voiceCommand == "any":
+			first_slice = 0
+			last_slice = self.numSlices
+		else:
+			first_slice = 0
+			last_slice = 0
+		slice_v_size = total_width // self.numSlices
+		slice_top = self.ignoreTopSlices * slice_v_size
+		slice_width = total_width // self.numSlices
+		slice_bottom = (self.numSlices - self.ignoreTopSlices) * slice_size
+		#print(f"slice_v_size:{slice_v_size}, slice_bottom:{slice_bottom}, {self.numSlices}-{self.ignoreTopSlices}")
+		for bit in range(first_slice, last_slice):
+			slice_left = bit * slice_width
+			slice_right = (bit+1) * slice_width - 1
+			(minVal, maxVal, minLoc, maxLoc) = cv2.minMaxLoc(image[slice_top:, slice_left:slice_right])
+			#offset += len(slices[bit])
+			
+			# Ignore any at extreme edges, as these are likely to be contrast-related artefacts
+			if self.blackLine:
+				#print(f"minLoc: {minLoc}, min y: {slice_bottom - 2*self.radius}")
+				if minVal > self.threshold or minLoc[1] > (slice_bottom - self.radius):
+					point = (minLoc[0] + slice_left, minLoc[1]+slice_top)
+					print(f"Ignoring V point: {point}, min value {minVal}")
+					pass
+				else:
+					point = (minLoc[0] + slice_left, minLoc[1]+slice_top)
+					print(f"Using V point: {point}, value {minVal}")
+					points.append(point)
+			else:
+				if maxVal < self.threshold or minLoc[1] > (slice_bottom - self.radius):
+					point = (minLoc[0] + slice_left, minLoc[1]+slice_top)
+					print(f"Ignoring V point: {point}, max value {maxVal}")
+					pass
+				else:
+					point = (maxLoc[0] + slice_left, maxLoc[1]+slice_top)
+					print(f"Using point: {point}, value {maxVal}")
+					points.append(point)
 	
 		if len(points) < self.minPoints:
 			print("Too few points - ignoring")
@@ -130,8 +178,10 @@ class VisionLineAnalysis:
 			cv2.arrowedLine(assessment, currentPosition, desiredPosition, (0, 255, 0), 3)
 			# Overlay the angle calculated
 			np.set_printoptions(precision=2)
-			cv2.putText(assessment, f"{yaw:.2f}deg => {angle:+.2f}deg", (5, self.resolution[1]-4), cv2.FONT_HERSHEY_DUPLEX, 0.4, (0, 255, 0))
-			cv2.putText(assessment, f"{rate:.0f}fps", (self.resolution[0]-40, self.resolution[1]-4), cv2.FONT_HERSHEY_DUPLEX, 0.4, (0, 255, 0))
+			cv2.putText(assessment, f"{yaw:.2f}deg>>{angle:+.2f}deg", (5, self.resolution[1]-4), cv2.FONT_HERSHEY_DUPLEX, 0.5, (0, 25, 0))
+			cv2.putText(assessment, f"{rate:.0f}fps", (self.resolution[0]-40, self.resolution[1]-4), cv2.FONT_HERSHEY_DUPLEX, 0.4, (0, 25, 0))
+			cv2.putText(assessment, self.voiceCommand, (self.resolution[0]//2 + 45, self.resolution[1]-4), cv2.FONT_HERSHEY_DUPLEX, 0.4, (0, 25, 0))
+			
 			cv2.imshow(f"assessed direction", assessment)
 			if self.displayGrayscale:
 				cv2.imshow(f"grey", gray)
@@ -151,12 +201,16 @@ class VisionLineAnalysis:
 		print(f"voiceCommand: {voiceCommand}")
 		if voiceCommand == 'right':
 			self.lastMask = self.left_mask
+			self.voiceCommand = voiceCommand
 		elif voiceCommand == 'left':
 			self.lastMask = self.right_mask
+			self.voiceCommand = voiceCommand
 		elif voiceCommand == 'go':
 			self.lastMask = self.edge_mask
+			self.voiceCommand = voiceCommand
 		elif voiceCommand == 'any':
 			self.lastMask = None
+			self.voiceCommand = voiceCommand
 		else:
 			# No change
 			pass
@@ -182,7 +236,8 @@ class VisionLineAnalysis:
 		currentPosition = None
 		desiredPosition = None
 		self.lastMask = None
-		
+		self.voiceCommand = "any"
+
 		while True:
 			count += 1
 			
@@ -208,7 +263,7 @@ class VisionLineAnalysis:
 			hasResult, points, vx, vy, x0, y0 = self.analyseImage(gray)
 			if hasResult:
 				currentPosition = (self.resolution[0]//2, self.resolution[1])
-				desiredPosition = (int((vx-self.resolution[0]//2)*self.targetLookaheadRatio+self.resolution[0]//2), int(self.resolution[1]*(1-self.targetLookaheadRatio)))
+				desiredPosition = (int((vx-self.resolution[0]//2)*self.targetLookaheadRatio+self.resolution[0]//2), vy) #int(self.resolution[1]*(1-self.targetLookaheadRatio)))
 				angle = np.arctan((currentPosition[0]-desiredPosition[0])/(currentPosition[1]-desiredPosition[1])) * 180.0/3.14159
 
 			# Overall capture/analysis time
