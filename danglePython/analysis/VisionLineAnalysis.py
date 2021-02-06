@@ -101,18 +101,18 @@ class VisionLineAnalysis:
 					points.append(point)
 					
 		# And the same as vertical slices
-		if self.voiceCommand == "left":
-			first_slice = 0
-			last_slice = self.numSlices//2
-		elif self.voiceCommand == "right":
-			first_slice = self.numSlices//2
-			last_slice = self.numSlices
-		elif self.voiceCommand == "any":
-			first_slice = 0
-			last_slice = self.numSlices
-		else:
-			first_slice = 0
-			last_slice = 0
+		#if self.voiceCommand == "left":
+		#	first_slice = 0
+		#	last_slice = self.numSlices//2
+		#elif self.voiceCommand == "right":
+		#	first_slice = self.numSlices//2
+		#	last_slice = self.numSlices
+		#elif self.voiceCommand == "any":
+		first_slice = 0
+		last_slice = self.numSlices
+		#else:
+		#	first_slice = 0
+		#	last_slice = 0
 		slice_v_size = total_width // self.numSlices
 		slice_top = self.ignoreTopSlices * slice_v_size
 		slice_width = total_width // self.numSlices
@@ -150,6 +150,26 @@ class VisionLineAnalysis:
 			hasResult = False
 			return hasResult, points, 0,0, 0,0
 		else:
+			# Sort the point top left to right
+			point_lr = sorted(points, key=lambda k: k[0])
+			#print(f"point_lr: {point_lr}")
+			if self.voiceCommand == "left":
+				first_slice = 0
+				last_slice = len(point_lr)//3
+			elif self.voiceCommand == "right":
+				first_slice = len(point_lr)*2//3
+				last_slice = len(point_lr)
+			elif self.voiceCommand == "go":
+				first_slice = len(point_lr)//3
+				last_slice = len(point_lr)*2//3
+			else:
+				first_slice = 0
+				last_slice = len(point_lr)
+			points = point_lr[first_slice:last_slice]
+			print(f"points: {points}")
+
+			# Now discard the edge points that aren't in our desired direction
+			
 			# Add a few points where we are, to prevent the line going to extreme angles
 			#for p in range(-4,5):
 			#	point = (self.resolution[0]//2 + p * 20, self.resolution[1])
@@ -157,7 +177,7 @@ class VisionLineAnalysis:
 			
 			# Alternative - simple average
 			vx = sum([p[0] for p in points]) // len(points)
-			vy = points[0][1] #len(points)-1][1]
+			vy = min(points, key=lambda k: k[1])[1] # points[0][1] #len(points)-1][1]
 
 			x0 = self.resolution[0]//2
 			y0 = self.resolution[1]
@@ -211,16 +231,16 @@ class VisionLineAnalysis:
 		voiceCommand = self.voice.findLastSpokenWord(['left','right','go', 'fast', 'any'])
 		print(f"voiceCommand: {voiceCommand}")
 		if voiceCommand == 'right':
-			self.lastMask = self.left_mask
+			#self.lastMask = self.left_mask
 			self.voiceCommand = voiceCommand
 		elif voiceCommand == 'left':
-			self.lastMask = self.right_mask
+			#self.lastMask = self.right_mask
 			self.voiceCommand = voiceCommand
 		elif voiceCommand == 'go':
-			self.lastMask = self.edge_mask
+			#self.lastMask = self.edge_mask
 			self.voiceCommand = voiceCommand
 		elif voiceCommand == 'any':
-			self.lastMask = None
+			#self.lastMask = None
 			self.voiceCommand = voiceCommand
 		else:
 			# No change
@@ -282,6 +302,7 @@ class VisionLineAnalysis:
 				desiredPosition = (int((vx-self.resolution[0]//2)*self.targetLookaheadRatio+self.resolution[0]//2), vy) #int(self.resolution[1]*(1-self.targetLookaheadRatio)))
 				angle = np.arctan((currentPosition[0]-desiredPosition[0])/(currentPosition[1]-desiredPosition[1])) * 180.0/3.14159
 				# cap max angle retuned
+				angle /= 2.0
 				if angle > self.maxAngle:
 					yawAngle = yaw + self.maxAngle 
 				elif angle < -self.maxAngle:
