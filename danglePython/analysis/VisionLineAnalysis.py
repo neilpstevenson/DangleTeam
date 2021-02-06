@@ -18,6 +18,7 @@ class VisionLineAnalysis:
 		self.saveFile = (filename is not None)
 		self.saveRaw = saveRaw
 		self.blackLine = blackLine
+		self.maxAngle = 15.0	# Cap any calulated angle to this
 		
 		# Create/overwrite
 		self.results = LineAnalysisSharedIPC()
@@ -164,23 +165,33 @@ class VisionLineAnalysis:
 			hasResult = True
 		return hasResult, points, vx, vy, x0, y0
 
-	def displayResults(self, original, gray, points, angle, yaw, rate, assessedTopLeft, assessedBottomRight, currentPosition, desiredPosition, analysisTime):
-		if self.display and angle != None:
-			# Print the time taken
-			print(f"Capture & analysis: {analysisTime:.3f}secs")
+	def displayResults(self, original, gray, points, hasResult, angle, yaw, rate, assessedTopLeft, assessedBottomRight, analysisTime):
+		currentPosition = (self.resolution[0]//2, self.resolution[1])
+		if self.display:
 			# Create an overlayed image
 			assessment = original.copy()
-			for point in points:
-				cv2.circle(assessment, point, 5, (0,0,255), 1)
-			# Draw an arrow representing the brightest points
-			cv2.arrowedLine(assessment, assessedTopLeft, assessedBottomRight, (255, 255, 0), 2)
-			# Draw an angle from where we are to target
-			cv2.arrowedLine(assessment, currentPosition, desiredPosition, (0, 255, 0), 3)
-			# Overlay the angle calculated
-			np.set_printoptions(precision=2)
-			cv2.putText(assessment, f"{yaw:.2f}deg>>{angle:+.2f}deg", (5, self.resolution[1]-4), cv2.FONT_HERSHEY_DUPLEX, 0.5, (0, 25, 0))
-			cv2.putText(assessment, f"{rate:.0f}fps", (self.resolution[0]-40, self.resolution[1]-4), cv2.FONT_HERSHEY_DUPLEX, 0.4, (0, 25, 0))
-			cv2.putText(assessment, self.voiceCommand, (self.resolution[0]//2 + 45, self.resolution[1]-4), cv2.FONT_HERSHEY_DUPLEX, 0.4, (0, 25, 0))
+
+			if angle != None:
+				desiredPosition =  (int(currentPosition[0] - self.resolution[0]*np.sin(angle*3.142/180)//2), \
+									int(self.resolution[1] - self.resolution[1]*0.75*np.cos(angle*3.142/180)) )
+				# Print the time taken
+				print(f"Capture & analysis: {analysisTime:.3f}secs {desiredPosition}")
+				# Show the points
+				for point in points:
+					cv2.circle(assessment, point, 5, (0,0,255), 1)
+				# Draw an arrow representing the brightest points
+				cv2.arrowedLine(assessment, assessedTopLeft, assessedBottomRight, (255, 255, 0), 2)
+				# Draw an angle from where we are to target
+				if hasResult:
+					cv2.arrowedLine(assessment, currentPosition, desiredPosition, (0, 255, 0), 3)
+				else:
+					cv2.arrowedLine(assessment, currentPosition, desiredPosition, (200, 200, 200), 3)
+					
+				# Overlay the angle calculated
+				np.set_printoptions(precision=2)
+				cv2.putText(assessment, f"{yaw:.2f}deg>>{angle:+.2f}deg", (5, self.resolution[1]-4), cv2.FONT_HERSHEY_DUPLEX, 0.5, (0, 25, 0))
+				cv2.putText(assessment, f"{rate:.0f}fps", (self.resolution[0]-40, self.resolution[1]-4), cv2.FONT_HERSHEY_DUPLEX, 0.4, (0, 25, 0))
+				cv2.putText(assessment, self.voiceCommand, (self.resolution[0]//2 + 45, self.resolution[1]-4), cv2.FONT_HERSHEY_DUPLEX, 0.4, (0, 25, 0))
 			
 			cv2.imshow(f"assessed direction", assessment)
 			if self.displayGrayscale:
@@ -233,7 +244,6 @@ class VisionLineAnalysis:
 		rate = 10.0
 		angle = None
 		count = 0
-		currentPosition = None
 		desiredPosition = None
 		self.lastMask = None
 		self.voiceCommand = "any"
@@ -261,10 +271,6 @@ class VisionLineAnalysis:
 
 			# Analyse the image
 			hasResult, points, vx, vy, x0, y0 = self.analyseImage(gray)
-			if hasResult:
-				currentPosition = (self.resolution[0]//2, self.resolution[1])
-				desiredPosition = (int((vx-self.resolution[0]//2)*self.targetLookaheadRatio+self.resolution[0]//2), vy) #int(self.resolution[1]*(1-self.targetLookaheadRatio)))
-				angle = np.arctan((currentPosition[0]-desiredPosition[0])/(currentPosition[1]-desiredPosition[1])) * 180.0/3.14159
 
 			# Overall capture/analysis time
 			endTime = cv2.getTickCount()
@@ -272,7 +278,16 @@ class VisionLineAnalysis:
 
 			if hasResult:	
 				# Share the results
-				yawAngle = yaw + angle 
+				currentPosition = (self.resolution[0]//2, self.resolution[1])
+				desiredPosition = (int((vx-self.resolution[0]//2)*self.targetLookaheadRatio+self.resolution[0]//2), vy) #int(self.resolution[1]*(1-self.targetLookaheadRatio)))
+				angle = np.arctan((currentPosition[0]-desiredPosition[0])/(currentPosition[1]-desiredPosition[1])) * 180.0/3.14159
+				# cap max angle retuned
+				if angle > self.maxAngle:
+					yawAngle = yaw + self.maxAngle 
+				elif angle < -self.maxAngle:
+					yawAngle = yaw - self.maxAngle
+				else:
+					yawAngle = yaw + angle 
 				if yawAngle > 180.0:
 					yawAngle -= 360.0
 				elif yawAngle < -180.0:
@@ -288,7 +303,7 @@ class VisionLineAnalysis:
 			lastYaw = yaw
 				
 			# display the results
-			self.displayResults(original, gray, points, angle, yaw, rate, (x0, y0), (vx, vy), currentPosition, desiredPosition, analysisTime)
+			self.displayResults(original, gray, points, hasResult, angle, yaw, rate, (x0, y0), (vx, vy), analysisTime)
 			
 			# stats
 			displayEndTime = cv2.getTickCount()
