@@ -8,6 +8,7 @@ from challenge.challengeWallFollowControl import ChallengeWallFollowControl
 from challenge.challengeMinesweeper import ChallengeMinesweeper
 from challenge.challengeManualControl import ChallengeManualControl
 from challenge.challengeLavaPalava import ChallengeLavaPalava
+from challenge.challengeTestAbsolute import ChallengeTestAbsolute
 
 # Factories
 from interfaces.SensorAccessFactory import SensorAccessFactory

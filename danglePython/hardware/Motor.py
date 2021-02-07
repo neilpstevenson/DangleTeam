@@ -24,6 +24,8 @@ class Motor:
 			print(f"{time.time():.4f}: {self.motor}: {self.last_speed:.1f} -> {required_torque:.1f}")
 			self.redboardM(required_torque)
 			self.last_speed = required_torque
+		else:
+			print(f"NO CHANGE: {self.motor}: {self.last_speed:.1f} -> {required_torque:.1f}")
 		#print(f"{time.time()}:{self.pwmCount} motor {self.motor}: {self.current_torque} -> {required_torque}")
 
 	def updateTorque(self):
@@ -48,6 +50,7 @@ class Motor:
 			self.updateMotor()
 	
 	def setTorque(self, torque):
+		print(f"setTorque: {self.last_speed:.1f} {self.current_torque:.2f}-> {torque:.2f}")
 		self.requested_torque = torque
 		self.updateTorque()
 		

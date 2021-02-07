@@ -10,7 +10,7 @@ class MotorAccessor(ControlInterface):
 		self.motor = motor
 		
 	def setValue(self, value):
-		#print(f"MotorControl[{self.motor}]: {value}")
+		print(f"MotorControl[{self.motor}]: {value}")
 		self.motorsIPC.setRequiredTorque(self.motor, value)
 
 	def getValue(self):

@@ -1,6 +1,7 @@
 # Direct access at the moment
 #import redboard
 from interfaces.MotorAccessor import MotorAccessor
+from interfaces.MotorPosition import MotorPosition
 from interfaces.MotorModeAccessor import MotorModeAccessor
 from interfaces.ServoAccessor import ServoAccessor
 from interfaces.ServoControlSharedIPC import ServoControlSharedIPC
@@ -53,6 +54,8 @@ class ControlAccessFactory:
 	# These are the primary methods used to set the control IPC values
 	def motor(self, motor):
 		return MotorAccessor(self.motorsIPC, motor)
+	def motorPosition(self, motor):
+		return MotorPosition(self.motorsIPC, motor)
 	def servo(self, servo):
 		return ServoAccessor(self.servosIPC, servo)
 	def led(self, led):
