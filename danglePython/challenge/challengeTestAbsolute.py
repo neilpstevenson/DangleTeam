@@ -75,8 +75,10 @@ class ChallengeTestAbsolute(ChallengeInterface):
 		self.motorLSimpleManualSpeed = [SpeedDirectionCombiner(Scaler(self.joystickForward, scaling = self.maxForward), Scaler(self.joystickLeftRight, scaling = self.maxForward))]
 		self.motorRSimpleManualSpeed = [SpeedDirectionCombiner(Scaler(self.joystickForward, scaling = self.maxForward), Scaler(self.joystickLeftRight, scaling = -self.maxForward))]
 		
-		self.motorLSimplePositionSpeed = [SpeedDirectionCombiner(Scaler([self.joystickForward,self.motorPositionErrorL], scaling = self.maxPidForward), Scaler([Scaler(self.motorPositionErrorR, scaling = -1.0),self.motorPositionErrorL], scaling = self.maxPidForward))]
-		self.motorRSimplePositionSpeed = [SpeedDirectionCombiner(Scaler([self.joystickForward,self.motorPositionErrorR], scaling = self.maxPidForward), Scaler([Scaler(self.motorPositionErrorL, scaling = -1.0),self.motorPositionErrorR], scaling = self.maxPidForward))]									
+		self.motorLSimplePositionSpeed = [Scaler([self.joystickForward, self.motorPositionErrorL], scaling = self.maxPidForward)]
+		self.motorRSimplePositionSpeed = [Scaler([self.joystickForward, self.motorPositionErrorR], scaling = self.maxPidForward)]
+		#self.motorLSimplePositionSpeed = [SpeedDirectionCombiner(Scaler([self.joystickForward,self.motorPositionErrorL], scaling = self.maxPidForward), Scaler([Scaler(self.motorPositionErrorR, scaling = -1.0),self.motorPositionErrorL], scaling = self.maxPidForward))]
+		#self.motorRSimplePositionSpeed = [SpeedDirectionCombiner(Scaler([self.joystickForward,self.motorPositionErrorR], scaling = self.maxPidForward), Scaler([Scaler(self.motorPositionErrorL, scaling = -1.0),self.motorPositionErrorR], scaling = self.maxPidForward))]									
 		
 		motorL = SwitchingControlMediator( [ motorsStop, 								 # Choice 0 = Stopped \
 											  											 # Choice 1 = Controlled

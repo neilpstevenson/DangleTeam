@@ -29,21 +29,25 @@ class MonitorDisplay:
 		self.x = np.arange(0, self.points, 1)
 
 		self.lines = \
-			self.ax.plot(self.x, [0.0]*len(self.x), label="F Joystick")[0], \
 			self.ax.plot(self.x, [0.0]*len(self.x), label="L motor")[0], \
-			self.ax.plot(self.x, [0.0]*len(self.x), label="L speed")[0], \
+			self.ax.plot(self.x, [0.0]*len(self.x), label="L position")[0], \
 			self.ax.plot(self.x, [0.0]*len(self.x), label="R motor")[0], \
-			self.ax.plot(self.x, [0.0]*len(self.x), label="R speed")[0], \
-			self.ax.plot(self.x, [0.0]*len(self.x), label="Heading")[0], \
-			self.ax.plot(self.x, [0.0]*len(self.x), label="Vision")[0]
+			self.ax.plot(self.x, [0.0]*len(self.x), label="R position")[0] 
+			#self.ax.plot(self.x, [0.0]*len(self.x), label="F Joystick")[0], \
+			#self.ax.plot(self.x, [0.0]*len(self.x), label="L speed")[0], \
+			#self.ax.plot(self.x, [0.0]*len(self.x), label="R speed")[0], \
+			#self.ax.plot(self.x, [0.0]*len(self.x), label="Heading")[0], \
+			#self.ax.plot(self.x, [0.0]*len(self.x), label="Vision")[0]
 		self.values = \
-			Scaler(self.sensors.joystickAxis(1), scaling=1.0), \
 			Scaler(self.controls.motor(2), scaling=-1.0), \
-			Scaler(self.sensors.rateCounter(0), scaling=0.0012), \
+			Scaler(self.controls.motorPosition(2), scaling=0.001), \
 			Scaler(self.controls.motor(1), scaling=1.0), \
-			Scaler(self.sensors.rateCounter(1), scaling=0.0012), \
-			Scaler(self.sensors.yaw(), scaling=1/180.0), \
-			Scaler(self.vision.getLineHeading(), scaling=1/180.0)
+			Scaler(self.controls.motorPosition(1), scaling=0.001) 
+			#Scaler(self.sensors.joystickAxis(1), scaling=1.0), \
+			#Scaler(self.sensors.rateCounter(0), scaling=0.0012), \
+			#Scaler(self.sensors.rateCounter(1), scaling=0.0012), \
+			#Scaler(self.sensors.yaw(), scaling=1/180.0), \
+			#Scaler(self.vision.getLineHeading(), scaling=1/180.0)
 		plt.ylabel('value')
 		plt.legend(loc=(0.01,0.75))
 
@@ -62,11 +66,12 @@ class MonitorDisplay:
 		#if i%100 == 0:
 		#	ax.set_ylim(min(-1.05,min(line.get_ydata())-0.1),max(1.05,max(line.get_ydata())+0.1))
 		#	plt.draw()
+		print(f"{i}")
 		return self.lines
 
 	def show(self):
 		self.ani = animation.FuncAnimation(
-			self.fig, self.animate, init_func=self.init, interval=10, blit=True, save_count=1)
+			self.fig, self.animate, init_func=self.init, interval=10, blit=True, save_count=5)
 		plt.show()
 	
 	def save(self, filename):
