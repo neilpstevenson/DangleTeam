@@ -13,8 +13,8 @@ class MotorControlSharedIPC:
 					('acttorque',np.float32),
 					('reqspeed',np.float32),
 					('actspeed',np.float32),
-					('reqposistion',np.uint64),
-					('actposistion',np.uint64)])
+					('reqposistion',np.int64),
+					('actposistion',np.int64)])
 	motors_shared_dt = np.dtype([
 					('watchdog',np.uint16),
 					('motors',motor_dt, (8))])

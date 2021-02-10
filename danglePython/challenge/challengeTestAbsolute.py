@@ -75,8 +75,8 @@ class ChallengeTestAbsolute(ChallengeInterface):
 		self.motorLSimpleManualSpeed = [SpeedDirectionCombiner(Scaler(self.joystickForward, scaling = self.maxForward), Scaler(self.joystickLeftRight, scaling = self.maxForward))]
 		self.motorRSimpleManualSpeed = [SpeedDirectionCombiner(Scaler(self.joystickForward, scaling = self.maxForward), Scaler(self.joystickLeftRight, scaling = -self.maxForward))]
 		
-		self.motorLSimplePositionSpeed = [SpeedDirectionCombiner(Scaler([self.joystickForward,self.motorPositionErrorL], scaling = self.maxForward), Scaler([Scaler(self.motorPositionErrorR, scaling = -1.0),self.motorPositionErrorL], scaling = self.maxPidForward))]
-		self.motorRSimplePositionSpeed = [SpeedDirectionCombiner(Scaler([self.joystickForward,self.motorPositionErrorR], scaling = self.maxForward), Scaler([Scaler(self.motorPositionErrorL, scaling = -1.0),self.motorPositionErrorR], scaling = self.maxPidForward))]									
+		self.motorLSimplePositionSpeed = [SpeedDirectionCombiner(Scaler([self.joystickForward,self.motorPositionErrorL], scaling = self.maxPidForward), Scaler([Scaler(self.motorPositionErrorR, scaling = -1.0),self.motorPositionErrorL], scaling = self.maxPidForward))]
+		self.motorRSimplePositionSpeed = [SpeedDirectionCombiner(Scaler([self.joystickForward,self.motorPositionErrorR], scaling = self.maxPidForward), Scaler([Scaler(self.motorPositionErrorL, scaling = -1.0),self.motorPositionErrorR], scaling = self.maxPidForward))]									
 		
 		motorL = SwitchingControlMediator( [ motorsStop, 								 # Choice 0 = Stopped \
 											  											 # Choice 1 = Controlled
@@ -106,6 +106,10 @@ class ChallengeTestAbsolute(ChallengeInterface):
 		self.ledIndicator = self.controls.led(0)
 		medPriorityProcesses.append(SimpleControlMediator( Scaler(self.motorEnable, scaling=2, offset=2, max=4), self.ledIndicator))
 		
+		# Nudge buttons
+		self.NudgeForward = OneShotButtonValue(self.sensors.button(2), triggeredValue = 300)
+		self.NudgeBackward = OneShotButtonValue(self.sensors.button(0), triggeredValue = 300)
+		
 	def move(self):
 		if self.fullAutoEnable.getValue() > 0:
 			if not self.pidL.auto_mode:
@@ -113,6 +117,9 @@ class ChallengeTestAbsolute(ChallengeInterface):
 				self.pidL.auto_mode = True
 				self.pidR.auto_mode = True
 			# Update targets
+			nudge = self.NudgeForward.getValue() - self.NudgeBackward.getValue() 
+			self.targetPositionL += nudge
+			self.targetPositionR += nudge
 			self.motorPositionErrorL.setTarget(self.targetPositionL)
 			self.motorPositionErrorR.setTarget(self.targetPositionR)
 		else:
