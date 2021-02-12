@@ -98,7 +98,7 @@ class MotorControlProcess:
 					# Calculate speeds
 					nowTime = time.perf_counter()
 					deltaT = nowTime - startTime
-					if deltaT > 0.1:
+					if deltaT > 0: #0.1:
 						speedL = (encoderPositionL - lastEncoderPositionL) // deltaT
 						lastEncoderPositionL = encoderPositionL
 						self.motorsIPC.setCurrentSpeed(2, speedL)

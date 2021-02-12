@@ -49,7 +49,7 @@ class ChallengeTestAbsolute(ChallengeInterface):
 	def createProcesses(self, highPriorityProcesses, medPriorityProcesses):
 		
 		# Set up the PIDs for the two motors
-		self.pidL = PID(self.pidConstants[0], self.pidConstants[1], self.pidConstants[2], sample_time=0.05, proportional_on_measurement=self.proportionalOnMeasure, output_limits=(-1.0, 1.0))
+		self.pidL = PID(self.pidConstants[0], self.pidConstants[1], self.pidConstants[2], sample_time=0.025, proportional_on_measurement=self.proportionalOnMeasure, output_limits=(-1.0, 1.0))
 		self.motorL = self.controls.motor(2)
 		self.positionL = self.controls.motorPosition(2)
 		self.motorPositionErrorL = SimplePIDErrorValue(self.pidL, self.positionL)
@@ -57,7 +57,7 @@ class ChallengeTestAbsolute(ChallengeInterface):
 		self.motorPositionErrorL.setTarget(self.targetPositionL)
 		self.motorPositionErrorL.getValue()
 		
-		self.pidR = PID(self.pidConstants[0], self.pidConstants[1], self.pidConstants[2], sample_time=0.05, proportional_on_measurement=self.proportionalOnMeasure, output_limits=(-1.0, 1.0))
+		self.pidR = PID(self.pidConstants[0], self.pidConstants[1], self.pidConstants[2], sample_time=0.025, proportional_on_measurement=self.proportionalOnMeasure, output_limits=(-1.0, 1.0))
 		self.motorR = self.controls.motor(1)
 		self.positionR = self.controls.motorPosition(1)
 		self.motorPositionErrorR = SimplePIDErrorValue(self.pidR, self.positionR)

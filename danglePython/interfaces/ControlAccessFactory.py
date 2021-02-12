@@ -2,6 +2,7 @@
 #import redboard
 from interfaces.MotorAccessor import MotorAccessor
 from interfaces.MotorPosition import MotorPosition
+from interfaces.MotorSpeed import MotorSpeed
 from interfaces.MotorModeAccessor import MotorModeAccessor
 from interfaces.ServoAccessor import ServoAccessor
 from interfaces.ServoControlSharedIPC import ServoControlSharedIPC
@@ -56,6 +57,8 @@ class ControlAccessFactory:
 		return MotorAccessor(self.motorsIPC, motor)
 	def motorPosition(self, motor):
 		return MotorPosition(self.motorsIPC, motor)
+	def motorSpeed(self, motor):
+		return MotorSpeed(self.motorsIPC, motor)
 	def servo(self, servo):
 		return ServoAccessor(self.servosIPC, servo)
 	def led(self, led):
