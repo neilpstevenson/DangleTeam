@@ -31,10 +31,10 @@ class MonitorDisplay:
 		self.lines = \
 			[(self.ax.plot(self.x, [0.0]*len(self.x), label="L motor")[0], 	 Scaler(self.controls.motor(2), scaling=-1.0)), \
 			(self.ax.plot(self.x, [0.0]*len(self.x), label="L position")[0], Scaler(self.controls.motorPosition(2), scaling=0.001)), \
-			(self.ax.plot(self.x, [0.0]*len(self.x), label="L speed")[0],    Scaler(self.controls.motorSpeed(2), scaling=-0.001)), \
+			(self.ax.plot(self.x, [0.0]*len(self.x), label="L speed")[0],    Scaler(self.controls.motorSpeed(2), scaling=-1.0/1500)), \
 			(self.ax.plot(self.x, [0.0]*len(self.x), label="R motor")[0],    Scaler(self.controls.motor(1), scaling=1.0)), \
 			(self.ax.plot(self.x, [0.0]*len(self.x), label="R position")[0], Scaler(self.controls.motorPosition(1), scaling=0.001)), \
-			(self.ax.plot(self.x, [0.0]*len(self.x), label="R speed")[0],    Scaler(self.controls.motorSpeed(1), scaling=0.001)) ]
+			(self.ax.plot(self.x, [0.0]*len(self.x), label="R speed")[0],    Scaler(self.controls.motorSpeed(1), scaling=1.0/1500)) ]
 			#(self.ax.plot(self.x, [0.0]*len(self.x), label="F Joystick")[0], Scaler(self.sensors.joystickAxis(1), scaling=1.0), \
 			#(self.ax.plot(self.x, [0.0]*len(self.x), label="Heading")[0],    Scaler(self.sensors.yaw(), scaling=1/180.0), \
 			#(self.ax.plot(self.x, [0.0]*len(self.x), label="Vision")[0],     Scaler(self.vision.getLineHeading(), scaling=1/180.0)
@@ -48,15 +48,18 @@ class MonitorDisplay:
 	def onClick(self, event):
 		if event.key == 'p':
 			self.pause ^= True
-		self.ani._blit = not self.pause
-		for line, valueprovider in self.lines:
-			line.set_animated(not self.pause)
-		#if self.pause:
-		#	self.ani.event_source.stop()
-		#else:
-		#	self.ani.event_source.start()
-		print(f"onClick: {self.pause }")
-
+			self.ani._blit = not self.pause
+			for line, valueprovider in self.lines:
+				line.set_animated(not self.pause)
+			#if self.pause:
+			#	self.ani.event_source.stop()
+			#else:
+			#	self.ani.event_source.start()
+			print(f"onClick: {self.pause }")
+		elif event.key == 'S':
+			print(f"onClick: Save")
+			self.save("monitor.mp4")
+			
 	def init(self):  # only required for blitting to give a clean slate.
 		for line, valueprovider in self.lines:
 			line.set_ydata([np.nan] * len(self.x))
@@ -84,7 +87,7 @@ class MonitorDisplay:
 
 	def show(self):
 		self.ani = animation.FuncAnimation(
-			self.fig, self.animate, init_func=self.init, interval=10, blit=True, save_count=200)
+			self.fig, self.animate, init_func=self.init, interval=10, blit=True, save_count=500)
 		#self.ax.callbacks.connect('xlim_changed', lambda event: self.ani._blit_cache.clear())
 		#self.ax.callbacks.connect('ylim_changed', lambda event: self.ani._blit_cache.clear())
 		#self.fig.canvas.mpl_connect('button_press_event', lambda event: self.ani._blit_cache.clear())
@@ -92,5 +95,6 @@ class MonitorDisplay:
 	
 	def save(self, filename):
 		from matplotlib.animation import FFMpegWriter
-		writer = FFMpegWriter(fps=15, metadata=dict(artist='Dangle'), bitrate=1800)
+		writer = FFMpegWriter(fps=15, metadata=dict(artist='Chameleon'), bitrate=1800)
 		self.ani.save(filename, writer=writer)
+		writer.finish()

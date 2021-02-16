@@ -39,3 +39,6 @@ class HysteresisValueBase(SensorInterface):
 				# Highest point
 				self.lastButtonValue = rawValue
 		return self.currentValue
+
+	def reset(self):
+		self.currentValue = self.untriggeredValue

@@ -7,6 +7,7 @@ class StateMachine:
 		self.states = {}
 		self.state = initialState
 		self.timeout = None
+		self.stateData = None
 		
 	# Add a new possible state
 	def addState(self, stateId, enterStateFunc, processFunc, exitStateFunc):
@@ -19,20 +20,21 @@ class StateMachine:
 		else:
 			# Call state processing function
 			if self.state != None and self.states[self.state][1] != None:
-				self.states[self.state][1]()
+				self.states[self.state][1](self.stateData)
 		
 	def changeState(self, newState):
 		self.timeout = None
 		if self.state != newState:
-			print(f"State change: {self.state} to {newState}")
+			print(f"State change: '{self.state}' to '{newState}'")
 			# Call Exit state
 			if self.state != None and self.states[self.state][2] != None:
-				self.states[self.state][2]()
+				self.states[self.state][2](self.stateData)
 			# Change state
 			self.state = newState
+			self.stateData = None
 			# Call Enter state
 			if self.state != None and self.states[self.state][0] != None:
-				self.states[self.state][0]()
+				self.stateData = self.states[self.state][0]()
 
 	def setTimeout(self, timeout = None, targetState = None):
 		if timeout is None:

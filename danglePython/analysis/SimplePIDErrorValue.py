@@ -18,7 +18,7 @@ class SimplePIDErrorValue(SensorInterface):
 	def getValue(self):
 		current = self.current.getValue()
 		error = self.pid(float(current)) * self.scaling
-		print(f"SimplePIDErrorValue: {current} ({self.pid.setpoint}) {error} = {self.pid.components} {self.pid.tunings}")
+		#print(f"SimplePIDErrorValue: {current} ({self.pid.setpoint}) {error} = {self.pid.components} {self.pid.tunings}")
 		if self.integrate:
 			self.integratedValue += error
 			if self.integratedValue + self.offset > self.max:

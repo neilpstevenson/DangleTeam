@@ -102,7 +102,7 @@
   "motor.position.pid": [
     0.002,
     0.0,
-    0.0001
+    0.00008
   ],
   "motor.position.pid.pom": false,
   "motor.position.pidforward.max": 0.5,

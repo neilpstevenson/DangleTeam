@@ -9,6 +9,7 @@ from challenge.challengeMinesweeper import ChallengeMinesweeper
 from challenge.challengeManualControl import ChallengeManualControl
 from challenge.challengeLavaPalava import ChallengeLavaPalava
 from challenge.challengeTestAbsolute import ChallengeTestAbsolute
+from challenge.challengeTestSequence import ChallengeTestSequence
 
 # Factories
 from interfaces.SensorAccessFactory import SensorAccessFactory
