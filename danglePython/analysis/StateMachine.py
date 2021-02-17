@@ -22,7 +22,7 @@ class StateMachine:
 			if self.state != None and self.states[self.state][1] != None:
 				self.states[self.state][1](self.stateData)
 		
-	def changeState(self, newState):
+	def changeState(self, newState, data = None):
 		self.timeout = None
 		if self.state != newState:
 			print(f"State change: '{self.state}' to '{newState}'")
@@ -34,7 +34,7 @@ class StateMachine:
 			self.stateData = None
 			# Call Enter state
 			if self.state != None and self.states[self.state][0] != None:
-				self.stateData = self.states[self.state][0]()
+				self.stateData = self.states[self.state][0](data)
 
 	def setTimeout(self, timeout = None, targetState = None):
 		if timeout is None:

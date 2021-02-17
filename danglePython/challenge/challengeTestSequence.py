@@ -47,15 +47,24 @@ class ChallengeTestSequence(ChallengeInterface):
 		self.maxPidForward = config.get("motor.position.pidforward.max", 0.4)	# PID-controlled max speed
 		config.save()
 
-	def ControlOff(self):
+	def ControlOff(self, data):
 		# Stop the motors
 		self.autoModeForwardSpeed.setValue(0.0)
 		# stop the PID controller
 		#self.pidHeading.auto_mode = False
 		self.autoModeEnable.reset()
 		self.autoModeForwardSpeed.setValue(0.0)
+		# Disable the PID controls
+		self.motorPositionErrorL.disable()
+		self.motorPositionErrorR.disable()
+		#self.pidL.auto_mode = False
+		#self.pidR.auto_mode = False
 			
 	def MotorsOffState(self, data):
+		# Maintain current position
+		self.targetPositionL = self.positionL.getValue()
+		self.targetPositionR = self.positionR.getValue()
+
 		# Check if entering remote control or auto mode
 		if self.motorEnable.getValue() > 0 or self.autoModeEnable.getValue() > 0:
 			self.stateMachine.changeState("Manual")
@@ -78,55 +87,59 @@ class ChallengeTestSequence(ChallengeInterface):
 			self.stateMachine.changeState("MotorsOff")
 
 	def nextSequence(self):
-		seq = [(1000,1000),(1000,0),(1000,1000),(1000,0),(1000,1000),(1000,0),(1000,1000),(1000,0)]
+		seq = [(300,300),(300,0),(300,300),(300,0),(300,300),(300,0),(300,300),(300,0)]
 		for move in range(len(seq)):
 			nudge  = seq[move]
 			yield nudge 
 			
-	def StartSequence(self):
+	def StartSequence(self, data):
 		self.nextSeq = self.nextSequence()
+		# Ensure all is enabled
+		self.autoModeForwardSpeed.setValue(0.4)
 		
 	def Sequence(self, data):
-		self.stateMachine.changeState("MoveDistance")
-		
-	def StartMoveDistance(self):
-		# Test state
-		self.autoModeForwardSpeed.setValue(0.4)
-		if not self.pidL.auto_mode:
-			# Switch back on the PIDs
-			self.pidL.auto_mode = True
-			self.pidR.auto_mode = True
-		try:
-			nudge = next(self.nextSeq)
-			print(f"nudge: {nudge}")
-			self.targetPositionL += nudge[0]
-			self.targetPositionR += nudge[1]
-			self.motorPositionErrorL.setTarget(self.targetPositionL)
-			self.motorPositionErrorR.setTarget(self.targetPositionR)
-			data = (self.targetPositionL, self.targetPositionR)
-			print(f"StartMoveDistance: {data}")
-			return data
-		except StopIteration:
-			return None
-		
-	def MoveDistance(self, data):
-		# End of sequence?
-		if data is None:
+		# Check if we've been disabled
+		if self.autoModeEnable.getValue() == 0:
 			self.stateMachine.changeState("MotorsOff")
-			return
+		else:
+			# Process next move in sequence
+			try:
+				nudge = next(self.nextSeq)
+				self.stateMachine.changeState("MoveDistance", nudge)
+			except StopIteration:
+				# End of sequence?
+				self.stateMachine.changeState("MotorsOff")
+				
+	def StartMoveDistance(self, data):
+		nudgeL, nudgeR = data
+		self.motorPositionErrorL.enable()
+		self.motorPositionErrorR.enable()
+		print(f"nudge: {data}")
+		self.targetPositionL += nudgeL
+		self.motorPositionErrorL.setTarget(self.targetPositionL)
+		self.targetPositionR += nudgeR
+		self.motorPositionErrorR.setTarget(self.targetPositionR)
+		# Remember the target positions as part of the state data
+		stateData = (self.targetPositionL, self.targetPositionR)
+		print(f"StartMoveDistance: {stateData}")
+		return stateData
+
+	def MoveDistance(self, data):
 		# Reached target?
 		currentPositionL = self.positionL.getValue()
 		currentPositionR = self.positionR.getValue()
+		targetPositionL, targetPositionR = data
 		print(f"MoveDistance: {data}; current: {(currentPositionL, currentPositionR)}")
-		if abs(data[0] - currentPositionL) < 100 and abs(data[1] - currentPositionR) < 100:
+		# Continue until we're close to the target
+		if abs(targetPositionL - currentPositionL) < 40 and abs(targetPositionR - currentPositionR) < 40 or self.autoModeEnable.getValue() == 0:
 			self.stateMachine.changeState("NextSequence")
 
 	def EndMoveDistance(self, data):
-		pass
-		#self.autoModeEnable.reset()
-		#self.autoModeForwardSpeed.setValue(0.0)
+		# Disable the PID controls
+		self.motorPositionErrorL.disable()
+		self.motorPositionErrorR.disable()
 
-	def StartRotateAngle(self):
+	def StartRotateAngle(self, data):
 		pass
 		
 	def RotateAngle(self, data):
@@ -213,12 +226,6 @@ class ChallengeTestSequence(ChallengeInterface):
 		# Nudge buttons
 		self.NudgeForward = OneShotButtonValue(self.sensors.button(2), triggeredValue = 300)
 		self.NudgeBackward = OneShotButtonValue(self.sensors.button(0), triggeredValue = 300)
-
-	def nextSequence(self):
-		seq = [(300,300),(300,0),(300,300),(300,0),(300,300),(300,0),(300,300),(300,0)]
-		for move in range(len(seq)):
-			nudge  = seq[move]
-			yield nudge 
 
 	def move(self):
 		self.stateMachine.process()

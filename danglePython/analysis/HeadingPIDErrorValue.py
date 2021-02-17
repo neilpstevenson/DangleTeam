@@ -48,3 +48,16 @@ class HeadingPIDErrorValue(SensorInterface):
 
 	def setTarget(self,targetHeading):
 		self.targetHeading = self.normaliseHeading(targetHeading)
+
+	def disable(self):
+		self.pid.set_auto_mode(False)
+		
+	def enable(self):
+		if not self.pid.auto_mode:
+			self.setTarget(self.currentHeading.getValue())
+			self.pid.set_auto_mode(True, last_output=0.0)
+
+	def reset(self):
+		self.pid.set_auto_mode(False)
+		self.setTarget(self.currentHeading.getValue())
+		self.pid.set_auto_mode(True, last_output=0.0)

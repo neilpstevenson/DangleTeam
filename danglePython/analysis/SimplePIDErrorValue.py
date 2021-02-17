@@ -35,3 +35,16 @@ class SimplePIDErrorValue(SensorInterface):
 
 	def setTarget(self, value):
 		self.pid.setpoint = float(value)
+
+	def disable(self):
+		self.pid.set_auto_mode(False)
+		
+	def enable(self):
+		if not self.pid.auto_mode:
+			self.setTarget(self.current.getValue())
+			self.pid.set_auto_mode(True, last_output=0.0)
+
+	def reset(self):
+		self.pid.set_auto_mode(False)
+		self.setTarget(self.current.getValue())
+		self.pid.set_auto_mode(True, last_output=0.0)
