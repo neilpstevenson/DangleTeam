@@ -43,7 +43,7 @@ class ChallengeTestSequence(ChallengeInterface):
 		config = Config()
 		self.pidConstants = config.get("motor.position.pid", [0.002, 0.0, 0.00008])	# Note: PID output is also limited to +/-1.0
 		self.proportionalOnMeasure = config.get("motor.position.pid.pom", False)
-		self.pidHeadingConstants = config.get("motor.heading.pid", [0.0012, 0.001, 0.015])	# Note: PID output is also limited to +/-1.0
+		self.pidHeadingConstants = config.get("motor.heading.pid", [0.015, 0.001, 0.0012])	# Note: PID output is also limited to +/-1.0
 		self.proportionalOnMeasureHeadiing = config.get("motor.heading.pid.pom", False)
 		self.maxForward = config.get("motor.position.forward.max", 1.0)	# Joystick-controlled max speed
 		self.maxManualTurn = config.get("lava.manualturn.max", -15.0) # Joystick-controlled max turn angle (mpu heading relative)
@@ -201,6 +201,7 @@ class ChallengeTestSequence(ChallengeInterface):
 
 		# Setup the heading PID
 		yaw = self.sensors.yaw()
+		print(f"Heading PID: {self.pidHeadingConstants}")
 		self.pidHeading = PID(self.pidHeadingConstants[0], self.pidHeadingConstants[1], self.pidHeadingConstants[2], sample_time=0.008, proportional_on_measurement=self.proportionalOnMeasureHeadiing, output_limits=(-1.0, 1.0))
 		self.headingError = HeadingPIDErrorValue(yaw, self.pidHeading, yaw.getValue())
 		# Initialise the PID
