@@ -43,8 +43,10 @@ class SimplePIDErrorValue(SensorInterface):
 		if not self.pid.auto_mode:
 			self.setTarget(self.current.getValue())
 			self.pid.set_auto_mode(True, last_output=0.0)
+			self.getValue()
 
 	def reset(self):
 		self.pid.set_auto_mode(False)
 		self.setTarget(self.current.getValue())
 		self.pid.set_auto_mode(True, last_output=0.0)
+		self.getValue()

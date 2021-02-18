@@ -41,40 +41,39 @@ class ChallengeTestSequence(ChallengeInterface):
 		self.zGunControl = ZGunControl()
 		# Get config
 		config = Config()
-		self.pidConstants = config.get("motor.position.pid", [0.001, 0.0, 0.001])	# Note: PID output is also limited to +/-1.0
+		self.pidConstants = config.get("motor.position.pid", [0.002, 0.0, 0.00008])	# Note: PID output is also limited to +/-1.0
 		self.proportionalOnMeasure = config.get("motor.position.pid.pom", False)
+		self.pidHeadingConstants = config.get("motor.heading.pid", [0.0012, 0.001, 0.015])	# Note: PID output is also limited to +/-1.0
+		self.proportionalOnMeasureHeadiing = config.get("motor.heading.pid.pom", False)
 		self.maxForward = config.get("motor.position.forward.max", 1.0)	# Joystick-controlled max speed
+		self.maxManualTurn = config.get("lava.manualturn.max", -15.0) # Joystick-controlled max turn angle (mpu heading relative)
 		self.maxPidForward = config.get("motor.position.pidforward.max", 0.4)	# PID-controlled max speed
+		self.maxHeadingTurn = config.get("lava.headingturn.max", 0.6) # PID output scaling (manual mode)
+		self.maxAutoTurn = config.get("lava.autoturn.max", 0.3) # PID output scaling (full auto mode)
 		config.save()
 
 	def ControlOff(self, data):
 		# Stop the motors
 		self.autoModeForwardSpeed.setValue(0.0)
-		# stop the PID controller
-		#self.pidHeading.auto_mode = False
+		# stop any auto mode
 		self.autoModeEnable.reset()
-		self.autoModeForwardSpeed.setValue(0.0)
+		self.motorsSpeedMode.setValue(0)
 		# Disable the PID controls
 		self.motorPositionErrorL.disable()
 		self.motorPositionErrorR.disable()
-		#self.pidL.auto_mode = False
-		#self.pidR.auto_mode = False
+		self.headingError.disable()
 			
 	def MotorsOffState(self, data):
 		# Maintain current position
 		self.targetPositionL = self.positionL.getValue()
 		self.targetPositionR = self.positionR.getValue()
-
+		#self.headingError.setTarget(self.visionTargetHeading.getValue())
 		# Check if entering remote control or auto mode
 		if self.motorEnable.getValue() > 0 or self.autoModeEnable.getValue() > 0:
 			self.stateMachine.changeState("Manual")
 
-	def ControlOn(self, data):
-		# reset the PID controller
-		pass
-		#self.pidHeading.set_auto_mode(True, last_output=0.0)
-		#self.headingError.setTarget(self.sensors.yaw().getValue())
-		#self.headingError.getValue()
+	def StartManualControl(self, data):
+		self.motorsSpeedMode.setValue(1)
 				
 	def ManualControl(self, data):
 		# Simple remote control
@@ -86,8 +85,30 @@ class ChallengeTestSequence(ChallengeInterface):
 		else:
 			self.stateMachine.changeState("MotorsOff")
 
+	def StartManualControlHeading(self, data):
+		self.motorsSpeedMode.setValue(3)
+		self.headingError.enable()
+				
+	def ManualControlHeading(self, data):
+		# Simple remote control
+		if self.motorEnable.getValue() > 0:
+			# Manual turns
+			if self.joystickLeftRight.getValue() != 0.0:
+				self.headingError.setTarget(self.sensors.yaw().getValue() + self.joystickLeftRight.getValue() * self.maxManualTurn)
+		elif self.autoModeEnable.getValue() > 0:
+			self.stateMachine.changeState("StartSequence")
+		else:
+			self.stateMachine.changeState("MotorsOff")
+
 	def nextSequence(self):
-		seq = [(300,300),(300,0),(300,300),(300,0),(300,300),(300,0),(300,300),(300,0)]
+		seq = [	("MoveDistance",[300,300]), \
+				("MoveDistance",[300,0]), \
+				("MoveDistance",[300,300]), \
+				("MoveDistance",[300,0]), \
+				("MoveDistance",[300,300]), \
+				("MoveDistance",[300,0]), \
+				("MoveDistance",[300,300]), \
+				("MoveDistance",[300,0])]
 		for move in range(len(seq)):
 			nudge  = seq[move]
 			yield nudge 
@@ -96,6 +117,7 @@ class ChallengeTestSequence(ChallengeInterface):
 		self.nextSeq = self.nextSequence()
 		# Ensure all is enabled
 		self.autoModeForwardSpeed.setValue(0.4)
+		self.motorsSpeedMode.setValue(2)
 		
 	def Sequence(self, data):
 		# Check if we've been disabled
@@ -104,17 +126,17 @@ class ChallengeTestSequence(ChallengeInterface):
 		else:
 			# Process next move in sequence
 			try:
-				nudge = next(self.nextSeq)
-				self.stateMachine.changeState("MoveDistance", nudge)
+				state, nudge = next(self.nextSeq)
+				self.stateMachine.changeState(state, nudge)
 			except StopIteration:
 				# End of sequence?
 				self.stateMachine.changeState("MotorsOff")
 				
 	def StartMoveDistance(self, data):
 		nudgeL, nudgeR = data
+		print(f"nudge: {(nudgeL, nudgeR)}")
 		self.motorPositionErrorL.enable()
 		self.motorPositionErrorR.enable()
-		print(f"nudge: {data}")
 		self.targetPositionL += nudgeL
 		self.motorPositionErrorL.setTarget(self.targetPositionL)
 		self.targetPositionR += nudgeR
@@ -153,8 +175,8 @@ class ChallengeTestSequence(ChallengeInterface):
 		
 		# Set up the state machine
 		self.stateMachine = StateMachine("MotorsOff")
-		self.stateMachine.addState("MotorsOff", self.ControlOff, self.MotorsOffState, self.ControlOn)
-		self.stateMachine.addState("Manual", None, self.ManualControl, None)
+		self.stateMachine.addState("MotorsOff", self.ControlOff, self.MotorsOffState, None)
+		self.stateMachine.addState("Manual", self.StartManualControlHeading, self.ManualControlHeading, None)
 		self.stateMachine.addState("StartSequence", self.StartSequence, self.Sequence, None)
 		self.stateMachine.addState("NextSequence", None, self.Sequence, None)
 		self.stateMachine.addState("MoveDistance", self.StartMoveDistance, self.MoveDistance, self.EndMoveDistance)
@@ -167,7 +189,7 @@ class ChallengeTestSequence(ChallengeInterface):
 		self.motorPositionErrorL = SimplePIDErrorValue(self.pidL, self.positionL)
 		self.targetPositionL = self.positionL.getValue()
 		self.motorPositionErrorL.setTarget(self.targetPositionL)
-		self.motorPositionErrorL.getValue()
+		self.motorPositionErrorL.reset()
 		
 		self.pidR = PID(self.pidConstants[0], self.pidConstants[1], self.pidConstants[2], sample_time=0.025, proportional_on_measurement=self.proportionalOnMeasure, output_limits=(-1.0, 1.0))
 		self.motorR = self.controls.motor(1)
@@ -175,7 +197,14 @@ class ChallengeTestSequence(ChallengeInterface):
 		self.motorPositionErrorR = SimplePIDErrorValue(self.pidR, self.positionR)
 		self.targetPositionR = self.positionR.getValue()
 		self.motorPositionErrorR.setTarget(self.targetPositionR)
-		self.motorPositionErrorR.getValue()
+		self.motorPositionErrorR.reset()
+
+		# Setup the heading PID
+		yaw = self.sensors.yaw()
+		self.pidHeading = PID(self.pidHeadingConstants[0], self.pidHeadingConstants[1], self.pidHeadingConstants[2], sample_time=0.008, proportional_on_measurement=self.proportionalOnMeasureHeadiing, output_limits=(-1.0, 1.0))
+		self.headingError = HeadingPIDErrorValue(yaw, self.pidHeading, yaw.getValue())
+		# Initialise the PID
+		self.headingError.reset()
 
 		# Motor control - General
 		motorsStop = FixedValue(0.0)
@@ -188,20 +217,28 @@ class ChallengeTestSequence(ChallengeInterface):
 
 		self.motorLSimpleManualSpeed = [SpeedDirectionCombiner(Scaler(self.joystickForward, scaling = self.maxForward), Scaler(self.joystickLeftRight, scaling = self.maxForward))]
 		self.motorRSimpleManualSpeed = [SpeedDirectionCombiner(Scaler(self.joystickForward, scaling = self.maxForward), Scaler(self.joystickLeftRight, scaling = -self.maxForward))]
-		
+
 		self.motorLSimplePositionSpeed = [Scaler([self.joystickForward, self.motorPositionErrorL], scaling = self.maxPidForward)]
 		self.motorRSimplePositionSpeed = [Scaler([self.joystickForward, self.motorPositionErrorR], scaling = self.maxPidForward)]
+
 		#self.motorLSimplePositionSpeed = [SpeedDirectionCombiner(Scaler([self.joystickForward,self.motorPositionErrorL], scaling = self.maxPidForward), Scaler([Scaler(self.motorPositionErrorR, scaling = -1.0),self.motorPositionErrorL], scaling = self.maxPidForward))]
 		#self.motorRSimplePositionSpeed = [SpeedDirectionCombiner(Scaler([self.joystickForward,self.motorPositionErrorR], scaling = self.maxPidForward), Scaler([Scaler(self.motorPositionErrorL, scaling = -1.0),self.motorPositionErrorR], scaling = self.maxPidForward))]									
-		self.motorsSpeedMode = ValueAdder([self.motorEnable, self.autoModeEnable, self.autoSequenceRun], max=2)
+		#self.motorLHeadingAutoSpeed = [SpeedDirectionCombiner(self.autoModeForwardSpeed, Scaler(self.headingError, scaling = -self.maxHeadingTurn))]
+		#self.motorRHeadingAutoSpeed = [SpeedDirectionCombiner(self.autoModeForwardSpeed, Scaler(self.headingError, scaling = self.maxHeadingTurn))]
+		self.motorLHeadingAutoSpeed = [SpeedDirectionCombiner(Scaler(self.joystickForward, scaling = self.maxForward), Scaler(self.headingError, scaling = -self.maxHeadingTurn))]
+		self.motorRHeadingAutoSpeed = [SpeedDirectionCombiner(Scaler(self.joystickForward, scaling = self.maxForward), Scaler(self.headingError, scaling = self.maxHeadingTurn))]
+		
+
+		self.motorsSpeedMode = FixedValue(0) # 0=Stop, 1=Manual, 2=Position Control, 3=Heading (gyro yaw) Control
+		#ValueAdder([self.motorEnable, self.autoModeEnable, self.autoSequenceRun], max=2)
 		
 		motorL = SwitchingControlMediator( [ motorsStop, 								 # Choice 0 = Stopped \
 											  											 # Choice 1 = Controlled
 											self.motorLSimpleManualSpeed,  \
 																						 # Choice 2 = Auto mode, but manual forward speed
-											self.motorLSimplePositionSpeed  \
+											self.motorLSimplePositionSpeed,  \
 																						 # Choice 3 = Full Auto mode
-											#[SpeedDirectionCombiner(fullAutoForwardSpeed, Scaler(self.motorPositionErrorL, scaling = -self.maxForward))]  \
+											self.motorLHeadingAutoSpeed #[SpeedDirectionCombiner(fullAutoForwardSpeed, Scaler(self.motorPositionErrorL, scaling = -self.maxForward))]  \
 										   ],
 											self.controls.motor(2), \
 											self.motorsSpeedMode )
@@ -211,9 +248,9 @@ class ChallengeTestSequence(ChallengeInterface):
 																						 # Choice 1 = Manual Controlled only
 											self.motorRSimpleManualSpeed,  \
 																						 # Choice 2 = Auto mode, but manual forward speed
-											self.motorRSimplePositionSpeed \
+											self.motorRSimplePositionSpeed, \
 																						 # Choice 3 = Full Auto mode
-											#[SpeedDirectionCombiner(fullAutoForwardSpeed, Scaler(self.motorPositionErrorR, scaling = self.maxAutoTurn), scaling = 1.0)]  \
+											self.motorRHeadingAutoSpeed	#[SpeedDirectionCombiner(fullAutoForwardSpeed, Scaler(self.motorPositionErrorR, scaling = self.maxAutoTurn), scaling = 1.0)]  \
 										   ],
 											self.controls.motor(1), \
 											self.motorsSpeedMode )

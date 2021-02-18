@@ -98,11 +98,17 @@
   "minesweeper.pid.p": 0.015,
   "minesweeper.pid.pom": false,
   "minesweeper.speed": 0.6,
+  "motor.heading.pid": [
+    0.0012,
+    0.001,
+    0.015
+  ],
+  "motor.heading.pid.pom": false,
   "motor.position.forward.max": 1.0,
   "motor.position.pid": [
     0.002,
     0.0,
-    0.00008
+    8e-05
   ],
   "motor.position.pid.pom": false,
   "motor.position.pidforward.max": 0.5,
