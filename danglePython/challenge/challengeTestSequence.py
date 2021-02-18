@@ -90,6 +90,22 @@ class ChallengeTestSequence(ChallengeInterface):
 		self.headingError.enable()
 				
 	def ManualControlHeading(self, data):
+		# Record position
+		if self.resetLastPositionButton.getValue() > 0:
+			self.lastPositionL = self.positionL.getValue()
+			self.lastPositionR = self.positionR.getValue()
+		elif self.recordPositionButton.getValue() > 0:
+			currentPositionL = self.positionL.getValue()
+			currentPositionR = self.positionR.getValue()
+			self.pathRecord.append(("MoveDistance",[int(currentPositionL-self.lastPositionL), int(currentPositionR-self.lastPositionR)]))
+			self.lastPositionL = currentPositionL
+			self.lastPositionR = currentPositionR
+		elif self.savePositionsButton.getValue() > 0:
+			pathFile = Config("recordedPath.json")
+			pathFile.set("path", self.pathRecord)
+			pathFile.save()
+			#self.pathRecord = []
+
 		# Simple remote control
 		if self.motorEnable.getValue() > 0:
 			# Manual turns
@@ -115,6 +131,9 @@ class ChallengeTestSequence(ChallengeInterface):
 				("MoveDistance",[300,300]), \
 				("RotateAngle", 90) \
 			  ]
+		# Use recorded path?
+		if len(self.pathRecord) > 0:
+			seq = self.pathRecord
 		for move in range(len(seq)):
 			nudge  = seq[move]
 			yield nudge 
@@ -234,6 +253,14 @@ class ChallengeTestSequence(ChallengeInterface):
 		self.headingError = HeadingPIDErrorValue(yaw, self.pidHeading, yaw.getValue())
 		# Initialise the PID
 		self.headingError.reset()
+
+		# Path recording
+		self.pathRecord = []
+		self.lastPositionL = self.targetPositionL
+		self.lastPositionR = self.targetPositionR
+		self.resetLastPositionButton = OneShotButtonValue(self.sensors.button(3))
+		self.recordPositionButton = OneShotButtonValue(self.sensors.button(2))
+		self.savePositionsButton = OneShotButtonValue(self.sensors.button(1))
 
 		# Motor control - General
 		motorsStop = FixedValue(0.0)
