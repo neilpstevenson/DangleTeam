@@ -14,6 +14,6 @@ class MotorPosition(ControlInterface):
 		self.motorsIPC.setCurrentPosition(self.motor, value)
 
 	def getValue(self):
-		print(f"MotorPosition[{self.motor}]: {self.motorsIPC.getCurrentPosition(self.motor)}")
+		#print(f"MotorPosition[{self.motor}]: {self.motorsIPC.getCurrentPosition(self.motor)}")
 		return self.motorsIPC.getCurrentPosition(self.motor)
 	

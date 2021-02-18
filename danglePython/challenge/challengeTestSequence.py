@@ -100,24 +100,27 @@ class ChallengeTestSequence(ChallengeInterface):
 		else:
 			self.stateMachine.changeState("MotorsOff")
 
+	def EndManualControlHeading(self, data):
+		# Disable the PID controls
+		self.motorsSpeedMode.setValue(0)
+		self.headingError.disable()
+
 	def nextSequence(self):
 		seq = [	("MoveDistance",[300,300]), \
-				("MoveDistance",[300,0]), \
+				("RotateAngle", 90), \
 				("MoveDistance",[300,300]), \
-				("MoveDistance",[300,0]), \
+				("RotateAngle", 90), \
 				("MoveDistance",[300,300]), \
-				("MoveDistance",[300,0]), \
+				("RotateAngle", 90), \
 				("MoveDistance",[300,300]), \
-				("MoveDistance",[300,0])]
+				("RotateAngle", 90) \
+			  ]
 		for move in range(len(seq)):
 			nudge  = seq[move]
 			yield nudge 
 			
 	def StartSequence(self, data):
 		self.nextSeq = self.nextSequence()
-		# Ensure all is enabled
-		self.autoModeForwardSpeed.setValue(0.4)
-		self.motorsSpeedMode.setValue(2)
 		
 	def Sequence(self, data):
 		# Check if we've been disabled
@@ -133,6 +136,9 @@ class ChallengeTestSequence(ChallengeInterface):
 				self.stateMachine.changeState("MotorsOff")
 				
 	def StartMoveDistance(self, data):
+		# Ensure all is enabled
+		self.autoModeForwardSpeed.setValue(0.4)
+		self.motorsSpeedMode.setValue(2)
 		nudgeL, nudgeR = data
 		print(f"nudge: {(nudgeL, nudgeR)}")
 		self.motorPositionErrorL.enable()
@@ -162,13 +168,35 @@ class ChallengeTestSequence(ChallengeInterface):
 		self.motorPositionErrorR.disable()
 
 	def StartRotateAngle(self, data):
-		pass
+		angle = data
+		print(f"angle: {angle}")
+		self.motorsSpeedMode.setValue(3)
+		self.headingError.enable()
+		targetAngle = self.sensors.yaw().getValue() + angle
+		self.headingError.setTarget(targetAngle)
+		# Remember the target positions as part of the state data
+		print(f"StartRotateAngle: {angle} => {targetAngle}")
+		return targetAngle
 		
 	def RotateAngle(self, data):
-		pass
+		# Reached target?
+		currentYaw = self.sensors.yaw().getValue()
+		angle = data
+		print(f"RotateAngle: {angle}; current: {currentYaw}")
+		angleDiff = abs(angle - currentYaw)
+		while angleDiff >= 360.0:
+			angleDiff -= 360.0
+		print(f"RotateAngle: {angle}; current: {currentYaw}; diff: {angleDiff}")
+		# Continue until we're close to the target
+		if angleDiff < 1.0 or self.autoModeEnable.getValue() == 0:
+			self.stateMachine.changeState("NextSequence")
 
 	def EndRotateAngle(self, data):
-		self.autoModeForwardSpeed.setValue(0.0)
+		# Disable the PID controls
+		self.headingError.disable()
+		# Reset position counters, as we've moved by an indeterminate angle
+		self.targetPositionL = self.positionL.getValue()
+		self.targetPositionR = self.positionR.getValue()
 
 
 	def createProcesses(self, highPriorityProcesses, medPriorityProcesses):
@@ -176,7 +204,7 @@ class ChallengeTestSequence(ChallengeInterface):
 		# Set up the state machine
 		self.stateMachine = StateMachine("MotorsOff")
 		self.stateMachine.addState("MotorsOff", self.ControlOff, self.MotorsOffState, None)
-		self.stateMachine.addState("Manual", self.StartManualControlHeading, self.ManualControlHeading, None)
+		self.stateMachine.addState("Manual", self.StartManualControlHeading, self.ManualControlHeading, self.EndManualControlHeading)
 		self.stateMachine.addState("StartSequence", self.StartSequence, self.Sequence, None)
 		self.stateMachine.addState("NextSequence", None, self.Sequence, None)
 		self.stateMachine.addState("MoveDistance", self.StartMoveDistance, self.MoveDistance, self.EndMoveDistance)
