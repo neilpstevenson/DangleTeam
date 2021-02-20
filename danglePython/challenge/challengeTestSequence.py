@@ -1,4 +1,5 @@
 from simple_pid import PID
+import time
 
 # Interfaces
 from interfaces.ChallengeInterface import ChallengeInterface
@@ -122,9 +123,17 @@ class ChallengeTestSequence(ChallengeInterface):
 		# Disable the PID controls
 		self.motorsSpeedMode.setValue(0)
 		self.headingError.disable()
+		
+	def SetZeroHeading(self, data):
+		# Just record the current heading, so everything else is then relative to this basline
+		self.targetAngle = self.sensors.yaw().getValue()
+		print(f"SetZeroHeading: {self.targetAngle}")
+		self.stateMachine.changeState("NextSequence")
+
 
 	def nextSequence(self):
-		seq = [	("MoveDistance",[300,300]), \
+		seq = [	("SetZeroHeading",None), \
+				("MoveDistance",[300,300]), \
 				("RotateAngle", 90), \
 				("MoveDistance",[300,300]), \
 				("RotateAngle", 90), \
@@ -196,11 +205,11 @@ class ChallengeTestSequence(ChallengeInterface):
 		print(f"angle: {angle}")
 		self.motorsSpeedMode.setValue(3)
 		self.headingError.enable()
-		targetAngle = self.sensors.yaw().getValue() + angle
-		self.headingError.setTarget(targetAngle)
+		self.targetAngle += angle
+		self.headingError.setTarget(self.targetAngle)
 		# Remember the target positions as part of the state data
-		print(f"StartRotateAngle: {angle} => {targetAngle}")
-		return targetAngle
+		print(f"StartRotateAngle: {angle} => {self.targetAngle}")
+		return self.targetAngle
 		
 	def RotateAngle(self, data):
 		# Reached target?
@@ -230,8 +239,7 @@ class ChallengeTestSequence(ChallengeInterface):
 		self.autoModeForwardSpeed.setValue(self.maxPidForward if distance > 0.0 else -self.maxPidForward)
 		self.headingError.enable()
 		# Maintain current heading
-		targetAngle = self.sensors.yaw().getValue()
-		self.headingError.setTarget(targetAngle)
+		self.headingError.setTarget(self.targetAngle)
 		# Remember the target distance as part of the state data
 		self.targetPositionL += distance
 		self.targetPositionR += distance
@@ -254,17 +262,32 @@ class ChallengeTestSequence(ChallengeInterface):
 		self.headingError.disable()
 		self.autoModeForwardSpeed.setValue(0.0)
 
+	def StartServo(self, data):
+		servoName, setpoint, timeout = data
+		endtime = time.perf_counter() + timeout
+		servo = self.servos[servoName]
+		return (servo, setpoint, endtime)
+		
+	def Servo(self, data):
+		servo, setpoint, endtime = data
+		if time.perf_counter() >= endtime or self.autoModeEnable.getValue() == 0:
+			self.stateMachine.changeState("NextSequence")
+		else:
+			servo.setValue(setpoint)
+
 	def createProcesses(self, highPriorityProcesses, medPriorityProcesses):
 		
 		# Set up the state machine
 		self.stateMachine = StateMachine("MotorsOff")
 		self.stateMachine.addState("MotorsOff", self.ControlOff, self.MotorsOffState, None)
 		self.stateMachine.addState("Manual", self.StartManualControlHeading, self.ManualControlHeading, self.EndManualControlHeading)
+		self.stateMachine.addState("SetZeroHeading", None, self.SetZeroHeading, None)
 		self.stateMachine.addState("StartSequence", self.StartSequence, self.Sequence, None)
 		self.stateMachine.addState("NextSequence", None, self.Sequence, None)
 		self.stateMachine.addState("MoveDistance", self.StartMoveDistance, self.MoveDistance, self.EndMoveDistance)
 		self.stateMachine.addState("RotateAngle", self.StartRotateAngle, self.RotateAngle, self.EndRotateAngle)
 		self.stateMachine.addState("Forward", self.StartForward, self.Forward, self.EndForward)
+		self.stateMachine.addState("Servo", self.StartServo, self.Servo, None)
 
 		# Set up the PIDs for the two motors
 		self.pidL = PID(self.pidConstants[0], self.pidConstants[1], self.pidConstants[2], sample_time=0.025, proportional_on_measurement=self.proportionalOnMeasure, output_limits=(-1.0, 1.0))
@@ -342,6 +365,20 @@ class ChallengeTestSequence(ChallengeInterface):
 											self.controls.motor(1), self.motorsSpeedMode )
 		highPriorityProcesses.append(motorR)
 
+		# Servos used within the state machine
+		grabberPosition = FixedValue(0.0)
+		grabber = SimpleControlMediator( Scaler(grabberPosition, scaling=0.3, min=-1.0, max=1.0, offset=0.35), self.controls.servo(5) )
+		grabber2 = SimpleControlMediator( Scaler(grabberPosition, scaling=-0.3, min=-1.0, max=1.0, offset=-0.15), self.controls.servo(6) )
+		highPriorityProcesses.append(grabber)
+		highPriorityProcesses.append(grabber2)
+		grabberHeight = FixedValue(0.0)
+		grabHeight = SimpleControlMediator( Scaler(grabberHeight, scaling=0.3, min=-1.0, max=1.0, offset=0.35), self.controls.servo(13) )
+		highPriorityProcesses.append(grabHeight)
+		self.servos = {
+			"grabber" : grabberPosition,
+			"grabheight" : grabHeight
+			}
+			
 		# LED display state
 		self.ledIndicator = self.controls.led(0)
 		medPriorityProcesses.append(SimpleControlMediator( Scaler(self.motorEnable, scaling=2, offset=2, max=4), self.ledIndicator))
@@ -358,44 +395,3 @@ class ChallengeTestSequence(ChallengeInterface):
 		'''
 		self.stateMachine.changeState("MotorsOff")
 		self.motorEnable.setValue(0, status=0)
-
-
-	def XXmove(self):
-		if self.autoModeEnable.getValue() > 0:
-			if not self.pidL.auto_mode:
-				# Switch back on the PIDs
-				self.pidL.auto_mode = True
-				self.pidR.auto_mode = True
-			# Update targets
-			nudge = self.NudgeForward.getValue() - self.NudgeBackward.getValue() 
-			self.targetPositionL += nudge
-			self.targetPositionR += nudge
-			self.motorPositionErrorL.setTarget(self.targetPositionL)
-			self.motorPositionErrorR.setTarget(self.targetPositionR)
-			self.startTime = 0
-			self.nextSeq = self.nextSequence()
-			
-		elif self.autoSequenceRun.getValue() > 0:
-			# Step the sequence
-			self.startTime += 1
-			if not self.pidL.auto_mode:
-				# Switch back on the PIDs
-				self.pidL.auto_mode = True
-				self.pidR.auto_mode = True
-			if self.startTime % 100 == 1:
-				nudge = next(self.nextSeq)
-				print(f"nudge: {nudge}")
-				self.targetPositionL += nudge[0]
-				self.targetPositionR += nudge[1]
-				self.motorPositionErrorL.setTarget(self.targetPositionL)
-				self.motorPositionErrorR.setTarget(self.targetPositionR)
-			
-		else:
-			# Switch off the PIDs - No change in position
-			self.pidL.auto_mode = False
-			self.targetPositionL = self.positionL.getValue()
-			self.motorPositionErrorL.setTarget(self.targetPositionL)
-			self.pidR.auto_mode = False
-			self.targetPositionR = self.positionR.getValue()
-			self.motorPositionErrorR.setTarget(self.targetPositionR)
-
