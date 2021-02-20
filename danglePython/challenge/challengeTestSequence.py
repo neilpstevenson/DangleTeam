@@ -25,9 +25,9 @@ from challenge.SimpleControlMediator import SimpleControlMediator
 from challenge.SwitchingControlMediator import SwitchingControlMediator
 from analysis.StateMachine import StateMachine
 # Common controls
-from challenge.grabberControl import GrabberControl
-from challenge.cameraLevellingControl import CameraLevellingControl
-from challenge.zGunControl import ZGunControl
+#from challenge.grabberControl import GrabberControl
+#from challenge.cameraLevellingControl import CameraLevellingControl
+#from challenge.zGunControl import ZGunControl
 
 
 class ChallengeTestSequence(ChallengeInterface):
@@ -37,9 +37,9 @@ class ChallengeTestSequence(ChallengeInterface):
 		self.sensors = SensorAccessFactory.getSingleton()
 		self.vision = VisionAccessFactory.getSingleton()
 		# Common controls
-		self.grabberControl = GrabberControl()
-		self.cameraLevellingControl = CameraLevellingControl()
-		self.zGunControl = ZGunControl()
+		#self.grabberControl = GrabberControl()
+		#self.cameraLevellingControl = CameraLevellingControl()
+		#self.zGunControl = ZGunControl()
 		# Get config
 		config = Config()
 		self.pidConstants = config.get("motor.position.pid", [0.002, 0.0, 0.00008])	# Note: PID output is also limited to +/-1.0
@@ -367,16 +367,16 @@ class ChallengeTestSequence(ChallengeInterface):
 
 		# Servos used within the state machine
 		grabberPosition = FixedValue(0.0)
-		grabber = SimpleControlMediator( Scaler(grabberPosition, scaling=0.3, min=-1.0, max=1.0, offset=0.35), self.controls.servo(5) )
-		grabber2 = SimpleControlMediator( Scaler(grabberPosition, scaling=-0.3, min=-1.0, max=1.0, offset=-0.15), self.controls.servo(6) )
+		grabber = SimpleControlMediator( Scaler(grabberPosition, scaling=0.3, min=-1.0, max=1.0, offset=0.3), self.controls.servo(5) )
+		grabber2 = SimpleControlMediator( Scaler(grabberPosition, scaling=-0.3, min=-1.0, max=1.0, offset=-0.1), self.controls.servo(6) )
 		highPriorityProcesses.append(grabber)
 		highPriorityProcesses.append(grabber2)
 		grabberHeight = FixedValue(0.0)
-		grabHeight = SimpleControlMediator( Scaler(grabberHeight, scaling=0.3, min=-1.0, max=1.0, offset=0.35), self.controls.servo(13) )
+		grabHeight = SimpleControlMediator( Scaler(grabberHeight, scaling=1.0, min=-1.0, max=1.0, offset=0.0), self.controls.servo(27) )
 		highPriorityProcesses.append(grabHeight)
 		self.servos = {
 			"grabber" : grabberPosition,
-			"grabheight" : grabHeight
+			"grabheight" : grabberHeight
 			}
 			
 		# LED display state
