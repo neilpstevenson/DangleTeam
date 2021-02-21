@@ -111,7 +111,7 @@
     8e-05
   ],
   "motor.position.pid.pom": false,
-  "motor.position.pidforward.max": 0.5,
+  "motor.position.pidforward.max": 0.4,
   "motors.encoders.fromioexpander": true,
   "motors.speedmode.pidconstants": [
     0.001,

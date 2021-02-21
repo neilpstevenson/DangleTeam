@@ -372,7 +372,7 @@ class ChallengeTestSequence(ChallengeInterface):
 		highPriorityProcesses.append(grabber)
 		highPriorityProcesses.append(grabber2)
 		grabberHeight = FixedValue(0.0)
-		grabHeight = SimpleControlMediator( Scaler(grabberHeight, scaling=1.0, min=-1.0, max=1.0, offset=0.0), self.controls.servo(27) )
+		grabHeight = SimpleControlMediator( Scaler(grabberHeight, scaling=1.0, min=-1.0, max=1.1, offset=0.1), self.controls.servo(27) )
 		highPriorityProcesses.append(grabHeight)
 		self.servos = {
 			"grabber" : grabberPosition,
