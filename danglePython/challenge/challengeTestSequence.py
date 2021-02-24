@@ -14,6 +14,7 @@ from analysis.OneShotButtonValue import OneShotButtonValue
 from analysis.ToggleButtonValue import ToggleButtonValue
 from analysis.TimedTriggerValue import TimedTriggerValue
 from analysis.FixedValue import FixedValue
+from analysis.LinearRamp import LinearRamp
 # Value combination helpers
 from analysis.Scaler import Scaler
 from analysis.ValueIntegrator import ValueIntegrator
@@ -82,7 +83,7 @@ class ChallengeTestSequence(ChallengeInterface):
 			# Manual turns
 			pass #self.headingError.setTarget(self.sensors.yaw().getValue() + self.joystickLeftRight.getValue() * self.maxManualTurn)
 		elif self.autoModeEnable.getValue() > 0:
-			self.stateMachine.changeState("StartSequence")
+			self.stateMachine.changeState("StartSequence", "recordedPath.json")
 		else:
 			self.stateMachine.changeState("MotorsOff")
 
@@ -115,7 +116,7 @@ class ChallengeTestSequence(ChallengeInterface):
 			if self.joystickLeftRight.getValue() != 0.0:
 				self.headingError.setTarget(self.sensors.yaw().getValue() + self.joystickLeftRight.getValue() * self.maxManualTurn)
 		elif self.autoModeEnable.getValue() > 0:
-			self.stateMachine.changeState("StartSequence")
+			self.stateMachine.changeState("StartSequence", "recordedPath.json")
 		else:
 			self.stateMachine.changeState("MotorsOff")
 
@@ -131,7 +132,7 @@ class ChallengeTestSequence(ChallengeInterface):
 		self.stateMachine.changeState("NextSequence")
 
 
-	def nextSequence(self):
+	def nextSequence(self, filename):
 		seq = [	("SetZeroHeading",None), \
 				("MoveDistance",[300,300]), \
 				("RotateAngle", 90), \
@@ -143,7 +144,7 @@ class ChallengeTestSequence(ChallengeInterface):
 				("RotateAngle", 90) \
 			  ]
 		# Use recorded path?
-		pathFile = Config("recordedPath.json")
+		pathFile = Config(filename)
 		seq = pathFile.get("path", seq)
 
 		if len(self.pathRecord) > 0:
@@ -153,7 +154,8 @@ class ChallengeTestSequence(ChallengeInterface):
 			yield nudge 
 			
 	def StartSequence(self, data):
-		self.nextSeq = self.nextSequence()
+		filename = data
+		self.nextSeq = self.nextSequence(filename)
 		
 	def Sequence(self, data):
 		# Check if we've been disabled
@@ -367,13 +369,15 @@ class ChallengeTestSequence(ChallengeInterface):
 
 		# Servos used within the state machine
 		grabberPosition = FixedValue(0.0)
-		grabber = SimpleControlMediator( Scaler(grabberPosition, scaling=0.3, min=-1.0, max=1.0, offset=0.3), self.controls.servo(5) )
-		grabber2 = SimpleControlMediator( Scaler(grabberPosition, scaling=-0.3, min=-1.0, max=1.0, offset=-0.1), self.controls.servo(6) )
+		grabberPositionRamp = LinearRamp(grabberPosition, increment=0.02)
+		grabber = SimpleControlMediator( Scaler(grabberPositionRamp, scaling=0.3, min=-1.0, max=1.0, offset=0.3), self.controls.servo(5) )
+		grabber2 = SimpleControlMediator( Scaler(grabberPositionRamp, scaling=-0.3, min=-1.0, max=1.0, offset=-0.1), self.controls.servo(6) )
 		highPriorityProcesses.append(grabber)
 		highPriorityProcesses.append(grabber2)
 		grabberHeight = FixedValue(0.0)
 		grabHeight = SimpleControlMediator( Scaler(grabberHeight, scaling=1.0, min=-1.0, max=1.1, offset=0.1), self.controls.servo(27) )
 		highPriorityProcesses.append(grabHeight)
+		highPriorityProcesses.append(grabberPositionRamp)
 		self.servos = {
 			"grabber" : grabberPosition,
 			"grabheight" : grabberHeight
