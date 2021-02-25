@@ -31,17 +31,17 @@ class DisplayImageCapture:
 					sys.exit()
 			
 			imageResults, timestamp, elapsed = self.imageAnalysisResult.updateSnapshot()
-			imageResults = self.imageAnalysisResult.getImageResultByNameAndType("Green","Barrel")
-			imageResults += self.imageAnalysisResult.getImageResultByNameAndType("Red","Barrel")
-			imageResults += self.imageAnalysisResult.getImageResultByNameAndType("Yellow","Region")
-			imageResults += self.imageAnalysisResult.getImageResultByNameAndType("Blue","Region")
+			imageResults = self.imageAnalysisResult.getImageResultByNameAndType("Green","Block")
+			imageResults += self.imageAnalysisResult.getImageResultByNameAndType("Red","Block")
+			imageResults += self.imageAnalysisResult.getImageResultByNameAndType("Yellow","Block")
+			imageResults += self.imageAnalysisResult.getImageResultByNameAndType("Blue","Block")
 			
 			# Clear current image
 			self.screen.fill((64,64,64))
 
 			self.screen.blit(font.render(f"Images: {len(imageResults)}", True, (255,255,255)), (32, 32))
 			for result in range(len(imageResults)):
-				self.screen.blit(font.render(f"{imageResults[result].typename}.{imageResults[result].name}: dist: {imageResults[result].distance:.0f}mm, angle: {imageResults[result].yaw:.1f}", True, (255,255,255)), (32, 48 + result*16))
+				self.screen.blit(font.render(f"{imageResults[result].typename}.{imageResults[result].name}: dist: {imageResults[result].distance:.0f}mm, angle: {imageResults[result].angle:.1f}", True, (255,255,255)), (32, 48 + result*16))
 			
 				# Plot the found points
 				dist = imageResults[result].distance

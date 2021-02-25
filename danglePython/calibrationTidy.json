@@ -1,0 +1,20 @@
+{
+  "distance.analysis.calibrationResolution": [
+    480,
+    640,
+    3
+  ],
+  "distance.analysis.cameraHeight": 170,
+  "distance.analysis.horizon": 490,
+  "distance.analysis.nearest": 130,
+  "minesweeper.analysis.colourTargetLower": [
+    159,
+    50,
+    114
+  ],
+  "minesweeper.analysis.colourTargetUpper": [
+    170,
+    255,
+    255
+  ]
+}

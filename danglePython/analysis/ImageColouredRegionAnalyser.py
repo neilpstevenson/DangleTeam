@@ -6,7 +6,8 @@ import cv2
 	distance and bearing for the larges colour block found
 '''
 class ImageColouredRegionAnalyser:
-	def __init__(self, colourRange, erodeCount, dilateCount, cannySize, minSize, cameraCalibration):
+	def __init__(self, name, colourRange, erodeCount, dilateCount, cannySize, minSize, cameraCalibration):
+		self.name = name
 		self.colourMin, self.colourMax = colourRange
 		self.minWidth, self.minHeight = minSize
 		self.erodeCount = erodeCount
