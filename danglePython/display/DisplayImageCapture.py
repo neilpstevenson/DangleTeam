@@ -47,7 +47,7 @@ class DisplayImageCapture:
 				dist = imageResults[result].distance
 				hpos = np.tan(imageResults[result].angle/180.0*3.14159) * dist
 				colour = pygame.colordict.THECOLORS[imageResults[result].name.lower()]
-				pygame.draw.circle(self.screen, colour, (self.width//3-int(hpos), self.height-int(dist/2.5)), 20)
+				pygame.draw.circle(self.screen, colour, (self.width//2-int(hpos/1.5), self.height-int(dist/2)), 20)
 			
 			# Show the new screen
 			pygame.display.flip()

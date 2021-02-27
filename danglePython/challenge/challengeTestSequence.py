@@ -80,8 +80,8 @@ class ChallengeTestSequence(ChallengeInterface):
 	def ManualControl(self, data):
 		# Simple remote control
 		if self.motorEnable.getValue() > 0:
-			# Manual turns
-			pass #self.headingError.setTarget(self.sensors.yaw().getValue() + self.joystickLeftRight.getValue() * self.maxManualTurn)
+			# continue manual control
+			pass
 		elif self.autoModeEnable.getValue() > 0:
 			self.stateMachine.changeState("StartSequence", "recordedPath.json")
 		else:
@@ -115,6 +115,12 @@ class ChallengeTestSequence(ChallengeInterface):
 			# Manual turns
 			if self.joystickLeftRight.getValue() != 0.0:
 				self.headingError.setTarget(self.sensors.yaw().getValue() + self.joystickLeftRight.getValue() * self.maxManualTurn)
+			# Special buttons
+			if self.faceGreenButton.getValue() > 0:
+				self.stateMachine.changeState("RotateToFaceBlock", "Green")
+			elif self.forwardToGreenButton.getValue() > 0:
+				self.stateMachine.changeState("ForwardToBlock", "Green")
+				
 		elif self.autoModeEnable.getValue() > 0:
 			self.stateMachine.changeState("StartSequence", "recordedPath.json")
 		else:
@@ -277,6 +283,82 @@ class ChallengeTestSequence(ChallengeInterface):
 		else:
 			servo.setValue(setpoint)
 
+	def StartRotateToFaceBlock(self, data):
+		blockColour = data
+		imageResults, timestamp, elapsed = self.imageAnalysisResult.updateSnapshot()
+		imageResults = self.imageAnalysisResult.getImageResultByNameAndType(blockColour,"Block")
+
+		if len(imageResults) > 0:
+			name = imageResults[0].name
+			dist = imageResults[0].distance
+			angle = imageResults[0].angle
+			yaw = imageResults[0].yaw
+			print(f"Found: {name} at: {angle} degrees")
+			self.motorsSpeedMode.setValue(3)
+			self.headingError.enable()
+			self.targetAngle = yaw
+			self.headingError.setTarget(self.targetAngle)
+			# Remember the target positions as part of the state data
+			print(f"StartRotateAngle: {angle} => {self.targetAngle}")
+		else:
+			# Not found
+			self.stateMachine.changeState("MotorsOff")
+			
+		return self.targetAngle
+		
+	def RotateToFaceBlock(self, data):
+		# Reached target?
+		currentYaw = self.sensors.yaw().getValue()
+		angle = data
+		print(f"RotateToFaceBlock: {angle}; current: {currentYaw}")
+		angleDiff = abs(angle - currentYaw)
+		while angleDiff >= 360.0:
+			angleDiff -= 360.0
+		print(f"RotateToFaceBlock: {currentYaw}; current: {currentYaw}; diff: {angleDiff}")
+		# Continue until we're close to the target
+		if angleDiff < 1.0 or self.motorEnable.getValue() == 0:
+			self.stateMachine.changeState("MotorsOff")
+
+	def StartForwardToBlock(self, data):
+		blockColour = data
+		imageResults, timestamp, elapsed = self.imageAnalysisResult.updateSnapshot()
+		imageResults = self.imageAnalysisResult.getImageResultByNameAndType(blockColour,"Block")
+
+		if len(imageResults) > 0:
+			name = imageResults[0].name
+			distance = imageResults[0].distance / 0.79 - 70.0 # scale
+			angle = imageResults[0].angle
+			yaw = imageResults[0].yaw
+			print(f"Found: {name} at distance: {distance}mm {angle} degrees")
+			self.motorsSpeedMode.setValue(4)
+			self.targetAngle = yaw
+			self.autoModeForwardSpeed.setValue(self.maxPidForward if distance > 0.0 else -self.maxPidForward)
+			self.headingError.enable()
+			# Maintain current heading
+			self.headingError.setTarget(self.targetAngle)
+			# Remember the target distance as part of the state data
+			self.targetPositionL += distance
+			self.targetPositionR += distance
+			stateData = (self.targetPositionL, self.targetPositionR)
+			print(f"StartForwardToBlock:  {distance} => {stateData}")
+			return stateData
+		else:
+			# Not found
+			self.stateMachine.changeState("MotorsOff")
+			
+		
+	def ForwardToBlock(self, data):
+		# Reached target?
+		currentPositionL = self.positionL.getValue()
+		currentPositionR = self.positionR.getValue()
+		targetPositionL, targetPositionR = data
+		print(f"ForwardToBlock: {data}; current: {(currentPositionL, currentPositionR)}")
+		# Continue until we're close to the target
+		if abs(targetPositionL - currentPositionL) < 40 or abs(targetPositionR - currentPositionR) < 40 or self.motorEnable.getValue() == 0:
+			self.stateMachine.changeState("MotorsOff")
+
+
+
 	def createProcesses(self, highPriorityProcesses, medPriorityProcesses):
 		
 		# Set up the state machine
@@ -290,6 +372,8 @@ class ChallengeTestSequence(ChallengeInterface):
 		self.stateMachine.addState("RotateAngle", self.StartRotateAngle, self.RotateAngle, self.EndRotateAngle)
 		self.stateMachine.addState("Forward", self.StartForward, self.Forward, self.EndForward)
 		self.stateMachine.addState("Servo", self.StartServo, self.Servo, None)
+		self.stateMachine.addState("RotateToFaceBlock", self.StartRotateToFaceBlock, self.RotateToFaceBlock, self.EndRotateAngle)
+		self.stateMachine.addState("ForwardToBlock", self.StartForwardToBlock, self.ForwardToBlock, self.EndForward)
 
 		# Set up the PIDs for the two motors
 		self.pidL = PID(self.pidConstants[0], self.pidConstants[1], self.pidConstants[2], sample_time=0.025, proportional_on_measurement=self.proportionalOnMeasure, output_limits=(-1.0, 1.0))
@@ -323,6 +407,8 @@ class ChallengeTestSequence(ChallengeInterface):
 		self.resetLastPositionButton = OneShotButtonValue(self.sensors.button(3))
 		self.recordPositionButton = OneShotButtonValue(self.sensors.button(2))
 		self.savePositionsButton = OneShotButtonValue(self.sensors.button(1))
+		self.faceGreenButton = OneShotButtonValue(self.sensors.button(13))
+		self.forwardToGreenButton = OneShotButtonValue(self.sensors.button(14))
 
 		# Motor control - General
 		motorsStop = FixedValue(0.0)
@@ -383,6 +469,9 @@ class ChallengeTestSequence(ChallengeInterface):
 			"grabheight" : grabberHeight
 			}
 			
+		# Image analysis
+		self.imageAnalysisResult = VisionAccessFactory.getSingleton().getImageResult()
+
 		# LED display state
 		self.ledIndicator = self.controls.led(0)
 		medPriorityProcesses.append(SimpleControlMediator( Scaler(self.motorEnable, scaling=2, offset=2, max=4), self.ledIndicator))
