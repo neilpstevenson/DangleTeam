@@ -48,6 +48,7 @@ class ChallengeTestSequence(ChallengeInterface):
 		self.pidHeadingConstants = config.get("motor.heading.pid", [0.015, 0.001, 0.0012])	# Note: PID output is also limited to +/-1.0
 		self.proportionalOnMeasureHeadiing = config.get("motor.heading.pid.pom", False)
 		self.maxForward = config.get("motor.position.forward.max", 1.0)	# Joystick-controlled max speed
+		self.angleTolerance = config.get("motor.position.angle.tolerance", 2.0)	# Tolerance for angles turns "reached" state
 		self.maxManualTurn = config.get("lava.manualturn.max", -15.0) # Joystick-controlled max turn angle (mpu heading relative)
 		self.maxPidForward = config.get("motor.position.pidforward.max", 0.4)	# PID-controlled max speed
 		self.maxHeadingTurn = config.get("lava.headingturn.max", 0.6) # PID output scaling (manual mode)
@@ -116,13 +117,13 @@ class ChallengeTestSequence(ChallengeInterface):
 			if self.joystickLeftRight.getValue() != 0.0:
 				self.headingError.setTarget(self.sensors.yaw().getValue() + self.joystickLeftRight.getValue() * self.maxManualTurn)
 			# Special buttons
-			if self.faceGreenButton.getValue() > 0:
-				self.stateMachine.changeState("RotateToFaceBlock", "Green")
-			elif self.forwardToGreenButton.getValue() > 0:
-				self.stateMachine.changeState("ForwardToBlock", "Green")
+			#if self.faceGreenButton.getValue() > 0:
+			#	self.stateMachine.changeState("RotateToFaceBlock", "Green")
+			#elif self.forwardToGreenButton.getValue() > 0:
+			#	self.stateMachine.changeState("ForwardToBlock", "Green")
 				
 		elif self.autoModeEnable.getValue() > 0:
-			self.stateMachine.changeState("StartSequence", "recordedPath.json")
+			self.stateMachine.changeState("StartSequence", "tidyUpSequence.json")
 		else:
 			self.stateMachine.changeState("MotorsOff")
 
@@ -139,19 +140,19 @@ class ChallengeTestSequence(ChallengeInterface):
 
 
 	def nextSequence(self, filename):
-		seq = [	("SetZeroHeading",None), \
-				("MoveDistance",[300,300]), \
-				("RotateAngle", 90), \
-				("MoveDistance",[300,300]), \
-				("RotateAngle", 90), \
-				("MoveDistance",[300,300]), \
-				("RotateAngle", 90), \
-				("MoveDistance",[300,300]), \
-				("RotateAngle", 90) \
-			  ]
+		#seq = [	("SetZeroHeading",None), \
+		#		("MoveDistance",[300,300]), \
+		#		("RotateAngle", 90), \
+		#		("MoveDistance",[300,300]), \
+		#		("RotateAngle", 90), \
+		#		("MoveDistance",[300,300]), \
+		#		("RotateAngle", 90), \
+		#		("MoveDistance",[300,300]), \
+		#		("RotateAngle", 90) \
+		#	  ]
 		# Use recorded path?
 		pathFile = Config(filename)
-		seq = pathFile.get("path", seq)
+		seq = pathFile.get("path", [])
 
 		if len(self.pathRecord) > 0:
 			seq = self.pathRecord
@@ -229,7 +230,7 @@ class ChallengeTestSequence(ChallengeInterface):
 			angleDiff -= 360.0
 		print(f"RotateAngle: {angle}; current: {currentYaw}; diff: {angleDiff}")
 		# Continue until we're close to the target
-		if angleDiff < 1.0 or self.autoModeEnable.getValue() == 0:
+		if angleDiff < self.angleTolerance or self.autoModeEnable.getValue() == 0:
 			self.stateMachine.changeState("NextSequence")
 
 	def EndRotateAngle(self, data):
@@ -316,8 +317,8 @@ class ChallengeTestSequence(ChallengeInterface):
 			angleDiff -= 360.0
 		print(f"RotateToFaceBlock: {currentYaw}; current: {currentYaw}; diff: {angleDiff}")
 		# Continue until we're close to the target
-		if angleDiff < 1.0 or self.motorEnable.getValue() == 0:
-			self.stateMachine.changeState("MotorsOff")
+		if angleDiff < self.angleTolerance or self.autoModeEnable.getValue() == 0:
+			self.stateMachine.changeState("NextSequence")
 
 	def StartForwardToBlock(self, data):
 		blockColour = data
@@ -354,8 +355,8 @@ class ChallengeTestSequence(ChallengeInterface):
 		targetPositionL, targetPositionR = data
 		print(f"ForwardToBlock: {data}; current: {(currentPositionL, currentPositionR)}")
 		# Continue until we're close to the target
-		if abs(targetPositionL - currentPositionL) < 40 or abs(targetPositionR - currentPositionR) < 40 or self.motorEnable.getValue() == 0:
-			self.stateMachine.changeState("MotorsOff")
+		if abs(targetPositionL - currentPositionL) < 40 or abs(targetPositionR - currentPositionR) < 40 or self.autoModeEnable.getValue() == 0:
+			self.stateMachine.changeState("NextSequence")
 
 
 

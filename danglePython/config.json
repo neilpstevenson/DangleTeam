@@ -104,6 +104,7 @@
     0.0012
   ],
   "motor.heading.pid.pom": false,
+  "motor.position.angle.tolerance": 2.0,
   "motor.position.forward.max": 1.0,
   "motor.position.pid": [
     0.002,
