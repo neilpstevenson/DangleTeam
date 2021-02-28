@@ -40,6 +40,7 @@ class TidyUpTheToysImageCaptureAndAnalysis:
 		# Scale factors for real-world measures
 		self.angleAdjustment = config.get("tidy.analysis.anglescale", 2.6)#1.3#0.55
 		self.showImage = config.get("tidy.display.image", True)
+		self.showMasks = config.get("tidy.display.masks", False)
 		#self.trailSize = config.get("tidy.display.trail", 25)
 		self.frameDelayMs = config.get("tidy.analysis.frameDelayMs", 20) # delay after each frame analysis
 		config.save()
@@ -111,7 +112,8 @@ class TidyUpTheToysImageCaptureAndAnalysis:
 				# Show the contours
 				cv2.polylines(frame, analysis.largestContours,  True, (128, 128, 128), 2, 8)		
 				cv2.putText(frame, analysis.name, (analysis.largestCenter[0]-20,analysis.largestCenter[1]), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2)
-			cv2.imshow(analysis.name, analysis.maskedImage)
+			if self.showMasks:
+				cv2.imshow(analysis.name, analysis.maskedImage)
 		
 		if self.fps != None:
 			cv2.putText(frame, f"{self.fps}fps", (frame.shape[1]-60, frame.shape[0]-20), cv2.FONT_HERSHEY_DUPLEX, 0.5, (0, 255, 0), 1, cv2.LINE_AA)

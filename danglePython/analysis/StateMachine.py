@@ -42,3 +42,6 @@ class StateMachine:
 		else:
 			self.timeout = timeout + time.perf_counter()
 		self.timeoutState = targetState
+
+	def getTimeout(self):
+		return self.timeout

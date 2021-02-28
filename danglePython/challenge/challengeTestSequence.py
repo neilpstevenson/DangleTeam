@@ -49,6 +49,8 @@ class ChallengeTestSequence(ChallengeInterface):
 		self.proportionalOnMeasureHeadiing = config.get("motor.heading.pid.pom", False)
 		self.maxForward = config.get("motor.position.forward.max", 1.0)	# Joystick-controlled max speed
 		self.angleTolerance = config.get("motor.position.angle.tolerance", 2.0)	# Tolerance for angles turns "reached" state
+		self.positionTolerance = config.get("motor.position.dist.tolerance", 40)	# Tolerance for position-sensored turns "reached" state
+		self.positionCalibration = config.get("motor.position.dist.calibration", 1.19)	# Number of encoder clicks per mm of motion 
 		self.maxManualTurn = config.get("lava.manualturn.max", -15.0) # Joystick-controlled max turn angle (mpu heading relative)
 		self.maxPidForward = config.get("motor.position.pidforward.max", 0.4)	# PID-controlled max speed
 		self.maxHeadingTurn = config.get("lava.headingturn.max", 0.6) # PID output scaling (manual mode)
@@ -117,8 +119,10 @@ class ChallengeTestSequence(ChallengeInterface):
 			if self.joystickLeftRight.getValue() != 0.0:
 				self.headingError.setTarget(self.sensors.yaw().getValue() + self.joystickLeftRight.getValue() * self.maxManualTurn)
 			# Special buttons
-			#if self.faceGreenButton.getValue() > 0:
-			#	self.stateMachine.changeState("RotateToFaceBlock", "Green")
+			if self.faceGreenButton.getValue() > 0:
+				self.headingError.reset()
+				self.targetAngle = self.sensors.yaw().getValue()
+				self.stateMachine.changeState("ForwardNudge", 500)
 			#elif self.forwardToGreenButton.getValue() > 0:
 			#	self.stateMachine.changeState("ForwardToBlock", "Green")
 				
@@ -142,13 +146,13 @@ class ChallengeTestSequence(ChallengeInterface):
 	def nextSequence(self, filename):
 		#seq = [	("SetZeroHeading",None), \
 		#		("MoveDistance",[300,300]), \
-		#		("RotateAngle", 90), \
+		#		("Rotate", 90), \
 		#		("MoveDistance",[300,300]), \
-		#		("RotateAngle", 90), \
+		#		("Rotate", 90), \
 		#		("MoveDistance",[300,300]), \
-		#		("RotateAngle", 90), \
+		#		("Rotate", 90), \
 		#		("MoveDistance",[300,300]), \
-		#		("RotateAngle", 90) \
+		#		("Rotate", 90) \
 		#	  ]
 		# Use recorded path?
 		pathFile = Config(filename)
@@ -201,7 +205,7 @@ class ChallengeTestSequence(ChallengeInterface):
 		targetPositionL, targetPositionR = data
 		print(f"MoveDistance: {data}; current: {(currentPositionL, currentPositionR)}")
 		# Continue until we're close to the target
-		if abs(targetPositionL - currentPositionL) < 40 and abs(targetPositionR - currentPositionR) < 40 or self.autoModeEnable.getValue() == 0:
+		if abs(targetPositionL - currentPositionL) < self.positionTolerance and abs(targetPositionR - currentPositionR) < self.positionTolerance or self.autoModeEnable.getValue() == 0:
 			self.stateMachine.changeState("NextSequence")
 
 	def EndMoveDistance(self, data):
@@ -210,7 +214,7 @@ class ChallengeTestSequence(ChallengeInterface):
 		self.motorPositionErrorR.disable()
 
 	def StartRotateAngle(self, data):
-		angle = data
+		angle, settleTime = data
 		print(f"angle: {angle}")
 		self.motorsSpeedMode.setValue(3)
 		self.headingError.enable()
@@ -218,20 +222,22 @@ class ChallengeTestSequence(ChallengeInterface):
 		self.headingError.setTarget(self.targetAngle)
 		# Remember the target positions as part of the state data
 		print(f"StartRotateAngle: {angle} => {self.targetAngle}")
-		return self.targetAngle
+		return self.targetAngle, settleTime
 		
 	def RotateAngle(self, data):
 		# Reached target?
 		currentYaw = self.sensors.yaw().getValue()
-		angle = data
+		angle, settleTime = data
 		print(f"RotateAngle: {angle}; current: {currentYaw}")
 		angleDiff = abs(angle - currentYaw)
 		while angleDiff >= 360.0:
 			angleDiff -= 360.0
 		print(f"RotateAngle: {angle}; current: {currentYaw}; diff: {angleDiff}")
 		# Continue until we're close to the target
-		if angleDiff < self.angleTolerance or self.autoModeEnable.getValue() == 0:
+		if self.autoModeEnable.getValue() == 0:
 			self.stateMachine.changeState("NextSequence")
+		elif angleDiff < self.angleTolerance and self.stateMachine.getTimeout() is None:
+			self.stateMachine.setTimeout(settleTime, "NextSequence")
 
 	def EndRotateAngle(self, data):
 		# Disable the PID controls
@@ -242,7 +248,7 @@ class ChallengeTestSequence(ChallengeInterface):
 
 
 	def StartForward(self, data):
-		distance = data
+		distance, settleTime = data
 		print(f"distance: {distance}")
 		self.motorsSpeedMode.setValue(4)
 		self.autoModeForwardSpeed.setValue(self.maxPidForward if distance > 0.0 else -self.maxPidForward)
@@ -252,7 +258,7 @@ class ChallengeTestSequence(ChallengeInterface):
 		# Remember the target distance as part of the state data
 		self.targetPositionL += distance
 		self.targetPositionR += distance
-		stateData = (self.targetPositionL, self.targetPositionR)
+		stateData = (self.targetPositionL, self.targetPositionR, settleTime)
 		print(f"Forward:  {distance} => {stateData}")
 		return stateData
 		
@@ -260,16 +266,26 @@ class ChallengeTestSequence(ChallengeInterface):
 		# Reached target?
 		currentPositionL = self.positionL.getValue()
 		currentPositionR = self.positionR.getValue()
-		targetPositionL, targetPositionR = data
+		targetPositionL, targetPositionR, settleTime = data
 		print(f"Forward: {data}; current: {(currentPositionL, currentPositionR)}")
 		# Continue until we're close to the target
-		if abs(targetPositionL - currentPositionL) < 40 or abs(targetPositionR - currentPositionR) < 40 or self.autoModeEnable.getValue() == 0:
+		if abs(targetPositionL - currentPositionL) < self.positionTolerance or abs(targetPositionR - currentPositionR) < self.positionTolerance or self.autoModeEnable.getValue() == 0:
 			self.stateMachine.changeState("NextSequence")
 
 	def EndForward(self, data):
 		# Disable the PID controls
 		self.headingError.disable()
 		self.autoModeForwardSpeed.setValue(0.0)
+		
+	def ForwardNudge(self, data):
+		# Reached target?
+		currentPositionL = self.positionL.getValue()
+		currentPositionR = self.positionR.getValue()
+		targetPositionL, targetPositionR = data
+		print(f"ForwardNudge: {data}; current: {(currentPositionL, currentPositionR)}")
+		# Continue until we're close to the target
+		if abs(targetPositionL - currentPositionL) < self.positionTolerance or abs(targetPositionR - currentPositionR) < self.positionTolerance or self.motorEnable.getValue() == 0:
+			self.stateMachine.changeState("MotorsOff")
 
 	def StartServo(self, data):
 		servoName, setpoint, timeout = data
@@ -285,7 +301,7 @@ class ChallengeTestSequence(ChallengeInterface):
 			servo.setValue(setpoint)
 
 	def StartRotateToFaceBlock(self, data):
-		blockColour = data
+		blockColour, settleTime = data
 		imageResults, timestamp, elapsed = self.imageAnalysisResult.updateSnapshot()
 		imageResults = self.imageAnalysisResult.getImageResultByNameAndType(blockColour,"Block")
 
@@ -305,29 +321,31 @@ class ChallengeTestSequence(ChallengeInterface):
 			# Not found
 			self.stateMachine.changeState("MotorsOff")
 			
-		return self.targetAngle
+		return self.targetAngle, settleTime
 		
 	def RotateToFaceBlock(self, data):
 		# Reached target?
 		currentYaw = self.sensors.yaw().getValue()
-		angle = data
+		angle, settleTime = data
 		print(f"RotateToFaceBlock: {angle}; current: {currentYaw}")
 		angleDiff = abs(angle - currentYaw)
 		while angleDiff >= 360.0:
 			angleDiff -= 360.0
 		print(f"RotateToFaceBlock: {currentYaw}; current: {currentYaw}; diff: {angleDiff}")
 		# Continue until we're close to the target
-		if angleDiff < self.angleTolerance or self.autoModeEnable.getValue() == 0:
+		if self.autoModeEnable.getValue() == 0:
 			self.stateMachine.changeState("NextSequence")
+		elif angleDiff < self.angleTolerance and self.stateMachine.getTimeout() is None:
+			self.stateMachine.setTimeout(settleTime, "NextSequence")
 
 	def StartForwardToBlock(self, data):
-		blockColour = data
+		blockColour, settleTime = data
 		imageResults, timestamp, elapsed = self.imageAnalysisResult.updateSnapshot()
 		imageResults = self.imageAnalysisResult.getImageResultByNameAndType(blockColour,"Block")
 
 		if len(imageResults) > 0:
 			name = imageResults[0].name
-			distance = imageResults[0].distance / 0.79 - 70.0 # scale
+			distance = (imageResults[0].distance - 100) * self.positionCalibration
 			angle = imageResults[0].angle
 			yaw = imageResults[0].yaw
 			print(f"Found: {name} at distance: {distance}mm {angle} degrees")
@@ -340,7 +358,7 @@ class ChallengeTestSequence(ChallengeInterface):
 			# Remember the target distance as part of the state data
 			self.targetPositionL += distance
 			self.targetPositionR += distance
-			stateData = (self.targetPositionL, self.targetPositionR)
+			stateData = (self.targetPositionL, self.targetPositionR, settleTime)
 			print(f"StartForwardToBlock:  {distance} => {stateData}")
 			return stateData
 		else:
@@ -352,7 +370,7 @@ class ChallengeTestSequence(ChallengeInterface):
 		# Reached target?
 		currentPositionL = self.positionL.getValue()
 		currentPositionR = self.positionR.getValue()
-		targetPositionL, targetPositionR = data
+		targetPositionL, targetPositionR, settleTime = data
 		print(f"ForwardToBlock: {data}; current: {(currentPositionL, currentPositionR)}")
 		# Continue until we're close to the target
 		if abs(targetPositionL - currentPositionL) < 40 or abs(targetPositionR - currentPositionR) < 40 or self.autoModeEnable.getValue() == 0:
@@ -370,8 +388,9 @@ class ChallengeTestSequence(ChallengeInterface):
 		self.stateMachine.addState("StartSequence", self.StartSequence, self.Sequence, None)
 		self.stateMachine.addState("NextSequence", None, self.Sequence, None)
 		self.stateMachine.addState("MoveDistance", self.StartMoveDistance, self.MoveDistance, self.EndMoveDistance)
-		self.stateMachine.addState("RotateAngle", self.StartRotateAngle, self.RotateAngle, self.EndRotateAngle)
+		self.stateMachine.addState("Rotate", self.StartRotateAngle, self.RotateAngle, self.EndRotateAngle)
 		self.stateMachine.addState("Forward", self.StartForward, self.Forward, self.EndForward)
+		self.stateMachine.addState("ForwardNudge", self.StartForward, self.ForwardNudge, self.EndForward)
 		self.stateMachine.addState("Servo", self.StartServo, self.Servo, None)
 		self.stateMachine.addState("RotateToFaceBlock", self.StartRotateToFaceBlock, self.RotateToFaceBlock, self.EndRotateAngle)
 		self.stateMachine.addState("ForwardToBlock", self.StartForwardToBlock, self.ForwardToBlock, self.EndForward)
