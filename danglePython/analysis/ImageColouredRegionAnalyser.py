@@ -69,12 +69,15 @@ class ImageColouredRegionAnalyser:
 			x = (self.largestBoundingRect[0] + self.largestBoundingRect[2]//2)
 			y = (self.largestBoundingRect[1] + self.largestBoundingRect[3] - 1)
 			ourPosition = (self.maskedImage.shape[1]//2, self.maskedImage.shape[0] + self.cameraNearestVisiblePixels)
-			angle = np.arctan((ourPosition[0]-x)/(ourPosition[1]-y)) * 180.0/3.14159 * self.angleAdjustment
+			angle_rads = np.arctan((ourPosition[0]-x)/(ourPosition[1]-y)) * self.angleAdjustment
+			angle = angle_rads * 180.0/3.14159
 			#print(f"x:{x}, y:{y}, ourPosition:{ourPosition}, angle:{angle}")
 			# Distance approximation
 			dist_recip = self.cameraFurthestVisiblePixel - (self.maskedImage.shape[0] - y)
 			if dist_recip > 0:
 				distance = ((((self.cameraFurthestVisiblePixel-1) / dist_recip) - 1) * self.cameraHeightAdjustment + 1) * self.cameraNearestVisibleDistance
+				# Convert to actual distance
+				distance = distance / np.cos(angle_rads)
 			else:
 				distance = 999 # to infinity and beyond!
 				
