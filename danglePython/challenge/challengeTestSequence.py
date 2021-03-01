@@ -1,5 +1,6 @@
 from simple_pid import PID
 import time
+import numpy as np
 
 # Interfaces
 from interfaces.ChallengeInterface import ChallengeInterface
@@ -339,13 +340,13 @@ class ChallengeTestSequence(ChallengeInterface):
 			self.stateMachine.setTimeout(settleTime, "NextSequence")
 
 	def StartForwardToBlock(self, data):
-		blockColour, settleTime = data
+		blockColour, howClose, settleTime = data
 		imageResults, timestamp, elapsed = self.imageAnalysisResult.updateSnapshot()
 		imageResults = self.imageAnalysisResult.getImageResultByNameAndType(blockColour,"Block")
 
 		if len(imageResults) > 0:
 			name = imageResults[0].name
-			distance = (imageResults[0].distance - 100) * self.positionCalibration
+			distance = (imageResults[0].distance - howClose) * self.positionCalibration
 			angle = imageResults[0].angle
 			yaw = imageResults[0].yaw
 			print(f"Found: {name} at distance: {distance}mm {angle} degrees")
@@ -358,7 +359,11 @@ class ChallengeTestSequence(ChallengeInterface):
 			# Remember the target distance as part of the state data
 			self.targetPositionL += distance
 			self.targetPositionR += distance
-			stateData = (self.targetPositionL, self.targetPositionR, settleTime)
+			# Adjust accordning to approx arc needed
+			arcadjust = 155.0 * np.sin(angle * 3.14159/180.0) * self.positionCalibration
+			self.targetPositionL -= arcadjust
+			self.targetPositionR += arcadjust
+			stateData = (self.targetPositionL, self.targetPositionR, howClose, settleTime)
 			print(f"StartForwardToBlock:  {distance} => {stateData}")
 			return stateData
 		else:
@@ -370,10 +375,10 @@ class ChallengeTestSequence(ChallengeInterface):
 		# Reached target?
 		currentPositionL = self.positionL.getValue()
 		currentPositionR = self.positionR.getValue()
-		targetPositionL, targetPositionR, settleTime = data
+		targetPositionL, targetPositionR, howClose, settleTime = data
 		print(f"ForwardToBlock: {data}; current: {(currentPositionL, currentPositionR)}")
 		# Continue until we're close to the target
-		if abs(targetPositionL - currentPositionL) < 40 or abs(targetPositionR - currentPositionR) < 40 or self.autoModeEnable.getValue() == 0:
+		if abs(targetPositionL - currentPositionL) < self.positionTolerance or abs(targetPositionR - currentPositionR) < self.positionTolerance or self.autoModeEnable.getValue() == 0:
 			self.stateMachine.changeState("NextSequence")
 
 

@@ -77,7 +77,9 @@ class TidyUpTheToysImageCaptureAndAnalysis:
 	# Generate the filtered/masked frames that we are to analyse
 	#
 	def preprocessImage(self, frame):
-		blurred = cv2.GaussianBlur(frame, (self.blur_radius, self.blur_radius), 0)
+		#blurred = cv2.GaussianBlur(frame, (self.blur_radius, self.blur_radius), 0)
+		blurred = cv2.blur(frame, (self.blur_radius, self.blur_radius))
+
 		hsv = cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV)	
 		
 		self.imageAnalysisRed = ImageColouredRegionAnalyser( "Red", ((165,94,69), (180,255,255)), 5, 5, None, \
@@ -171,11 +173,18 @@ class TidyUpTheToysImageCaptureAndAnalysis:
 		# if a video path was not supplied, grab the reference
 		# to the webcam
 		if not self.recordedVideo:
-			vs = VideoStream(src=0)
-			vs.stream.stream.set( cv2.CAP_PROP_WHITE_BALANCE_BLUE_U, 7.5)
-			vs.stream.stream.set( cv2.CAP_PROP_WHITE_BALANCE_RED_V, 7.5)
-			#vs.stream.stream.set( cv2.CAP_PROP_AUTO_WB, 0)
-			vs.start()
+			#vs = VideoStream(src=0)
+			#vs.stream.stream.set( cv2.CAP_PROP_WHITE_BALANCE_BLUE_U, 7.5)
+			#vs.stream.stream.set( cv2.CAP_PROP_WHITE_BALANCE_RED_V, 7.5)
+			##vs.stream.stream.set( cv2.CAP_PROP_AUTO_WB, 0)
+			#vs.start()
+			vs = cv2.VideoCapture(0)
+			vs.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+			vs.set(cv2.CAP_PROP_FRAME_HEIGHT, 480) #!!!
+			vs.set(cv2.CAP_PROP_FPS, 30)
+			vs.set(cv2.CAP_PROP_WHITE_BALANCE_BLUE_U, 7.5)
+			vs.set(cv2.CAP_PROP_WHITE_BALANCE_RED_V, 7.5)
+
 		# otherwise, grab a reference to the video file
 		else:
 			vs = cv2.VideoCapture(self.videoFilenanme)
@@ -197,7 +206,7 @@ class TidyUpTheToysImageCaptureAndAnalysis:
 				self.startTime = cv2.getTickCount()
 				
 				# grab the current frame
-				frame = vs.read()
+				ret, frame = vs.read()
 
 				# handle the frame from VideoCapture or VideoStream
 				frame = frame[1] if self.recordedVideo else frame
