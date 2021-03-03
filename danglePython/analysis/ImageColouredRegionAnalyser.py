@@ -8,7 +8,7 @@ import cv2
 class ImageColouredRegionAnalyser:
 	def __init__(self, name, colourRange, erodeCount, dilateCount, cannySize, minSize, cameraCalibration):
 		self.name = name
-		self.colourMin, self.colourMax = colourRange
+		self.colourRange = colourRange
 		self.minWidth, self.minHeight = minSize
 		self.erodeCount = erodeCount
 		self.dilateCount = dilateCount
@@ -30,7 +30,18 @@ class ImageColouredRegionAnalyser:
 	mask and contour features used by the rest of the analysis
 	'''
 	def processImage(self, image):
-		mask = cv2.inRange(image, self.colourMin, self.colourMax)
+		if type(self.colourRange) is list:
+			# Apply multiple mask colour ranges
+			mask = None
+			for cols in self.colourRange:
+				if mask is None:
+					mask = cv2.inRange(image, cols[0], cols[1])
+				else:
+					mask = cv2.bitwise_or(mask, cv2.inRange(image, cols[0], cols[1]))
+		else:
+			# Simple mask
+			mask = cv2.inRange(image, self.colourRange[0], self.colourRange[1])
+			
 		mask = cv2.erode(mask, None, iterations = self.erodeCount)
 		self.maskedImage = cv2.dilate(mask, None, iterations = self.dilateCount)
 		if self.cannySize is not None:
