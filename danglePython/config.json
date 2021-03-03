@@ -104,6 +104,8 @@
     0.0012
   ],
   "motor.heading.pid.pom": false,
+  "motor.manualheadingturn.max": 1.0,
+  "motor.manualturnangle.max": -15.0,
   "motor.position.angle.tolerance": 6.0,
   "motor.position.dist.calibration": 1.19,
   "motor.position.dist.tolerance": 40,
@@ -140,6 +142,7 @@
   "tidy.analysis.imagewidth": 480,
   "tidy.analysis.minHeight": 10,
   "tidy.analysis.minWidth": 15,
+  "tidy.autoheadingturn.max": 0.4,
   "tidy.display.image": true,
   "tidy.display.masks": false,
   "wall.camera.tilt": -0.4,

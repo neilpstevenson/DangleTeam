@@ -48,14 +48,14 @@ class ChallengeTestSequence(ChallengeInterface):
 		self.proportionalOnMeasure = config.get("motor.position.pid.pom", False)
 		self.pidHeadingConstants = config.get("motor.heading.pid", [0.015, 0.001, 0.0012])	# Note: PID output is also limited to +/-1.0
 		self.proportionalOnMeasureHeadiing = config.get("motor.heading.pid.pom", False)
-		self.maxForward = config.get("motor.position.forward.max", 1.0)	# Joystick-controlled max speed
+		self.maxManualForward = config.get("motor.position.forward.max", 1.0)	# Joystick-controlled max speed
 		self.angleTolerance = config.get("motor.position.angle.tolerance", 2.0)	# Tolerance for angles turns "reached" state
 		self.positionTolerance = config.get("motor.position.dist.tolerance", 40)	# Tolerance for position-sensored turns "reached" state
 		self.positionCalibration = config.get("motor.position.dist.calibration", 1.19)	# Number of encoder clicks per mm of motion 
-		self.maxManualTurn = config.get("lava.manualturn.max", -15.0) # Joystick-controlled max turn angle (mpu heading relative)
+		self.maxManualTurn = config.get("motor.manualturnangle.max", -15.0) # Joystick-controlled max turn angle (mpu heading relative)
 		self.maxPidForward = config.get("motor.position.pidforward.max", 0.4)	# PID-controlled max speed
-		self.maxHeadingTurn = config.get("lava.headingturn.max", 0.6) # PID output scaling (manual mode)
-		self.maxAutoTurn = config.get("lava.autoturn.max", 0.3) # PID output scaling (full auto mode)
+		self.maxManualHeadingTurn = config.get("motor.manualheadingturn.max", 0.6) # PID output scaling (manual mode)
+		self.maxAutoHeadingTurn = config.get("tidy.autoheadingturn.max", 0.3) # PID output scaling (full auto mode)
 		config.save()
 
 	def ControlOff(self, data):
@@ -123,7 +123,7 @@ class ChallengeTestSequence(ChallengeInterface):
 			if self.faceGreenButton.getValue() > 0:
 				self.headingError.reset()
 				self.targetAngle = self.sensors.yaw().getValue()
-				self.stateMachine.changeState("ForwardNudge", 500)
+				self.stateMachine.changeState("ForwardNudge", [500,0])
 			#elif self.forwardToGreenButton.getValue() > 0:
 			#	self.stateMachine.changeState("ForwardToBlock", "Green")
 				
@@ -188,6 +188,10 @@ class ChallengeTestSequence(ChallengeInterface):
 		self.motorsSpeedMode.setValue(2)
 		nudgeL, nudgeR = data
 		print(f"nudge: {(nudgeL, nudgeR)}")
+		# Get the current positions
+		self.targetPositionL = self.positionL.getValue()
+		self.targetPositionR = self.positionR.getValue()
+
 		self.motorPositionErrorL.enable()
 		self.motorPositionErrorR.enable()
 		self.targetPositionL += nudgeL
@@ -217,7 +221,8 @@ class ChallengeTestSequence(ChallengeInterface):
 	def StartRotateAngle(self, data):
 		angle, settleTime = data
 		print(f"angle: {angle}")
-		self.motorsSpeedMode.setValue(3)
+		self.motorsSpeedMode.setValue(4)
+		self.autoModeForwardSpeed.setValue(0)
 		self.headingError.enable()
 		self.targetAngle += angle
 		self.headingError.setTarget(self.targetAngle)
@@ -231,7 +236,7 @@ class ChallengeTestSequence(ChallengeInterface):
 		angle, settleTime = data
 		print(f"RotateAngle: {angle}; current: {currentYaw}")
 		angleDiff = abs(angle - currentYaw)
-		while angleDiff >= 360.0:
+		while angleDiff >= 180.0:
 			angleDiff -= 360.0
 		print(f"RotateAngle: {angle}; current: {currentYaw}; diff: {angleDiff}")
 		# Continue until we're close to the target
@@ -256,6 +261,9 @@ class ChallengeTestSequence(ChallengeInterface):
 		self.headingError.enable()
 		# Maintain current heading
 		self.headingError.setTarget(self.targetAngle)
+		# Get the current positions
+		self.targetPositionL = self.positionL.getValue()
+		self.targetPositionR = self.positionR.getValue()
 		# Remember the target distance as part of the state data
 		self.targetPositionL += distance
 		self.targetPositionR += distance
@@ -270,8 +278,11 @@ class ChallengeTestSequence(ChallengeInterface):
 		targetPositionL, targetPositionR, settleTime = data
 		print(f"Forward: {data}; current: {(currentPositionL, currentPositionR)}")
 		# Continue until we're close to the target
-		if abs(targetPositionL - currentPositionL) < self.positionTolerance or abs(targetPositionR - currentPositionR) < self.positionTolerance or self.autoModeEnable.getValue() == 0:
+		if self.autoModeEnable.getValue() == 0:
 			self.stateMachine.changeState("NextSequence")
+		elif (abs(targetPositionL - currentPositionL) < self.positionTolerance or abs(targetPositionR - currentPositionR) < self.positionTolerance) and self.stateMachine.getTimeout() is None:
+			self.autoModeForwardSpeed.setValue(0.0)
+			self.stateMachine.setTimeout(settleTime, "NextSequence")
 
 	def EndForward(self, data):
 		# Disable the PID controls
@@ -282,7 +293,7 @@ class ChallengeTestSequence(ChallengeInterface):
 		# Reached target?
 		currentPositionL = self.positionL.getValue()
 		currentPositionR = self.positionR.getValue()
-		targetPositionL, targetPositionR = data
+		targetPositionL, targetPositionR, settleTime  = data
 		print(f"ForwardNudge: {data}; current: {(currentPositionL, currentPositionR)}")
 		# Continue until we're close to the target
 		if abs(targetPositionL - currentPositionL) < self.positionTolerance or abs(targetPositionR - currentPositionR) < self.positionTolerance or self.motorEnable.getValue() == 0:
@@ -312,7 +323,8 @@ class ChallengeTestSequence(ChallengeInterface):
 			angle = imageResults[0].angle
 			yaw = imageResults[0].yaw
 			print(f"Found: {name} at: {angle} degrees")
-			self.motorsSpeedMode.setValue(3)
+			self.motorsSpeedMode.setValue(4)
+			self.autoModeForwardSpeed.setValue(0)
 			self.headingError.enable()
 			self.targetAngle = yaw
 			self.headingError.setTarget(self.targetAngle)
@@ -330,7 +342,7 @@ class ChallengeTestSequence(ChallengeInterface):
 		angle, settleTime = data
 		print(f"RotateToFaceBlock: {angle}; current: {currentYaw}")
 		angleDiff = abs(angle - currentYaw)
-		while angleDiff >= 360.0:
+		while angleDiff >= 180.0:
 			angleDiff -= 360.0
 		print(f"RotateToFaceBlock: {currentYaw}; current: {currentYaw}; diff: {angleDiff}")
 		# Continue until we're close to the target
@@ -354,6 +366,9 @@ class ChallengeTestSequence(ChallengeInterface):
 			self.targetAngle = yaw
 			self.autoModeForwardSpeed.setValue(self.maxPidForward if distance > 0.0 else -self.maxPidForward)
 			self.headingError.enable()
+			# Get the current positions
+			self.targetPositionL = self.positionL.getValue()
+			self.targetPositionR = self.positionR.getValue()
 			# Maintain current heading
 			self.headingError.setTarget(self.targetAngle)
 			# Remember the target distance as part of the state data
@@ -378,8 +393,11 @@ class ChallengeTestSequence(ChallengeInterface):
 		targetPositionL, targetPositionR, howClose, settleTime = data
 		print(f"ForwardToBlock: {data}; current: {(currentPositionL, currentPositionR)}")
 		# Continue until we're close to the target
-		if abs(targetPositionL - currentPositionL) < self.positionTolerance or abs(targetPositionR - currentPositionR) < self.positionTolerance or self.autoModeEnable.getValue() == 0:
+		if self.autoModeEnable.getValue() == 0:
 			self.stateMachine.changeState("NextSequence")
+		elif (abs(targetPositionL - currentPositionL) < self.positionTolerance or abs(targetPositionR - currentPositionR) < self.positionTolerance) and self.stateMachine.getTimeout() is None:
+			self.autoModeForwardSpeed.setValue(0.0)
+			self.stateMachine.setTimeout(settleTime, "NextSequence")
 
 
 
@@ -443,23 +461,19 @@ class ChallengeTestSequence(ChallengeInterface):
 		self.autoSequenceRun = ToggleButtonValue(self.sensors.button(3), triggeredValue = 2)
 		self.joystickForward = self.sensors.joystickAxis(1)
 		self.joystickLeftRight = self.sensors.joystickAxis(3)
-
-		self.motorLSimpleManualSpeed = [SpeedDirectionCombiner(Scaler(self.joystickForward, scaling = self.maxForward), Scaler(self.joystickLeftRight, scaling = self.maxForward))]
-		self.motorRSimpleManualSpeed = [SpeedDirectionCombiner(Scaler(self.joystickForward, scaling = self.maxForward), Scaler(self.joystickLeftRight, scaling = -self.maxForward))]
-
+		self.motorsSpeedMode = FixedValue(0) # 0=Stop, 1=Simple Manual, 2=Position Control, 3=Heading (gyro yaw) Manual Control, 4 = Auto Forward + Heading PID
+		#1
+		self.motorLSimpleManualSpeed = [SpeedDirectionCombiner(Scaler(self.joystickForward, scaling = self.maxManualForward), Scaler(self.joystickLeftRight, scaling = self.maxManualForward))]
+		self.motorRSimpleManualSpeed = [SpeedDirectionCombiner(Scaler(self.joystickForward, scaling = self.maxManualForward), Scaler(self.joystickLeftRight, scaling = -self.maxManualForward))]
+		#2
 		self.motorLSimplePositionSpeed = [Scaler([self.joystickForward, self.motorPositionErrorL], scaling = self.maxPidForward)]
 		self.motorRSimplePositionSpeed = [Scaler([self.joystickForward, self.motorPositionErrorR], scaling = self.maxPidForward)]
-
-		#self.motorLSimplePositionSpeed = [SpeedDirectionCombiner(Scaler([self.joystickForward,self.motorPositionErrorL], scaling = self.maxPidForward), Scaler([Scaler(self.motorPositionErrorR, scaling = -1.0),self.motorPositionErrorL], scaling = self.maxPidForward))]
-		#self.motorRSimplePositionSpeed = [SpeedDirectionCombiner(Scaler([self.joystickForward,self.motorPositionErrorR], scaling = self.maxPidForward), Scaler([Scaler(self.motorPositionErrorL, scaling = -1.0),self.motorPositionErrorR], scaling = self.maxPidForward))]									
-		self.motorLHeadingAutoSpeed = [SpeedDirectionCombiner(self.autoModeForwardSpeed, Scaler(self.headingError, scaling = -self.maxHeadingTurn))]
-		self.motorRHeadingAutoSpeed = [SpeedDirectionCombiner(self.autoModeForwardSpeed, Scaler(self.headingError, scaling = self.maxHeadingTurn))]
-		self.motorLHeadingJoystickSpeed = [SpeedDirectionCombiner(Scaler(self.joystickForward, scaling = self.maxPidForward), Scaler(self.headingError, scaling = -self.maxHeadingTurn))]
-		self.motorRHeadingJoystickSpeed = [SpeedDirectionCombiner(Scaler(self.joystickForward, scaling = self.maxPidForward), Scaler(self.headingError, scaling = self.maxHeadingTurn))]
-		
-
-		self.motorsSpeedMode = FixedValue(0) # 0=Stop, 1=Manual, 2=Position Control, 3=Heading (gyro yaw) Control
-		#ValueAdder([self.motorEnable, self.autoModeEnable, self.autoSequenceRun], max=2)
+		#3
+		self.motorLHeadingJoystickSpeed = [SpeedDirectionCombiner(Scaler(self.joystickForward, scaling = self.maxPidForward), Scaler(self.headingError, scaling = -self.maxManualHeadingTurn))]
+		self.motorRHeadingJoystickSpeed = [SpeedDirectionCombiner(Scaler(self.joystickForward, scaling = self.maxPidForward), Scaler(self.headingError, scaling = self.maxManualHeadingTurn))]
+		#4
+		self.motorLHeadingAutoSpeed = [SpeedDirectionCombiner(self.autoModeForwardSpeed, Scaler(self.headingError, scaling = -self.maxAutoHeadingTurn))]
+		self.motorRHeadingAutoSpeed = [SpeedDirectionCombiner(self.autoModeForwardSpeed, Scaler(self.headingError, scaling = self.maxAutoHeadingTurn))]
 		
 		motorL = SwitchingControlMediator( [ motorsStop, 						# 0 = Stopped \
 											self.motorLSimpleManualSpeed,  		# 1 = Simple joystick \
@@ -480,7 +494,7 @@ class ChallengeTestSequence(ChallengeInterface):
 
 		# Servos used within the state machine
 		grabberPosition = FixedValue(0.0)
-		grabberPositionRamp = LinearRamp(grabberPosition, increment=0.02)
+		grabberPositionRamp = LinearRamp(grabberPosition, increment=0.03)
 		grabber = SimpleControlMediator( Scaler(grabberPositionRamp, scaling=0.3, min=-1.0, max=1.0, offset=0.3), self.controls.servo(5) )
 		grabber2 = SimpleControlMediator( Scaler(grabberPositionRamp, scaling=-0.3, min=-1.0, max=1.0, offset=-0.1), self.controls.servo(6) )
 		highPriorityProcesses.append(grabber)

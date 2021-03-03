@@ -82,6 +82,7 @@ class TidyUpTheToysImageCaptureAndAnalysis:
 
 		hsv = cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV)	
 		
+		#self.imageAnalysisRed = ImageColouredRegionAnalyser( "Red", ((0,141,148), (180,198,255)), 5, 5, None, \
 		self.imageAnalysisRed = ImageColouredRegionAnalyser( "Red", ((165,94,69), (180,255,255)), 5, 5, None, \
 			(self.minWidth, self.minHeight), \
 			(self.cameraNearestVisiblePixels, self.cameraFurthestVisiblePixel, self.cameraNearestVisibleDistance, self.cameraHeightDistance, self.angleAdjustment))
@@ -92,7 +93,7 @@ class TidyUpTheToysImageCaptureAndAnalysis:
 			(self.cameraNearestVisiblePixels, self.cameraFurthestVisiblePixel, self.cameraNearestVisibleDistance, self.cameraHeightDistance, self.angleAdjustment))
 		self.imageAnalysisGreen.processImage(hsv)
 
-		self.imageAnalysisBlue = ImageColouredRegionAnalyser( "Blue", ((96,101,85), (130,255,255)), 5, 5, None, \
+		self.imageAnalysisBlue = ImageColouredRegionAnalyser( "Blue", ((96,101,60), (130,255,255)), 5, 5, None, \
 			(self.minWidth, self.minHeight), \
 			(self.cameraNearestVisiblePixels, self.cameraFurthestVisiblePixel, self.cameraNearestVisibleDistance, self.cameraHeightDistance, self.angleAdjustment))
 		self.imageAnalysisBlue.processImage(hsv)
