@@ -98,7 +98,7 @@ class TidyUpTheToysImageCaptureAndAnalysis:
 			(self.cameraNearestVisiblePixels, self.cameraFurthestVisiblePixel, self.cameraNearestVisibleDistance, self.cameraHeightDistance, self.angleAdjustment))
 		self.imageAnalysisBlue.processImage(hsv)
 
-		self.imageAnalysisYellow = ImageColouredRegionAnalyser( "Yellow", ((0,128,135), (21,255,255)), 5, 5, None, \
+		self.imageAnalysisYellow = ImageColouredRegionAnalyser( "Yellow", ((3,100,86), (21,205,255)), 5, 5, None, \
 			(self.minWidth, self.minHeight), \
 			(self.cameraNearestVisiblePixels, self.cameraFurthestVisiblePixel, self.cameraNearestVisibleDistance, self.cameraHeightDistance, self.angleAdjustment))
 		self.imageAnalysisYellow.processImage(hsv)
@@ -125,10 +125,10 @@ class TidyUpTheToysImageCaptureAndAnalysis:
 		
 		# Print up the results found
 		print(f"Total time taken {self.elapsed}")
-		print(f"Result count {len(self.results)}")
-		for result in self.results:
-			print(f"{result.typename}.{result.name}")
-			print(f"  d={result.distance:.0f}mm, size={result.size}, yaw={result.yaw:.1f}, angle={result.angle:.1f}")
+		#print(f"Result count {len(self.results)}")
+		#for result in self.results:
+		#	print(f"{result.typename}.{result.name}")
+		#	print(f"  d={result.distance:.0f}mm, size={result.size}, yaw={result.yaw:.1f}, angle={result.angle:.1f}")
 
 	#
 	# Share the results for robot code consumption
@@ -153,6 +153,8 @@ class TidyUpTheToysImageCaptureAndAnalysis:
 					 yaw = yawHeading,
 					 angle = angle )
 				self.results.append(result)
+				print(f"{result.typename}.{result.name}")
+				print(f"  d={result.distance:.0f}mm, size={result.size}, yaw={result.yaw:.1f}, angle={result.angle:.1f}")
 
 		self.resultsIpc.shareResults(self.startTime, self.elapsed, self.results )
 		

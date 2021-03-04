@@ -119,16 +119,15 @@ class ChallengeTestSequence(ChallengeInterface):
 			# Manual turns
 			if self.joystickLeftRight.getValue() != 0.0:
 				self.headingError.setTarget(self.sensors.yaw().getValue() + self.joystickLeftRight.getValue() * self.maxManualTurn)
-			# Special buttons
-			if self.faceGreenButton.getValue() > 0:
-				self.headingError.reset()
-				self.targetAngle = self.sensors.yaw().getValue()
-				self.stateMachine.changeState("ForwardNudge", [500,0])
-			#elif self.forwardToGreenButton.getValue() > 0:
-			#	self.stateMachine.changeState("ForwardToBlock", "Green")
-				
 		elif self.autoModeEnable.getValue() > 0:
-			self.stateMachine.changeState("StartSequence", "tidyUpSequence.json")
+			# Special buttons
+			if self.runTestSequence1.getValue() > 0:
+				self.stateMachine.changeState("StartSequence", "testSequence1.json")
+			elif self.runTestSequence2.getValue() > 0:
+				self.stateMachine.changeState("StartSequence", "testSequence2.json")
+			else:
+				# Full challenge
+				self.stateMachine.changeState("StartSequence", "tidyUpSequence.json")
 		else:
 			self.stateMachine.changeState("MotorsOff")
 
@@ -332,6 +331,7 @@ class ChallengeTestSequence(ChallengeInterface):
 			print(f"StartRotateAngle: {angle} => {self.targetAngle}")
 		else:
 			# Not found
+			print(f"StartRotateAngle: Block {blockColour} not found - aborting")
 			self.stateMachine.changeState("MotorsOff")
 			
 		return self.targetAngle, settleTime
@@ -358,13 +358,14 @@ class ChallengeTestSequence(ChallengeInterface):
 
 		if len(imageResults) > 0:
 			name = imageResults[0].name
-			distance = (imageResults[0].distance - howClose) * self.positionCalibration
+			distanceToBlock = imageResults[0].distance
+			positionDelta = (distanceToBlock - howClose) * self.positionCalibration
 			angle = imageResults[0].angle
 			yaw = imageResults[0].yaw
-			print(f"Found: {name} at distance: {distance}mm {angle} degrees")
+			print(f"Found: {name} at distance: {distanceToBlock}mm {angle} degrees")
 			self.motorsSpeedMode.setValue(4)
 			self.targetAngle = yaw
-			self.autoModeForwardSpeed.setValue(self.maxPidForward if distance > 0.0 else -self.maxPidForward)
+			self.autoModeForwardSpeed.setValue(self.maxPidForward if positionDelta > 0.0 else -self.maxPidForward)
 			self.headingError.enable()
 			# Get the current positions
 			self.targetPositionL = self.positionL.getValue()
@@ -372,17 +373,18 @@ class ChallengeTestSequence(ChallengeInterface):
 			# Maintain current heading
 			self.headingError.setTarget(self.targetAngle)
 			# Remember the target distance as part of the state data
-			self.targetPositionL += distance
-			self.targetPositionR += distance
+			self.targetPositionL += positionDelta
+			self.targetPositionR += positionDelta
 			# Adjust accordning to approx arc needed
 			arcadjust = 155.0 * np.sin(angle * 3.14159/180.0) * self.positionCalibration
 			self.targetPositionL -= arcadjust
 			self.targetPositionR += arcadjust
 			stateData = (self.targetPositionL, self.targetPositionR, howClose, settleTime)
-			print(f"StartForwardToBlock:  {distance} => {stateData}")
+			print(f"StartForwardToBlock:  {(distanceToBlock - howClose)}mm = {(self.targetPositionL,self.targetPositionR)} => {stateData}")
 			return stateData
 		else:
 			# Not found
+			print(f"StartForwardToBlock: Block {blockColour} not found - aborting")
 			self.stateMachine.changeState("MotorsOff")
 			
 		
@@ -450,8 +452,8 @@ class ChallengeTestSequence(ChallengeInterface):
 		self.resetLastPositionButton = OneShotButtonValue(self.sensors.button(3))
 		self.recordPositionButton = OneShotButtonValue(self.sensors.button(2))
 		self.savePositionsButton = OneShotButtonValue(self.sensors.button(1))
-		self.faceGreenButton = OneShotButtonValue(self.sensors.button(13))
-		self.forwardToGreenButton = OneShotButtonValue(self.sensors.button(14))
+		self.runTestSequence1 = self.sensors.button(13)
+		self.runTestSequence2 = self.sensors.button(14)
 
 		# Motor control - General
 		motorsStop = FixedValue(0.0)
