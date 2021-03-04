@@ -377,9 +377,9 @@ class ChallengeTestSequence(ChallengeInterface):
 			self.targetPositionR += positionDelta
 			# Adjust accordning to approx arc needed
 			arcadjust = 155.0 * np.sin(angle * 3.14159/180.0) * self.positionCalibration
-			self.targetPositionL -= arcadjust
-			self.targetPositionR += arcadjust
-			stateData = (self.targetPositionL, self.targetPositionR, howClose, settleTime)
+			self.targetPositionL -= int(arcadjust)
+			self.targetPositionR += int(arcadjust)
+			stateData = [self.targetPositionL, self.targetPositionR, blockColour, howClose, settleTime]
 			print(f"StartForwardToBlock:  {(distanceToBlock - howClose)}mm = {(self.targetPositionL,self.targetPositionR)} => {stateData}")
 			return stateData
 		else:
@@ -389,10 +389,27 @@ class ChallengeTestSequence(ChallengeInterface):
 			
 		
 	def ForwardToBlock(self, data):
-		# Reached target?
+		targetPositionL, targetPositionR, blockColour, howClose, settleTime = data
 		currentPositionL = self.positionL.getValue()
 		currentPositionR = self.positionR.getValue()
-		targetPositionL, targetPositionR, howClose, settleTime = data
+		# new target?
+		imageResults, timestamp, elapsed = self.imageAnalysisResult.updateSnapshot()
+		imageResults = self.imageAnalysisResult.getImageResultByNameAndType(blockColour,"Block")
+		if len(imageResults) > 0 and imageResults[0].distance > 300:
+			name = imageResults[0].name
+			distanceToBlock = imageResults[0].distance
+			positionDelta = (distanceToBlock - howClose) * self.positionCalibration
+			angle = imageResults[0].angle
+			yaw = imageResults[0].yaw
+			self.targetAngle = yaw
+			print(f"Found: {name} at distance: {distanceToBlock}mm {angle} degrees")
+			self.headingError.setTarget(self.targetAngle)
+			#targetPositionL = currentPositionL + positionDelta
+			#targetPositionR = currentPositionR + positionDelta
+			#data[0] = targetPositionL
+			#data[1] = targetPositionR
+		
+		# Reached target?
 		print(f"ForwardToBlock: {data}; current: {(currentPositionL, currentPositionR)}")
 		# Continue until we're close to the target
 		if self.autoModeEnable.getValue() == 0:
