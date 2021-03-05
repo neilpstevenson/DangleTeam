@@ -135,7 +135,7 @@
   "speedsteer.med.compensation": 1.0,
   "speedsteer.slow": 0.1,
   "speedsteer.slow.compensation": 1.0,
-  "tidy.analysis.anglescale": 2.6,
+  "tidy.analysis.anglescale": 2.1,
   "tidy.analysis.burrradius": 5,
   "tidy.analysis.debugPrint": false,
   "tidy.analysis.frameDelayMs": 1,

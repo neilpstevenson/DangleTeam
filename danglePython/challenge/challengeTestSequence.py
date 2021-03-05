@@ -193,9 +193,9 @@ class ChallengeTestSequence(ChallengeInterface):
 
 		self.motorPositionErrorL.enable()
 		self.motorPositionErrorR.enable()
-		self.targetPositionL += nudgeL
+		self.targetPositionL += nudgeL * self.positionCalibration
 		self.motorPositionErrorL.setTarget(self.targetPositionL)
-		self.targetPositionR += nudgeR
+		self.targetPositionR += nudgeR * self.positionCalibration
 		self.motorPositionErrorR.setTarget(self.targetPositionR)
 		# Remember the target positions as part of the state data
 		stateData = (self.targetPositionL, self.targetPositionR)
@@ -264,8 +264,8 @@ class ChallengeTestSequence(ChallengeInterface):
 		self.targetPositionL = self.positionL.getValue()
 		self.targetPositionR = self.positionR.getValue()
 		# Remember the target distance as part of the state data
-		self.targetPositionL += distance
-		self.targetPositionR += distance
+		self.targetPositionL += distance * self.positionCalibration
+		self.targetPositionR += distance * self.positionCalibration
 		stateData = (self.targetPositionL, self.targetPositionR, settleTime)
 		print(f"Forward:  {distance} => {stateData}")
 		return stateData

@@ -183,7 +183,7 @@ class TidyUpTheToysImageCaptureAndAnalysis:
 	def captureContinuous(self):
 		# if a video path was not supplied, grab the reference
 		# to the webcam
-		frameRate = 30
+		frameRate = 25#30
 		resolution = (640,480)
 		if not self.recordedVideo:
 			#vs = VideoStream(src=0)
@@ -197,6 +197,7 @@ class TidyUpTheToysImageCaptureAndAnalysis:
 			vs.set(cv2.CAP_PROP_FPS, frameRate)
 			vs.set(cv2.CAP_PROP_WHITE_BALANCE_BLUE_U, 7.5)
 			vs.set(cv2.CAP_PROP_WHITE_BALANCE_RED_V, 7.5)
+			vs.set(cv2.CAP_PROP_BUFFERSIZE, 1)	# Only interested in live data
 
 		# otherwise, grab a reference to the video file
 		else:
