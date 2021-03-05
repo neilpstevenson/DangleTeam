@@ -142,6 +142,8 @@
   "tidy.analysis.imagewidth": 480,
   "tidy.analysis.minHeight": 10,
   "tidy.analysis.minWidth": 15,
+  "tidy.analysis.save": true,
+  "tidy.analysis.savefilename": "tidyupthetoys.mp4",
   "tidy.autoheadingturn.max": 0.4,
   "tidy.display.image": true,
   "tidy.display.masks": false,

@@ -43,6 +43,8 @@ class TidyUpTheToysImageCaptureAndAnalysis:
 		self.showMasks = config.get("tidy.display.masks", False)
 		#self.trailSize = config.get("tidy.display.trail", 25)
 		self.frameDelayMs = config.get("tidy.analysis.frameDelayMs", 20) # delay after each frame analysis
+		self.filename = config.get("tidy.analysis.savefilename", "tidyupthetoys.mp4")
+		self.saveFile = config.get("tidy.analysis.save", True)
 		config.save()
 		
 		# Load calibration values
@@ -114,7 +116,9 @@ class TidyUpTheToysImageCaptureAndAnalysis:
 			if analysis.hasResult:
 				# Show the contours
 				cv2.polylines(frame, analysis.largestContours,  True, (128, 128, 128), 2, 8)		
-				cv2.putText(frame, analysis.name, (analysis.largestCenter[0]-20,analysis.largestCenter[1]), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2)
+				cv2.putText(frame, analysis.name, (analysis.largestCenter[0]-20,analysis.largestCenter[1]), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 0), 2)
+				distance, angle = analysis.calculateDistanceBearing()
+				cv2.putText(frame, f"{distance:.0f}mm {angle:.1f}deg", (analysis.largestCenter[0]-65,analysis.largestCenter[1] - 18), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 0), 2)
 			if self.showMasks:
 				cv2.imshow(analysis.name, analysis.maskedImage)
 		
@@ -122,6 +126,10 @@ class TidyUpTheToysImageCaptureAndAnalysis:
 			cv2.putText(frame, f"{self.fps}fps", (frame.shape[1]-60, frame.shape[0]-20), cv2.FONT_HERSHEY_DUPLEX, 0.5, (0, 255, 0), 1, cv2.LINE_AA)
 
 		cv2.imshow("Overview", frame)
+
+		if self.saveFile:
+			# Write the next frame into the file
+			self.captureFile.write(frame)
 		
 		# Print up the results found
 		print(f"Total time taken {self.elapsed}")
@@ -175,6 +183,8 @@ class TidyUpTheToysImageCaptureAndAnalysis:
 	def captureContinuous(self):
 		# if a video path was not supplied, grab the reference
 		# to the webcam
+		frameRate = 30
+		resolution = (640,480)
 		if not self.recordedVideo:
 			#vs = VideoStream(src=0)
 			#vs.stream.stream.set( cv2.CAP_PROP_WHITE_BALANCE_BLUE_U, 7.5)
@@ -182,9 +192,9 @@ class TidyUpTheToysImageCaptureAndAnalysis:
 			##vs.stream.stream.set( cv2.CAP_PROP_AUTO_WB, 0)
 			#vs.start()
 			vs = cv2.VideoCapture(0)
-			vs.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
-			vs.set(cv2.CAP_PROP_FRAME_HEIGHT, 480) #!!!
-			vs.set(cv2.CAP_PROP_FPS, 30)
+			vs.set(cv2.CAP_PROP_FRAME_WIDTH, resolution[0])
+			vs.set(cv2.CAP_PROP_FRAME_HEIGHT, resolution[1])
+			vs.set(cv2.CAP_PROP_FPS, frameRate)
 			vs.set(cv2.CAP_PROP_WHITE_BALANCE_BLUE_U, 7.5)
 			vs.set(cv2.CAP_PROP_WHITE_BALANCE_RED_V, 7.5)
 
@@ -200,6 +210,11 @@ class TidyUpTheToysImageCaptureAndAnalysis:
 		self.angle = None
 		self.ourPosition = None
 		count = 0
+
+		if self.saveFile:
+			print(f"Saving to file: {self.filename}")
+			# Define the codec and create VideoWriter object.
+			self.captureFile = cv2.VideoWriter(self.filename, cv2.VideoWriter_fourcc(*'mp4v'), frameRate, (self.analysis_width, self.analysis_width*resolution[1]//resolution[0]))
 		
 		# keep looping
 		while True:
@@ -257,7 +272,8 @@ class TidyUpTheToysImageCaptureAndAnalysis:
 
 		# if we are not using a video file, stop the camera video stream
 		if not self.recordedVideo:
-			vs.stop()
+			pass
+			#vs.stop() # for imutils version
 		else:
 			# otherwise, close the file
 			vs.release()
