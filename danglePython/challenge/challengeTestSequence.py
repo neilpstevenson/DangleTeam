@@ -513,7 +513,7 @@ class ChallengeTestSequence(ChallengeInterface):
 
 		# Servos used within the state machine
 		grabberPosition = FixedValue(0.0)
-		grabberPositionRamp = LinearRamp(grabberPosition, increment=0.03)
+		grabberPositionRamp = LinearRamp(grabberPosition, increment=0.06)
 		grabber = SimpleControlMediator( Scaler(grabberPositionRamp, scaling=0.3, min=-1.0, max=1.0, offset=0.3), self.controls.servo(5) )
 		grabber2 = SimpleControlMediator( Scaler(grabberPositionRamp, scaling=-0.3, min=-1.0, max=1.0, offset=-0.1), self.controls.servo(6) )
 		highPriorityProcesses.append(grabber)
