@@ -213,6 +213,7 @@ class ChallengeTestSequence(ChallengeInterface):
 			self.stateMachine.changeState("NextSequence")
 
 	def EndMoveDistance(self, data):
+		self.motorsSpeedMode.setValue(0)
 		# Disable the PID controls
 		self.motorPositionErrorL.disable()
 		self.motorPositionErrorR.disable()
@@ -242,9 +243,13 @@ class ChallengeTestSequence(ChallengeInterface):
 		if self.autoModeEnable.getValue() == 0:
 			self.stateMachine.changeState("NextSequence")
 		elif angleDiff < self.angleTolerance and self.stateMachine.getTimeout() is None:
-			self.stateMachine.setTimeout(settleTime, "NextSequence")
+			if settleTime > 0:
+				self.stateMachine.setTimeout(settleTime, "NextSequence")
+			else:
+				self.stateMachine.changeState("NextSequence")
 
 	def EndRotateAngle(self, data):
+		self.motorsSpeedMode.setValue(0)
 		# Disable the PID controls
 		self.headingError.disable()
 		# Reset position counters, as we've moved by an indeterminate angle
@@ -281,10 +286,14 @@ class ChallengeTestSequence(ChallengeInterface):
 			self.stateMachine.changeState("NextSequence")
 		elif (abs(targetPositionL - currentPositionL) < self.positionTolerance or abs(targetPositionR - currentPositionR) < self.positionTolerance) and self.stateMachine.getTimeout() is None:
 			self.autoModeForwardSpeed.setValue(0.0)
-			self.stateMachine.setTimeout(settleTime, "NextSequence")
+			if settleTime > 0:
+				self.stateMachine.setTimeout(settleTime, "NextSequence")
+			else:
+				self.stateMachine.changeState("NextSequence")
 
 	def EndForward(self, data):
 		# Disable the PID controls
+		self.motorsSpeedMode.setValue(0)
 		self.headingError.disable()
 		self.autoModeForwardSpeed.setValue(0.0)
 		
@@ -302,14 +311,13 @@ class ChallengeTestSequence(ChallengeInterface):
 		servoName, setpoint, timeout = data
 		endtime = time.perf_counter() + timeout
 		servo = self.servos[servoName]
+		servo.setValue(setpoint)
 		return (servo, setpoint, endtime)
 		
 	def Servo(self, data):
 		servo, setpoint, endtime = data
 		if time.perf_counter() >= endtime or self.autoModeEnable.getValue() == 0:
 			self.stateMachine.changeState("NextSequence")
-		else:
-			servo.setValue(setpoint)
 
 	def StartRotateToFaceBlock(self, data):
 		blockColour, settleTime = data
@@ -349,7 +357,10 @@ class ChallengeTestSequence(ChallengeInterface):
 		if self.autoModeEnable.getValue() == 0:
 			self.stateMachine.changeState("NextSequence")
 		elif angleDiff < self.angleTolerance and self.stateMachine.getTimeout() is None:
-			self.stateMachine.setTimeout(settleTime, "NextSequence")
+			if settleTime > 0:
+				self.stateMachine.setTimeout(settleTime, "NextSequence")
+			else:
+				self.stateMachine.changeState("NextSequence")
 
 	def StartForwardToBlock(self, data):
 		blockColour, howClose, settleTime = data
@@ -376,9 +387,15 @@ class ChallengeTestSequence(ChallengeInterface):
 			self.targetPositionL += positionDelta
 			self.targetPositionR += positionDelta
 			# Adjust accordning to approx arc needed
-			arcadjust = 155.0 * np.sin(angle * 3.14159/180.0) * self.positionCalibration
-			self.targetPositionL -= int(arcadjust)
-			self.targetPositionR += int(arcadjust)
+			arcDist = int(6.28*155*angle//360)
+			##arcadjust = int(155.0 * np.sin(angle * 3.14159/180.0) * self.positionCalibration // 2)
+			#self.targetPositionL -= arcadjust
+			#self.targetPositionR += arcadjust
+			if arcDist < 0.0:
+				self.targetPositionL -= arcDist
+			else:
+				self.targetPositionR += arcDist
+			print(f"StartForwardToBlock:  positionDelta: {positionDelta}, arcDist: {arcDist}")
 			stateData = [self.targetPositionL, self.targetPositionR, blockColour, howClose, settleTime]
 			print(f"StartForwardToBlock:  {(distanceToBlock - howClose)}mm = {(self.targetPositionL,self.targetPositionR)} => {stateData}")
 			return stateData
@@ -416,8 +433,10 @@ class ChallengeTestSequence(ChallengeInterface):
 			self.stateMachine.changeState("NextSequence")
 		elif (abs(targetPositionL - currentPositionL) < self.positionTolerance or abs(targetPositionR - currentPositionR) < self.positionTolerance) and self.stateMachine.getTimeout() is None:
 			self.autoModeForwardSpeed.setValue(0.0)
-			self.stateMachine.setTimeout(settleTime, "NextSequence")
-
+			if settleTime > 0:
+				self.stateMachine.setTimeout(settleTime, "NextSequence")
+			else:
+				self.stateMachine.changeState("NextSequence")
 
 
 	def createProcesses(self, highPriorityProcesses, medPriorityProcesses):

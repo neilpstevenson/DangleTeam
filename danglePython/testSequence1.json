@@ -1,9 +1,6 @@
 {
   "path": [
     ["SetZeroHeading", null],
-    ["Servo", ["grabheight",  1.0, 1.0]],
-    ["Rotate", [-170, 10.5]],
-    ["RotateToFaceBlock", ["Blue",0.5]],
     ["ForwardToBlock", ["Blue", 90, 0.3]],
     ["Servo", ["grabheight",  -0.6, 0.5]]
    ]

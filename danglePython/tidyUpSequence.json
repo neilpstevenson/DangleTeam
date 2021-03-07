@@ -2,17 +2,15 @@
   "path": [
     ["SetZeroHeading", null],
     ["Servo", ["grabber", 1.0, 1.0]],
-    ["Servo", ["grabheight",  1.0, 1.0]],
+    ["Servo", ["grabheight",  1.0, 0.0]],
     ["Forward", [-450, 0]],
     ["Rotate", [165, 0.5]],
-    ["RotateToFaceBlock", ["Red",0.5]],
     ["ForwardToBlock", ["Red", 105, 0.5]],
     ["Servo", ["grabber", 1.0, 0.5]],
     ["Servo", ["grabber", -1.0, 1.0]],
     ["Servo", ["grabheight",  -0.6, 0.5]],
     ["Forward", [80, 0]],
     ["Rotate", [95, 0.5]],
-    ["RotateToFaceBlock", ["Green",0.5]],
     ["ForwardToBlock", ["Green", 105, 0.5]],
     ["Servo", ["grabheight",  -0.4, 0.5]],
     ["Servo", ["grabber", 1.0, 1.0]],
@@ -21,7 +19,6 @@
     ["Servo", ["grabheight",  -0.6, 0.5]],
     ["Forward", [-250, 0]],
     ["Rotate", [-165, 0.5]],
-    ["RotateToFaceBlock", ["Blue",0.5]],
     ["ForwardToBlock", ["Blue", 105, 0.5]],
     ["Servo", ["grabheight",  -0.4, 0.5]],
     ["Servo", ["grabber", 1.0, 1.0]],
@@ -30,12 +27,11 @@
     ["Servo", ["grabheight",  0.6, 0.5]],
     ["Rotate", [-160, 0.5]],
     ["Forward", [700, 0]],
-    ["RotateToFaceBlock", ["Yellow",0.5]],
     ["ForwardToBlock", ["Yellow", 190, 0.1]],
     ["Servo", ["grabheight",  1.0, 0.5]],
     ["Servo", ["grabber", 1.0, 1.0]],
     ["Forward", [-300, 0]],
     ["Rotate", [90, 0]],
-    ["Forward", [550, 0]]
+    ["Forward", [650, 0]]
    ]
 }
