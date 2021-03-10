@@ -44,9 +44,9 @@ class DisplayStatus:
                     sys.exit()
 
             # Get the next text
-            title = "Long Title"#self.results.getTitle()
-            subtitle = "This is a subtitle" #self.results.getSubtitle()
-            additional = "This is a long line with lots of data that might not fit very well" #self.results.getAdditional()
+            title = self.results.getTitle()
+            subtitle = self.results.getSubtitle()
+            additional = self.results.getAdditional()
             
             if last_title != title or last_subtitle != subtitle or last_additional != additional:
                 last_title = title

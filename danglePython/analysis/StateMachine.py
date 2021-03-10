@@ -1,13 +1,20 @@
 import time
+from interfaces.StatusSharedIPC import StatusSharedIPC
 
 # Simple state machine helper class
 class StateMachine:
 
-	def __init__(self, initialState = None):
+	def __init__(self, initialState = None, autoUpdateStatus = True):
 		self.states = {}
 		self.state = initialState
 		self.timeout = None
 		self.stateData = None
+		self.stateDisplayName = ""
+		self.stateDisplayData = ""
+		self.autoUpdateStatus = autoUpdateStatus
+		# Status shared memory
+		self.status = StatusSharedIPC()
+		self.status.create()
 		
 	# Add a new possible state
 	def addState(self, stateId, enterStateFunc, processFunc, exitStateFunc):
@@ -19,9 +26,12 @@ class StateMachine:
 			self.changeState(self.timeoutState)
 		else:
 			# Call state processing function
-			if self.state != None and self.states[self.state][1] != None:
-				self.states[self.state][1](self.stateData)
-		
+			if self.state != None:
+				if self.autoUpdateStatus:
+					self.status.setStatus(self.stateDisplayName, self.stateDisplayData, self.stateData)
+				if self.states[self.state][1] != None:
+					self.states[self.state][1](self.stateData)
+
 	def changeState(self, newState, data = None):
 		self.timeout = None
 		if self.state != newState:
@@ -30,6 +40,8 @@ class StateMachine:
 			if self.state != None and self.states[self.state][2] != None:
 				self.states[self.state][2](self.stateData)
 			# Change state
+			self.stateDisplayName = newState	# default
+			self.stateDisplayData = ""
 			self.state = newState
 			self.stateData = None
 			# Call Enter state
@@ -45,3 +57,8 @@ class StateMachine:
 
 	def getTimeout(self):
 		return self.timeout
+
+	def setDisplayStatus(self, stateDisplayName, stateDisplayData = ""):
+		self.stateDisplayName = stateDisplayName
+		self.stateDisplayData = stateDisplayData
+		self.status.setStatus(self.stateDisplayName, self.stateDisplayData, self.stateData)

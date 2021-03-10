@@ -337,17 +337,17 @@ class ChallengeTestSequence(ChallengeInterface):
 			self.headingError.setTarget(self.targetAngle)
 			# Remember the target positions as part of the state data
 			print(f"StartRotateAngle: {angle} => {self.targetAngle}")
+			self.stateMachine.setDisplayStatus("Rotate to", blockColour)
 		else:
 			# Not found
 			print(f"StartRotateAngle: Block {blockColour} not found - aborting")
 			self.stateMachine.changeState("MotorsOff")
-			
-		return self.targetAngle, settleTime
+		return blockColour, self.targetAngle, settleTime
 		
 	def RotateToFaceBlock(self, data):
 		# Reached target?
 		currentYaw = self.sensors.yaw().getValue()
-		angle, settleTime = data
+		blockColour, angle, settleTime = data
 		print(f"RotateToFaceBlock: {angle}; current: {currentYaw}")
 		angleDiff = abs(angle - currentYaw)
 		while angleDiff >= 180.0:
@@ -398,6 +398,7 @@ class ChallengeTestSequence(ChallengeInterface):
 			print(f"StartForwardToBlock:  positionDelta: {positionDelta}, arcDist: {arcDist}")
 			stateData = [self.targetPositionL, self.targetPositionR, blockColour, howClose, settleTime]
 			print(f"StartForwardToBlock:  {(distanceToBlock - howClose)}mm = {(self.targetPositionL,self.targetPositionR)} => {stateData}")
+			self.stateMachine.setDisplayStatus("Forward to", blockColour)
 			return stateData
 		else:
 			# Not found
