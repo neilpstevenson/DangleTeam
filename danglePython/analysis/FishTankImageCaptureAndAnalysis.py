@@ -15,9 +15,10 @@ from interfaces.SensorAccessFactory import SensorAccessFactory
 from interfaces.Config import Config
 # Analysis classes
 from analysis.ElapsedTime import elapsedTime
-from analysis.ImageColouredRegionAnalyser import ImageColouredRegionAnalyser
+#from analysis.ImageColouredRegionAnalyser import ImageColouredRegionAnalyser
+from analysis.ImageArucoRecogniser import ImageArucoRecogniser
 
-class TidyUpTheToysImageCaptureAndAnalysis:
+class FishTankImageCaptureAndAnalysis:
 	
 	def __init__(self):
 		# construct the argument parse and parse the arguments
@@ -79,32 +80,10 @@ class TidyUpTheToysImageCaptureAndAnalysis:
 	# Generate the filtered/masked frames that we are to analyse
 	#
 	def preprocessImage(self, frame):
-		#blurred = cv2.GaussianBlur(frame, (self.blur_radius, self.blur_radius), 0)
-		blurred = cv2.blur(frame, (self.blur_radius, self.blur_radius))
-
-		hsv = cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV)	
-		
-		#self.imageAnalysisRed = ImageColouredRegionAnalyser( "Red", ((0,141,148), (180,198,255)), 5, 5, None, \
-		self.imageAnalysisRed = ImageColouredRegionAnalyser( "Red", [((155,94,69), (180,255,255)), ((0,94,69), (6,255,255))], 5, 5, None, \
-			(self.minWidth, self.minHeight), \
+		self.imageAnalysisFishTankAruco = ImageArucoRecogniser("Tank", \
 			(self.cameraNearestVisiblePixels, self.cameraFurthestVisiblePixel, self.cameraNearestVisibleDistance, self.cameraHeightDistance, self.angleAdjustment))
-		self.imageAnalysisRed.processImage(hsv)
+		self.imageAnalysisFishTankAruco.processImage(frame)
 
-		self.imageAnalysisGreen = ImageColouredRegionAnalyser( "Green", ((40,63,27), (84,255,255)), 5, 5, None, \
-			(self.minWidth, self.minHeight), \
-			(self.cameraNearestVisiblePixels, self.cameraFurthestVisiblePixel, self.cameraNearestVisibleDistance, self.cameraHeightDistance, self.angleAdjustment))
-		self.imageAnalysisGreen.processImage(hsv)
-
-		self.imageAnalysisBlue = ImageColouredRegionAnalyser( "Blue", ((96,101,60), (130,255,255)), 5, 5, None, \
-			(self.minWidth, self.minHeight), \
-			(self.cameraNearestVisiblePixels, self.cameraFurthestVisiblePixel, self.cameraNearestVisibleDistance, self.cameraHeightDistance, self.angleAdjustment))
-		self.imageAnalysisBlue.processImage(hsv)
-
-		self.imageAnalysisYellow = ImageColouredRegionAnalyser( "Yellow", ((3,100,86), (21,205,255)), 5, 5, None, \
-			(self.minWidth, self.minHeight), \
-			(self.cameraNearestVisiblePixels, self.cameraFurthestVisiblePixel, self.cameraNearestVisibleDistance, self.cameraHeightDistance, self.angleAdjustment))
-		self.imageAnalysisYellow.processImage(hsv)
-	
 		self.timedCheckpoint("coloured masks created")
 
 
@@ -112,16 +91,17 @@ class TidyUpTheToysImageCaptureAndAnalysis:
 	# Display an annotated image of the results
 	#		
 	def displayResults(self, frame):
-		for analysis in [self.imageAnalysisRed, self.imageAnalysisGreen, self.imageAnalysisBlue, self.imageAnalysisYellow]:
+		for analysis in [self.imageAnalysisFishTankAruco]:
 			if analysis.hasResult:
+				# Get the results
+				corners, distance, angle = analysis.calculateDistanceBearing(48)
 				# Show the contours
-				#print(f"displayResults: {analysis.largestContours}")
-				cv2.polylines(frame, analysis.largestContours,  True, (128, 128, 128), 2, 8)		
-				cv2.putText(frame, analysis.name, (analysis.largestCenter[0]-20,analysis.largestCenter[1]), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 0), 2)
-				distance, angle = analysis.calculateDistanceBearing()
+				#corners=np.array([[100,200],[200,200],[300,200],[300,300],[200,300]], dtype=np.int32)
+				corners = corners.reshape((-1,1,2))
+				#print(f"displayResults: {corners}")
+				cv2.polylines(frame, [corners],  True, (0, 255, 0), 2, 8)		
+				cv2.putText(frame, f"{48} : {analysis.name}", (corners[0][0][0], corners[0][0][1]), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 0), 2)
 				cv2.putText(frame, f"{distance:.0f}mm {angle:.1f}deg", (analysis.largestCenter[0]-65,analysis.largestCenter[1] - 18), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 0), 2)
-			if self.showMasks:
-				cv2.imshow(analysis.name, analysis.maskedImage)
 		
 		if self.fps != None:
 			cv2.putText(frame, f"{self.fps}fps", (frame.shape[1]-60, frame.shape[0]-20), cv2.FONT_HERSHEY_DUPLEX, 0.5, (0, 255, 0), 1, cv2.LINE_AA)
@@ -143,29 +123,30 @@ class TidyUpTheToysImageCaptureAndAnalysis:
 	# Share the results for robot code consumption
 	#
 	def publishResults(self):
-		for analysis in [self.imageAnalysisRed, self.imageAnalysisGreen, self.imageAnalysisBlue, self.imageAnalysisYellow]:
-			if analysis.hasResult:
-				distance, angle = analysis.calculateDistanceBearing()
-				yawHeading = self.yaw + angle 
-				if yawHeading > 180.0:
-					yawHeading -= 360.0
-				elif yawHeading < -180.0:
-					yawHeading += 360.0
-				# Add result to end list
-				result = ImageAnalysisSharedIPC.ImageResult(
-					 status = 1,
-					 typename = 'Block',
-					 name = analysis.name,
-					 confidence = 90.0,
-					 distance = distance,
-					 size = [0,0],
-					 yaw = yawHeading,
-					 angle = angle )
-				self.results.append(result)
-				print(f"{result.typename}.{result.name}")
-				print(f"  d={result.distance:.0f}mm, size={result.size}, yaw={result.yaw:.1f}, angle={result.angle:.1f}")
-
-		self.resultsIpc.shareResults(self.startTime, self.elapsed, self.results )
+		pass
+		#for analysis in [self.imageAnalysisRed, self.imageAnalysisGreen, self.imageAnalysisBlue, self.imageAnalysisYellow]:
+		#	if analysis.hasResult:
+		#		distance, angle = analysis.calculateDistanceBearing()
+		#		yawHeading = self.yaw + angle 
+		#		if yawHeading > 180.0:
+		#			yawHeading -= 360.0
+		#		elif yawHeading < -180.0:
+		#			yawHeading += 360.0
+		#		# Add result to end list
+		#		result = ImageAnalysisSharedIPC.ImageResult(
+		#			 status = 1,
+		#			 typename = 'Block',
+		#			 name = analysis.name,
+		#			 confidence = 90.0,
+		#			 distance = distance,
+		#			 size = [0,0],
+		#			 yaw = yawHeading,
+		#			 angle = angle )
+		#		self.results.append(result)
+		#		print(f"{result.typename}.{result.name}")
+		#		print(f"  d={result.distance:.0f}mm, size={result.size}, yaw={result.yaw:.1f}, angle={result.angle:.1f}")
+		#
+		#self.resultsIpc.shareResults(self.startTime, self.elapsed, self.results )
 		
 	#
 	# Debug stuff	
@@ -241,7 +222,7 @@ class TidyUpTheToysImageCaptureAndAnalysis:
 				self.yaw = self.yawAccessor.getValue()
 				
 				# resize the frame
-				frame = imutils.resize(frame, width=self.analysis_width, inter=cv2.INTER_NEAREST)
+				#frame = imutils.resize(frame, width=self.analysis_width, inter=cv2.INTER_NEAREST)
 		
 				# Do all necessary pre-processing, e.g. filtering and threholding
 				self.preprocessImage(frame)
@@ -283,6 +264,3 @@ class TidyUpTheToysImageCaptureAndAnalysis:
 		# close all windows
 		cv2.destroyAllWindows()
 
-if __name__ == "__main__":
-	capture = FindRedLight()
-	capture.captureContinuous()

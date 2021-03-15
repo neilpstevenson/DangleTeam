@@ -9,7 +9,7 @@ class StateMachine:
 		self.state = initialState
 		self.timeout = None
 		self.stateData = None
-		self.stateDisplayName = ""
+		self.stateDisplayName = "" if initialState is None else initialState
 		self.stateDisplayData = ""
 		self.autoUpdateStatus = autoUpdateStatus
 		# Status shared memory

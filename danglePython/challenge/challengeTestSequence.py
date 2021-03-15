@@ -68,6 +68,7 @@ class ChallengeTestSequence(ChallengeInterface):
 		self.motorPositionErrorL.disable()
 		self.motorPositionErrorR.disable()
 		self.headingError.disable()
+		self.stateMachine.setDisplayStatus("Stopped")
 			
 	def MotorsOffState(self, data):
 		# Maintain current position
@@ -228,6 +229,7 @@ class ChallengeTestSequence(ChallengeInterface):
 		self.headingError.setTarget(self.targetAngle)
 		# Remember the target positions as part of the state data
 		print(f"StartRotateAngle: {angle} => {self.targetAngle}")
+		self.stateMachine.setDisplayStatus("Rotate", f"{angle}degs")
 		return self.targetAngle, settleTime
 		
 	def RotateAngle(self, data):
@@ -273,6 +275,7 @@ class ChallengeTestSequence(ChallengeInterface):
 		self.targetPositionR += distance * self.positionCalibration
 		stateData = (self.targetPositionL, self.targetPositionR, settleTime)
 		print(f"Forward:  {distance} => {stateData}")
+		self.stateMachine.setDisplayStatus("Forward", f"{distance}mm")
 		return stateData
 		
 	def Forward(self, data):
@@ -312,6 +315,7 @@ class ChallengeTestSequence(ChallengeInterface):
 		endtime = time.perf_counter() + timeout
 		servo = self.servos[servoName]
 		servo.setValue(setpoint)
+		self.stateMachine.setDisplayStatus("Servo", servoName)
 		return (servo, setpoint, endtime)
 		
 	def Servo(self, data):
@@ -497,7 +501,7 @@ class ChallengeTestSequence(ChallengeInterface):
 		self.autoModeForwardSpeed = FixedValue(0.0)
 		self.motorEnable = self.sensors.button(4)
 		self.autoModeEnable = ToggleButtonValue(self.sensors.button(5), triggeredValue = 2)
-		self.autoSequenceRun = ToggleButtonValue(self.sensors.button(3), triggeredValue = 2)
+		#self.autoSequenceRun = ToggleButtonValue(self.sensors.button(3), triggeredValue = 2)
 		self.joystickForward = self.sensors.joystickAxis(1)
 		self.joystickLeftRight = self.sensors.joystickAxis(3)
 		self.motorsSpeedMode = FixedValue(0) # 0=Stop, 1=Simple Manual, 2=Position Control, 3=Heading (gyro yaw) Manual Control, 4 = Auto Forward + Heading PID
@@ -550,13 +554,18 @@ class ChallengeTestSequence(ChallengeInterface):
 		# Image analysis
 		self.imageAnalysisResult = VisionAccessFactory.getSingleton().getImageResult()
 
+		# Flinger fire button
+		flingerFire = ToggleButtonValue(self.sensors.button(2))
+		flinger = SimpleControlMediator( Scaler(flingerFire, min=-0.2, max=0.3, offset=-0.2), self.controls.servo(20) )
+		medPriorityProcesses.append(flinger)
+		
 		# LED display state
 		self.ledIndicator = self.controls.led(0)
-		medPriorityProcesses.append(SimpleControlMediator( Scaler(self.motorEnable, scaling=2, offset=2, max=4), self.ledIndicator))
+		medPriorityProcesses.append(SimpleControlMediator( Scaler([self.motorEnable,self.autoModeEnable], scaling=2, offset=2, max=4), self.ledIndicator))
 		
 		# Nudge buttons
-		self.NudgeForward = OneShotButtonValue(self.sensors.button(2), triggeredValue = 300)
-		self.NudgeBackward = OneShotButtonValue(self.sensors.button(0), triggeredValue = 300)
+		#self.NudgeForward = OneShotButtonValue(self.sensors.button(2), triggeredValue = 300)
+		#self.NudgeBackward = OneShotButtonValue(self.sensors.button(0), triggeredValue = 300)
 
 	def move(self):
 		self.stateMachine.process()
