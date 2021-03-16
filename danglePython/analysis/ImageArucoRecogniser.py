@@ -30,6 +30,7 @@ class ImageArucoRecogniser:
 		print(f"ids: {ids}")
 		if self.hasResult:
 			self.markers = zip(corners, ids.flatten())
+			self.imageShape = image.shape
 	
 	'''
 	Calculate and return an estimated distance, bearing for the largest area identified
@@ -56,7 +57,7 @@ class ImageArucoRecogniser:
 				# Assume roughly quare pixels, calulate the size using the bottom edge of the marker
 				size = np.sqrt(((bottomRight[0] - bottomLeft[0])**2.0) + ((bottomRight[1] - bottomLeft[1])**2.0))
 				
-				print(f"{markerID}: {corners}, size: {size}")
+				#print(f"{markerID}: {corners}, size: {size}")
 
 				# draw the bounding box of the ArUCo detection
 				#cv2.line(frame, topLeft, topRight, (0, 255, 0), 2)
@@ -77,21 +78,31 @@ class ImageArucoRecogniser:
 				#	0.5, (0, 255, 0), 2)
 					
 				# Calculate the angle from the bottom centre to the lowest point
-				#x = (self.largestBoundingRect[0] + self.largestBoundingRect[2]//2)
-				#y = (self.largestBoundingRect[1] + self.largestBoundingRect[3] - 1)
-				#ourPosition = (self.maskedImage.shape[1]//2, self.maskedImage.shape[0] + self.cameraNearestVisiblePixels)
-				#angle_rads = np.arctan((ourPosition[0]-x)/(ourPosition[1]-y)) * self.angleAdjustment
-				#angle = angle_rads * 180.0/3.14159
-				##print(f"x:{x}, y:{y}, ourPosition:{ourPosition}, angle:{angle}")
-				## Distance approximation
-				#dist_recip = self.cameraFurthestVisiblePixel - (self.maskedImage.shape[0] - y)
+				x = int((bottomLeft[0] + bottomRight[0]) / 2.0)
+				y = int((bottomLeft[1] + bottomRight[1]) / 2.0)
+				ourPosition = (self.imageShape[1]//2, self.imageShape[0] + self.cameraNearestVisiblePixels)
+				angle_rads = np.arctan((ourPosition[0]-x)/(ourPosition[1]-y)) * self.angleAdjustment
+				angle = angle_rads * 180.0/3.14159
+				print(f"{markerID} at x:{x}, y:{y}, ourPosition:{ourPosition}, angle:{angle}")
+				# Distance approximation
+				ACURO_SIZE = 100 # mm
+				FocalLength = 520
+				distance = ACURO_SIZE * FocalLength / np.sqrt((bottomLeft[0]-bottomRight[0])**2 + (bottomLeft[1]-bottomRight[1])**2)# + self.cameraNearestVisibleDistance
+				#dist_recip = self.cameraFurthestVisiblePixel - (self.imageShape[0] - y)
 				#if dist_recip > 0:
 				#	distance = ((((self.cameraFurthestVisiblePixel-1) / dist_recip) - 1) * self.cameraHeightAdjustment + 1) * self.cameraNearestVisibleDistance
 				#	# Convert to actual distance
 				#	distance = distance / np.cos(angle_rads)
 				#else:
 				#	distance = 999 # to infinity and beyond!
-				#	return corners, distance, angle
+				# Adjust for camera height
+				distance = np.sqrt(distance**2 - self.cameraHeightDistance**2)
+				# Adjust for distance to axis of rotation
+				distance += 60
+				# Adjust for angle
+				distance = distance / np.cos(angle_rads)
+				print(f"dis:{distance}, angle:{angle}")
+				return corners, distance, angle
 
 		
 		

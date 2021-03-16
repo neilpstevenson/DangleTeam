@@ -60,7 +60,7 @@ class ImageColouredRegionAnalyser:
 			c = max(self.contours, key=cv2.contourArea)
 			# find the best enclosing rectangle
 			#x, y, w, h 
-			self.largestBoundingRect = cv2.boundingRect(c)
+			self.largestBoundingRect = cv2.boundingRect(c)	# (x,y,w,h)
 			M = cv2.moments(c)
 			if M["m00"] != 0.0 and M["m00"] != 0.0:
 				self.largestCenter = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))

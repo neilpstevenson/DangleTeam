@@ -100,8 +100,8 @@ class FishTankImageCaptureAndAnalysis:
 				corners = corners.reshape((-1,1,2))
 				#print(f"displayResults: {corners}")
 				cv2.polylines(frame, [corners],  True, (0, 255, 0), 2, 8)		
-				cv2.putText(frame, f"{48} : {analysis.name}", (corners[0][0][0], corners[0][0][1]), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 0), 2)
-				cv2.putText(frame, f"{distance:.0f}mm {angle:.1f}deg", (analysis.largestCenter[0]-65,analysis.largestCenter[1] - 18), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 0), 2)
+				cv2.putText(frame, f"{48} : {analysis.name}", (corners[0][0][0], corners[0][0][1]), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 0), 2)
+				cv2.putText(frame, f"{distance:.0f}mm {angle:.1f}deg", (analysis.largestCenter[0]-65,analysis.largestCenter[1] - 18), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 0), 2)
 		
 		if self.fps != None:
 			cv2.putText(frame, f"{self.fps}fps", (frame.shape[1]-60, frame.shape[0]-20), cv2.FONT_HERSHEY_DUPLEX, 0.5, (0, 255, 0), 1, cv2.LINE_AA)
