@@ -324,9 +324,9 @@ class ChallengeTestSequence(ChallengeInterface):
 			self.stateMachine.changeState("NextSequence")
 
 	def StartRotateToFaceBlock(self, data):
-		blockColour, settleTime = data
+		blockType, blockColour, settleTime = data
 		imageResults, timestamp, elapsed = self.imageAnalysisResult.updateSnapshot()
-		imageResults = self.imageAnalysisResult.getImageResultByNameAndType(blockColour,"Block")
+		imageResults = self.imageAnalysisResult.getImageResultByNameAndType(blockColour,blockType)
 
 		if len(imageResults) > 0:
 			name = imageResults[0].name
@@ -346,12 +346,12 @@ class ChallengeTestSequence(ChallengeInterface):
 			# Not found
 			print(f"StartRotateAngle: Block {blockColour} not found - aborting")
 			self.stateMachine.changeState("MotorsOff")
-		return blockColour, self.targetAngle, settleTime
+		return blockType, blockColour, self.targetAngle, settleTime
 		
 	def RotateToFaceBlock(self, data):
 		# Reached target?
 		currentYaw = self.sensors.yaw().getValue()
-		blockColour, angle, settleTime = data
+		blockType, blockColour, angle, settleTime = data
 		print(f"RotateToFaceBlock: {angle}; current: {currentYaw}")
 		angleDiff = abs(angle - currentYaw)
 		while angleDiff >= 180.0:
@@ -367,9 +367,9 @@ class ChallengeTestSequence(ChallengeInterface):
 				self.stateMachine.changeState("NextSequence")
 
 	def StartForwardToBlock(self, data):
-		blockColour, howClose, settleTime = data
+		blockType, blockColour, howClose, settleTime = data
 		imageResults, timestamp, elapsed = self.imageAnalysisResult.updateSnapshot()
-		imageResults = self.imageAnalysisResult.getImageResultByNameAndType(blockColour,"Block")
+		imageResults = self.imageAnalysisResult.getImageResultByNameAndType(blockColour,blockType)
 
 		if len(imageResults) > 0:
 			name = imageResults[0].name
@@ -400,7 +400,7 @@ class ChallengeTestSequence(ChallengeInterface):
 			else:
 				self.targetPositionR += arcDist
 			print(f"StartForwardToBlock:  positionDelta: {positionDelta}, arcDist: {arcDist}")
-			stateData = [self.targetPositionL, self.targetPositionR, blockColour, howClose, settleTime]
+			stateData = [self.targetPositionL, self.targetPositionR, blockType, blockColour, howClose, settleTime]
 			print(f"StartForwardToBlock:  {(distanceToBlock - howClose)}mm = {(self.targetPositionL,self.targetPositionR)} => {stateData}")
 			self.stateMachine.setDisplayStatus("Forward to", blockColour)
 			return stateData
@@ -411,12 +411,12 @@ class ChallengeTestSequence(ChallengeInterface):
 			
 		
 	def ForwardToBlock(self, data):
-		targetPositionL, targetPositionR, blockColour, howClose, settleTime = data
+		targetPositionL, targetPositionR, blockType, blockColour, howClose, settleTime = data
 		currentPositionL = self.positionL.getValue()
 		currentPositionR = self.positionR.getValue()
 		# new target?
 		imageResults, timestamp, elapsed = self.imageAnalysisResult.updateSnapshot()
-		imageResults = self.imageAnalysisResult.getImageResultByNameAndType(blockColour,"Block")
+		imageResults = self.imageAnalysisResult.getImageResultByNameAndType(blockColour,blockType)
 		if len(imageResults) > 0 and imageResults[0].distance > 300:
 			name = imageResults[0].name
 			distanceToBlock = imageResults[0].distance

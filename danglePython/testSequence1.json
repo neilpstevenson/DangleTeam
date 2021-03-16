@@ -1,7 +1,7 @@
 {
   "path": [
     ["SetZeroHeading", null],
-    ["ForwardToBlock", ["Blue", 90, 0.3]],
+    ["ForwardToBlock", ["ArUco", "48", 700, 0.3]],
     ["Servo", ["grabheight",  -0.6, 0.5]]
    ]
 }
