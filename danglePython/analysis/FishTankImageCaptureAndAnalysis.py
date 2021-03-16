@@ -80,7 +80,7 @@ class FishTankImageCaptureAndAnalysis:
 	# Generate the filtered/masked frames that we are to analyse
 	#
 	def preprocessImage(self, frame):
-		self.imageAnalysisFishTankAruco = ImageArucoRecogniser("Tank", \
+		self.imageAnalysisFishTankAruco = ImageArucoRecogniser("ArUco", \
 			(self.cameraNearestVisiblePixels, self.cameraFurthestVisiblePixel, self.cameraNearestVisibleDistance, self.cameraHeightDistance, self.angleAdjustment))
 		self.imageAnalysisFishTankAruco.processImage(frame)
 
@@ -93,15 +93,15 @@ class FishTankImageCaptureAndAnalysis:
 	def displayResults(self, frame):
 		for analysis in [self.imageAnalysisFishTankAruco]:
 			if analysis.hasResult:
-				# Get the results
-				corners, distance, angle = analysis.calculateDistanceBearing(48)
-				# Show the contours
-				#corners=np.array([[100,200],[200,200],[300,200],[300,300],[200,300]], dtype=np.int32)
-				corners = corners.reshape((-1,1,2))
-				#print(f"displayResults: {corners}")
-				cv2.polylines(frame, [corners],  True, (0, 255, 0), 2, 8)		
-				cv2.putText(frame, f"{48} : {analysis.name}", (corners[0][0][0], corners[0][0][1]), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 0), 2)
-				cv2.putText(frame, f"{distance:.0f}mm {angle:.1f}deg", (analysis.largestCenter[0]-65,analysis.largestCenter[1] - 18), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 0), 2)
+				for id in analysis.getIds():
+					# Get the results
+					corners, distance, angle = analysis.calculateDistanceBearing(id)
+					# Show the contours
+					corners = corners.reshape((-1,1,2))
+					#print(f"displayResults: {corners}")
+					cv2.polylines(frame, [corners],  True, (0, 255, 0), 2, 8)		
+					cv2.putText(frame, f"{id} : {analysis.name}", (corners[0][0][0], corners[0][0][1]), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 0), 2)
+					cv2.putText(frame, f"{distance:.0f}mm {angle:.1f}deg", (analysis.largestCenter[0]-65,analysis.largestCenter[1] - 18), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 0), 2)
 		
 		if self.fps != None:
 			cv2.putText(frame, f"{self.fps}fps", (frame.shape[1]-60, frame.shape[0]-20), cv2.FONT_HERSHEY_DUPLEX, 0.5, (0, 255, 0), 1, cv2.LINE_AA)
@@ -123,30 +123,31 @@ class FishTankImageCaptureAndAnalysis:
 	# Share the results for robot code consumption
 	#
 	def publishResults(self):
-		pass
-		#for analysis in [self.imageAnalysisRed, self.imageAnalysisGreen, self.imageAnalysisBlue, self.imageAnalysisYellow]:
-		#	if analysis.hasResult:
-		#		distance, angle = analysis.calculateDistanceBearing()
-		#		yawHeading = self.yaw + angle 
-		#		if yawHeading > 180.0:
-		#			yawHeading -= 360.0
-		#		elif yawHeading < -180.0:
-		#			yawHeading += 360.0
-		#		# Add result to end list
-		#		result = ImageAnalysisSharedIPC.ImageResult(
-		#			 status = 1,
-		#			 typename = 'Block',
-		#			 name = analysis.name,
-		#			 confidence = 90.0,
-		#			 distance = distance,
-		#			 size = [0,0],
-		#			 yaw = yawHeading,
-		#			 angle = angle )
-		#		self.results.append(result)
-		#		print(f"{result.typename}.{result.name}")
-		#		print(f"  d={result.distance:.0f}mm, size={result.size}, yaw={result.yaw:.1f}, angle={result.angle:.1f}")
-		#
-		#self.resultsIpc.shareResults(self.startTime, self.elapsed, self.results )
+		for analysis in [self.imageAnalysisFishTankAruco]:
+			if analysis.hasResult:
+				for id in analysis.getIds():
+					# Get the results
+					corners, distance, angle = analysis.calculateDistanceBearing(id)
+					yawHeading = self.yaw + angle 
+					if yawHeading > 180.0:
+						yawHeading -= 360.0
+					elif yawHeading < -180.0:
+						yawHeading += 360.0
+					# Add result to end list
+					result = ImageAnalysisSharedIPC.ImageResult(
+						 status = 1,
+						 typename = analysis.name,
+						 name = id,
+						 confidence = 90.0,
+						 distance = distance,
+						 size = [0,0],
+						 yaw = yawHeading,
+						 angle = angle )
+					self.results.append(result)
+					print(f"{result.typename}.{result.name}")
+					print(f"  d={result.distance:.0f}mm, size={result.size}, yaw={result.yaw:.1f}, angle={result.angle:.1f}")
+		
+		self.resultsIpc.shareResults(self.startTime, self.elapsed, self.results )
 		
 	#
 	# Debug stuff	

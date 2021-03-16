@@ -23,6 +23,15 @@ class DisplayImageCapture:
 		timestampPrev = 0.0
 		sampleNumberPrev = 0
 		
+		# Name, Type, Colour
+		imageNames = [("Green","Block","Green"), \
+					  ("Red","Block", "Red"), \
+					  ("Yellow","Block", "Yellow"), \
+					  ("Blue","Block", "Blue"), \
+					  ("12","ArUco", "Cyan"), \
+					  ("24","ArUco", "Magenta"), \
+					  ("48","ArUco", "White") ]
+
 		# Main Loop
 		while 1:
 			for event in pygame.event.get():
@@ -30,25 +39,33 @@ class DisplayImageCapture:
 					pygame.quit()
 					sys.exit()
 			
-			imageResults, timestamp, elapsed = self.imageAnalysisResult.updateSnapshot()
-			imageResults = self.imageAnalysisResult.getImageResultByNameAndType("Green","Block")
-			imageResults += self.imageAnalysisResult.getImageResultByNameAndType("Red","Block")
-			imageResults += self.imageAnalysisResult.getImageResultByNameAndType("Yellow","Block")
-			imageResults += self.imageAnalysisResult.getImageResultByNameAndType("Blue","Block")
+			res, timestamp, elapsed = self.imageAnalysisResult.updateSnapshot()
+			imageResults = []
+			for i in imageNames:
+				imageResult = self.imageAnalysisResult.getImageResultByNameAndType(i[0], i[1])
+				if len(imageResult) > 0:
+					for l in imageResult:
+						imageResults += [[l, i[2]]]
+			print(f"Showing: {imageResults}")
 			
 			# Clear current image
 			self.screen.fill((64,64,64))
 
 			self.screen.blit(font.render(f"Images: {len(imageResults)}", True, (255,255,255)), (32, 32))
 			for result in range(len(imageResults)):
-				self.screen.blit(font.render(f"{imageResults[result].typename}.{imageResults[result].name}: dist: {imageResults[result].distance:.0f}mm, angle: {imageResults[result].angle:.1f}", True, (255,255,255)), (32, 48 + result*16))
+				print(f"result: {imageResults[result][0]}")
+				self.screen.blit(font.render(f"{imageResults[result][0].typename}.{imageResults[result][0].name}: dist: {imageResults[result][0].distance:.0f}mm, angle: {imageResults[result][0].angle:.1f}", \
+					True, (255,255,255)), (32, 48 + result*16))
 			
 				# Plot the found points
-				dist = imageResults[result].distance
-				#x = np.tan(imageResults[result].angle/180.0*3.14159) * dist
-				x = np.sin(imageResults[result].angle/180.0*3.14159) * dist
-				y= np.cos(imageResults[result].angle/180.0*3.14159) * dist
-				colour = pygame.colordict.THECOLORS[imageResults[result].name.lower()]
+				dist = imageResults[result][0].distance
+				#x = np.tan(imageResults[result][0].angle/180.0*3.14159) * dist
+				x = np.sin(imageResults[result][0].angle/180.0*3.14159) * dist
+				y= np.cos(imageResults[result][0].angle/180.0*3.14159) * dist
+				try:
+					colour = pygame.colordict.THECOLORS[imageResults[result][1].lower()]
+				except:
+					colour = (255,255,255)
 				pygame.draw.circle(self.screen, colour, (self.width//2-int(x/1.5), self.height-int(y/2)), 20)
 			
 			# Show the new screen
