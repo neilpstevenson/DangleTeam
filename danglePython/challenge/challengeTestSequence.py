@@ -535,6 +535,11 @@ class ChallengeTestSequence(ChallengeInterface):
 											self.controls.motor(1), self.motorsSpeedMode )
 		highPriorityProcesses.append(motorR)
 
+		# Flinger fire button
+		flingerFire = ToggleButtonValue(self.sensors.button(2))
+		flinger = SimpleControlMediator( Scaler(flingerFire, min=-0.2, max=0.3, offset=-0.2), self.controls.servo(20) )
+		medPriorityProcesses.append(flinger)
+		
 		# Servos used within the state machine
 		grabberPosition = FixedValue(0.0)
 		grabberPositionRamp = LinearRamp(grabberPosition, increment=0.06)
@@ -548,17 +553,13 @@ class ChallengeTestSequence(ChallengeInterface):
 		highPriorityProcesses.append(grabberPositionRamp)
 		self.servos = {
 			"grabber" : grabberPosition,
-			"grabheight" : grabberHeight
+			"grabheight" : grabberHeight,
+			"fire" : flingerFire
 			}
 			
 		# Image analysis
 		self.imageAnalysisResult = VisionAccessFactory.getSingleton().getImageResult()
 
-		# Flinger fire button
-		flingerFire = ToggleButtonValue(self.sensors.button(2))
-		flinger = SimpleControlMediator( Scaler(flingerFire, min=-0.2, max=0.3, offset=-0.2), self.controls.servo(20) )
-		medPriorityProcesses.append(flinger)
-		
 		# LED display state
 		self.ledIndicator = self.controls.led(0)
 		medPriorityProcesses.append(SimpleControlMediator( Scaler([self.motorEnable,self.autoModeEnable], scaling=2, offset=2, max=4), self.ledIndicator))

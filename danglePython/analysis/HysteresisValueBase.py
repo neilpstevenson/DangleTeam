@@ -42,3 +42,7 @@ class HysteresisValueBase(SensorInterface):
 
 	def reset(self):
 		self.currentValue = self.untriggeredValue
+
+	# Force a value
+	def setValue(self, value):
+		self.currentValue = value

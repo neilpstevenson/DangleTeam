@@ -1,7 +1,6 @@
 {
   "path": [
-    ["ForwardToBlock", ["Blue", 400, 1.0]],
-    ["ForwardToBlock", ["Blue", 90, 1.0]],
-    ["Servo", ["grabheight",  -0.6, 0.5]]
+    ["Servo", ["fire",  1.0, 0.5]],
+    ["Servo", ["fire",  0.0, 0.5]]
    ]
 }
