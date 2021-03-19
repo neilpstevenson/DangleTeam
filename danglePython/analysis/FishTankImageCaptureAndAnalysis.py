@@ -32,34 +32,30 @@ class FishTankImageCaptureAndAnalysis:
 
 		# Get config
 		config = Config()
-		self.debugPrint = config.get("tidy.analysis.debugPrint", True)
-		self.analysis_width = config.get("tidy.analysis.imagewidth", 480)
-		self.blur_radius = config.get("tidy.analysis.burrradius", 11)
-		#self.minSize = config.get("tidy.analysis.minsize", 10)
-		self.minWidth = config.get("tidy.analysis.minWidth", 15)
-		self.minHeight  = config.get("tidy.analysis.minHeight", 10)
+		self.debugPrint = config.get("fish.analysis.debugPrint", True)
 		# Scale factors for real-world measures
-		self.angleAdjustment = config.get("tidy.analysis.anglescale", 2.6)#1.3#0.55
-		self.showImage = config.get("tidy.display.image", True)
-		self.showMasks = config.get("tidy.display.masks", False)
-		#self.trailSize = config.get("tidy.display.trail", 25)
-		self.frameDelayMs = config.get("tidy.analysis.frameDelayMs", 20) # delay after each frame analysis
-		self.filename = config.get("tidy.analysis.savefilename", "tidyupthetoys.mp4")
-		self.saveFile = config.get("tidy.analysis.save", True)
+		self.angleAdjustment = config.get("fish.analysis.anglescale", 2.1)
+		self.showImage = config.get("fish.display.image", True)
+		self.frameDelayMs = config.get("fish.analysis.frameDelayMs", 1) # delay after each frame analysis
+		self.filename = config.get("fish.analysis.savefilename", "feedthefish.mp4")
+		self.saveFile = config.get("fish.analysis.save", True)
+		self.frameRate = config.get("fish.camera.framerate", 25)
+		self.resolution = config.get("fish.camera.resolution", (640,480))
+		self.arucoDictName = config.get("fish.camera.arucodictname", cv2.aruco.DICT_4X4_50)
+		self.arucoSize = config.get("fish.camera.arucosize", 100) # mm
+
 		config.save()
 		
 		# Load calibration values
-		configCal = Config("calibrationTidy.json")
-		#if useCalibrationColours:
-		#	self.colourTargetLower = tuple(configCal.get("tidy.analysis.colourTargetLower", None))
-		#	self.colourTargetUpper = tuple(configCal.get("tidy.analysis.colourTargetUpper", None))
+		configCal = Config("calibrationFish.json")
 		self.cameraNearestVisibleDistance = configCal.get("distance.analysis.nearest", 130)
 		self.cameraNearestVisiblePixels = int(self.cameraNearestVisibleDistance * 3.5) # Rough approximation equivallent!!
 		self.cameraFurthestVisiblePixel = configCal.get("distance.analysis.horizon", 500)
 		self.cameraHeightDistance = configCal.get("distance.analysis.cameraHeight", 170)
+		self.focalLength = configCal.get("camera.focallength", 520)
 		calibrationResolution = configCal.get("distance.analysis.calibrationResolution", [480,640])
 		# Adjust for the analysis picture resolution being different to the calibrator
-		self.cameraFurthestVisiblePixel = self.cameraFurthestVisiblePixel * self.analysis_width // calibrationResolution[1]
+		self.cameraFurthestVisiblePixel = self.cameraFurthestVisiblePixel * self.resolution[0] // calibrationResolution[1]
 
 		# Results IPC
 		self.resultsIpc = ImageAnalysisSharedIPC()
@@ -81,11 +77,11 @@ class FishTankImageCaptureAndAnalysis:
 	#
 	def preprocessImage(self, frame):
 		self.imageAnalysisFishTankAruco = ImageArucoRecogniser("ArUco", \
-			(self.cameraNearestVisiblePixels, self.cameraFurthestVisiblePixel, self.cameraNearestVisibleDistance, self.cameraHeightDistance, self.angleAdjustment))
+			(self.cameraNearestVisiblePixels, self.cameraFurthestVisiblePixel, self.cameraNearestVisibleDistance, self.cameraHeightDistance, self.angleAdjustment), \
+			self.focalLength, self.arucoSize, self.arucoDictName)
 		self.imageAnalysisFishTankAruco.processImage(frame)
 
-		self.timedCheckpoint("coloured masks created")
-
+		self.timedCheckpoint("aruco image analysed")
 
 	#
 	# Display an annotated image of the results
@@ -113,7 +109,8 @@ class FishTankImageCaptureAndAnalysis:
 			self.captureFile.write(frame)
 		
 		# Print up the results found
-		print(f"Total time taken {self.elapsed}")
+		if self.debugPrint:
+			print(f"Total time taken {self.elapsed}")
 		#print(f"Result count {len(self.results)}")
 		#for result in self.results:
 		#	print(f"{result.typename}.{result.name}")
@@ -144,8 +141,9 @@ class FishTankImageCaptureAndAnalysis:
 						 yaw = yawHeading,
 						 angle = angle )
 					self.results.append(result)
-					print(f"{result.typename}.{result.name}")
-					print(f"  d={result.distance:.0f}mm, size={result.size}, yaw={result.yaw:.1f}, angle={result.angle:.1f}")
+					if self.debugPrint:
+						print(f"{result.typename}.{result.name}")
+						print(f"  d={result.distance:.0f}mm, size={result.size}, yaw={result.yaw:.1f}, angle={result.angle:.1f}")
 		
 		self.resultsIpc.shareResults(self.startTime, self.elapsed, self.results )
 		
@@ -198,7 +196,7 @@ class FishTankImageCaptureAndAnalysis:
 		if self.saveFile:
 			print(f"Saving to file: {self.filename}")
 			# Define the codec and create VideoWriter object.
-			self.captureFile = cv2.VideoWriter(self.filename, cv2.VideoWriter_fourcc(*'mp4v'), frameRate, (self.analysis_width, self.analysis_width*resolution[1]//resolution[0]))
+			self.captureFile = cv2.VideoWriter(self.filename, cv2.VideoWriter_fourcc(*'mp4v'), frameRate, (self.resolution[0], self.resolution[1]))
 		
 		# keep looping
 		while True:

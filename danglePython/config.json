@@ -9,6 +9,19 @@
     "--height=128"
   ],
   "display.graph.numpoints": 300,
+  "fish.analysis.anglescale": 2.1,
+  "fish.analysis.debugPrint": true,
+  "fish.analysis.frameDelayMs": 1,
+  "fish.analysis.save": true,
+  "fish.analysis.savefilename": "feedthefish.mp4",
+  "fish.camera.arucodictname": 0,
+  "fish.camera.arucosize": 100,
+  "fish.camera.framerate": 25,
+  "fish.camera.resolution": [
+    640,
+    480
+  ],
+  "fish.display.image": true,
   "grabber.closed": 0.25,
   "grabber.open": -0.75,
   "grabber.speed": 0.2,
