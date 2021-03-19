@@ -164,18 +164,11 @@ class FishTankImageCaptureAndAnalysis:
 	def captureContinuous(self):
 		# if a video path was not supplied, grab the reference
 		# to the webcam
-		frameRate = 25#30
-		resolution = (640,480)
 		if not self.recordedVideo:
-			#vs = VideoStream(src=0)
-			#vs.stream.stream.set( cv2.CAP_PROP_WHITE_BALANCE_BLUE_U, 7.5)
-			#vs.stream.stream.set( cv2.CAP_PROP_WHITE_BALANCE_RED_V, 7.5)
-			##vs.stream.stream.set( cv2.CAP_PROP_AUTO_WB, 0)
-			#vs.start()
 			vs = cv2.VideoCapture(0)
-			vs.set(cv2.CAP_PROP_FRAME_WIDTH, resolution[0])
-			vs.set(cv2.CAP_PROP_FRAME_HEIGHT, resolution[1])
-			vs.set(cv2.CAP_PROP_FPS, frameRate)
+			vs.set(cv2.CAP_PROP_FRAME_WIDTH, self.resolution[0])
+			vs.set(cv2.CAP_PROP_FRAME_HEIGHT, self.resolution[1])
+			vs.set(cv2.CAP_PROP_FPS, self.frameRate)
 			vs.set(cv2.CAP_PROP_WHITE_BALANCE_BLUE_U, 7.5)
 			vs.set(cv2.CAP_PROP_WHITE_BALANCE_RED_V, 7.5)
 			vs.set(cv2.CAP_PROP_BUFFERSIZE, 1)	# Only interested in live data
@@ -196,7 +189,7 @@ class FishTankImageCaptureAndAnalysis:
 		if self.saveFile:
 			print(f"Saving to file: {self.filename}")
 			# Define the codec and create VideoWriter object.
-			self.captureFile = cv2.VideoWriter(self.filename, cv2.VideoWriter_fourcc(*'mp4v'), frameRate, (self.resolution[0], self.resolution[1]))
+			self.captureFile = cv2.VideoWriter(self.filename, cv2.VideoWriter_fourcc(*'mp4v'), self.frameRate, (self.resolution[0], self.resolution[1]))
 		
 		# keep looping
 		while True:

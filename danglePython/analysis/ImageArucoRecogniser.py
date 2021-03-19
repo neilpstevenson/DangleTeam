@@ -15,7 +15,6 @@ class ImageArucoRecogniser:
 
 		# Camera calibration
 		self.cameraNearestVisiblePixels, self.cameraFurthestVisiblePixel, self.cameraNearestVisibleDistance, self.cameraHeightDistance, self.angleAdjustment = cameraCalibration
-		self.cameraHeightAdjustment = np.sqrt(self.cameraHeightDistance*self.cameraHeightDistance + self.cameraNearestVisibleDistance*self.cameraNearestVisibleDistance) / self.cameraNearestVisibleDistance
 		# Results
 		self.hasResult = False
 		self.markers  = None
@@ -28,7 +27,7 @@ class ImageArucoRecogniser:
 		# detect ArUco markers in the input frame
 		(corners, ids, rejected) = cv2.aruco.detectMarkers(image, self.arucoDict, parameters=self.arucoParams)
 		self.hasResult = len(corners) > 0
-		print(f"ids: {ids}")
+		#print(f"ids: {ids}")
 		if self.hasResult:
 			self.corners = corners
 			self.ids = ids.flatten()
@@ -36,6 +35,7 @@ class ImageArucoRecogniser:
 		else:
 			self.ids = []
 			self.corners = None
+			print(f"No markers found")
 			
 	'''
 	Get the Ids of the identified blocks
@@ -71,7 +71,7 @@ class ImageArucoRecogniser:
 		ourPosition = (self.imageShape[1]//2, self.imageShape[0] + self.cameraNearestVisiblePixels)
 		angle_rads = np.arctan((ourPosition[0]-x)/(ourPosition[1]-y)) * self.angleAdjustment
 		angle = angle_rads * 180.0/3.14159
-		print(f"{id} at x:{x}, y:{y}, ourPosition:{ourPosition}, angle:{angle}")
+		#print(f"{id} at x:{x}, y:{y}, ourPosition:{ourPosition}, angle:{angle}")
 		
 		# Distance approximation
 		distance = self.arucoSize * self.focalLength / np.sqrt((bottomLeft[0]-bottomRight[0])**2 + (bottomLeft[1]-bottomRight[1])**2)# + self.cameraNearestVisibleDistance
@@ -81,5 +81,5 @@ class ImageArucoRecogniser:
 		distance += 60
 		# Adjust for angle
 		distance = distance / np.cos(angle_rads)
-		print(f"dis:{distance}, angle:{angle}")
+		print(f"{id}: distance:{distance:.0f}mm, angle:{angle:.1f}deg")
 		return corners, distance, angle
