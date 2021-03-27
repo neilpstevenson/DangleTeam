@@ -5,10 +5,10 @@
     ["Rotate", [90, 0.5]],
     ["Forward", [100, 0]],
     ["ForwardToBlock", ["ArUco", "48", 800, 0.7]],
-    ["ForwardToBlock", ["ArUco", "48", 750, 0.5]],
+    ["ForwardToBlock", ["ArUco", "48", 760, 0.5]],
     ["Servo", ["fire",  1.0, 0.7]],
     ["Forward", [-170, 0]],
     ["Rotate", [-90, 0.5]],
-    ["Forward", [-380, 0]]
+    ["Forward", [-410, 0]]
    ]
 }
