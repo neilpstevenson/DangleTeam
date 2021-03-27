@@ -114,7 +114,7 @@
   "motor.heading.pid": [
     0.02,
     0.005,
-    0.002
+    0.0015
   ],
   "motor.heading.pid.pom": false,
   "motor.manualheadingturn.max": 1.0,

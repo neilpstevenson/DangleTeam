@@ -6,7 +6,7 @@ class HeadingPIDErrorValue(SensorInterface):
 	the returned error (e.g. for positioning via a motor), or an integrated form of the error up to a limit (e.g. for motor speed regulation)
 	"""
 	
-	def __init__(self, currentHeading, pid, targetHeading, min = -1.0, max = 1.0, scaling = 1.0, integrate = False):
+	def __init__(self, currentHeading, pid, targetHeading, min = -1.0, max = 1.0, scaling = 1.0, integrate = False, clampIAt = None):
 		SensorInterface.__init__(self)
 		self.currentHeading = currentHeading
 		self.pid = pid
@@ -16,6 +16,7 @@ class HeadingPIDErrorValue(SensorInterface):
 		self.scaling = scaling
 		self.integrate = integrate
 		self.integratedValue = 0.0
+		self.clampIAt = clampIAt
 
 	def normaliseHeading(self, heading):
 		while heading > 180.0:
@@ -27,6 +28,11 @@ class HeadingPIDErrorValue(SensorInterface):
 	def getValue(self):
 		current = self.currentHeading.getValue()
 		headingDiff = self.normaliseHeading(current - self.targetHeading)
+		# Clear the I term if we're a long way off, to prevent stability issues with large movements
+		if self.clampIAt is not None:
+			if headingDiff > self.clampIAt or headingDiff < -self.clampIAt:
+				self.pid._integral = 0
+				
 		error = self.pid(headingDiff) * self.scaling
 		#np.set_printoptions(precision=2)
 		print(f"HeadingPIDErrorValue: targetHeading={self.targetHeading:4.2f}, current={current:4.2f}, headingDiff={headingDiff:4.2f}, error={error:4.2f}")

@@ -1,6 +1,7 @@
 {
   "path": [
-    ["Servo", ["fire",  1.0, 0.5]],
-    ["Servo", ["fire",  0.0, 0.5]]
+    ["SetZeroHeading", null],
+    ["Forward", [100, 0]],
+    ["Rotate", [90, 3]]
    ]
 }
