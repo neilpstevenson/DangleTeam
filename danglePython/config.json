@@ -160,6 +160,7 @@
   "tidy.autoheadingturn.max": 0.4,
   "tidy.display.image": true,
   "tidy.display.masks": false,
+  "tidy.servo.rampspeed": 0.1,
   "wall.camera.tilt": -0.4,
   "wall.forward.max": 1.0,
   "wall.forward.maxdist": 500,
