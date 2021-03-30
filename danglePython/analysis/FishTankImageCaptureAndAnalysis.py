@@ -12,6 +12,7 @@ import time
 # Interfaces
 from interfaces.ImageAnalysisSharedIPC import ImageAnalysisSharedIPC
 from interfaces.SensorAccessFactory import SensorAccessFactory
+from interfaces.ControlAccessFactory import ControlAccessFactory
 from interfaces.Config import Config
 # Analysis classes
 from analysis.ElapsedTime import elapsedTime
@@ -64,6 +65,12 @@ class FishTankImageCaptureAndAnalysis:
 		# Yaw reading accessor
 		self.sensors = SensorAccessFactory.getSingleton()
 		self.yawAccessor = self.sensors.yaw()
+		
+		# Accessors for current wheel positions
+		self.controls = ControlAccessFactory.getSingleton()
+		self.positionL = self.controls.motorPosition(2)
+		self.positionR = self.controls.motorPosition(1)
+		
 		
 	#
 	# Print a checkpoint time for an analysis stage
@@ -139,7 +146,8 @@ class FishTankImageCaptureAndAnalysis:
 						 distance = distance,
 						 size = [0,0],
 						 yaw = yawHeading,
-						 angle = angle )
+						 angle = angle,
+						 motorpositions = self.currentMotorPositions )
 					self.results.append(result)
 					if self.debugPrint:
 						print(f"{result.typename}.{result.name}")
@@ -213,6 +221,9 @@ class FishTankImageCaptureAndAnalysis:
 				self.sensors.process()
 				self.yaw = self.yawAccessor.getValue()
 				
+				# Get the current motor positions
+				self.currentMotorPositions = [self.positionL.getValue(), self.positionR.getValue()]
+				
 				# resize the frame
 				#frame = imutils.resize(frame, width=self.analysis_width, inter=cv2.INTER_NEAREST)
 		
@@ -225,13 +236,13 @@ class FishTankImageCaptureAndAnalysis:
 				endTime = cv2.getTickCount()
 				self.elapsed = (endTime - self.startTime) / cv2.getTickFrequency()
 				
+				# Share the results
+				self.publishResults()
+
 				# Display the results		
 				if self.showImage:
 					self.displayResults(frame)
 					
-				# Share the results
-				self.publishResults()
-
 				# Stats
 				self.printDebugStats(count)
 				count += 1

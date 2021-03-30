@@ -12,6 +12,7 @@ import time
 # Interfaces
 from interfaces.ImageAnalysisSharedIPC import ImageAnalysisSharedIPC
 from interfaces.SensorAccessFactory import SensorAccessFactory
+from interfaces.ControlAccessFactory import ControlAccessFactory
 from interfaces.Config import Config
 # Analysis classes
 from analysis.ElapsedTime import elapsedTime
@@ -67,6 +68,11 @@ class TidyUpTheToysImageCaptureAndAnalysis:
 		# Yaw reading accessor
 		self.sensors = SensorAccessFactory.getSingleton()
 		self.yawAccessor = self.sensors.yaw()
+		
+		# Accessors for current wheel positions
+		self.controls = ControlAccessFactory.getSingleton()
+		self.positionL = self.controls.motorPosition(2)
+		self.positionR = self.controls.motorPosition(1)
 		
 	#
 	# Print a checkpoint time for an analysis stage
@@ -160,7 +166,8 @@ class TidyUpTheToysImageCaptureAndAnalysis:
 					 distance = distance,
 					 size = [0,0],
 					 yaw = yawHeading,
-					 angle = angle )
+					 angle = angle,
+					 motorpositions = self.currentMotorPositions )
 				self.results.append(result)
 				print(f"{result.typename}.{result.name}")
 				print(f"  d={result.distance:.0f}mm, size={result.size}, yaw={result.yaw:.1f}, angle={result.angle:.1f}")
@@ -217,7 +224,7 @@ class TidyUpTheToysImageCaptureAndAnalysis:
 			print(f"Saving to file: {self.filename}")
 			# Define the codec and create VideoWriter object.
 			self.captureFile = cv2.VideoWriter(self.filename, cv2.VideoWriter_fourcc(*'mp4v'), frameRate, (self.analysis_width, self.analysis_width*resolution[1]//resolution[0]))
-		
+
 		# keep looping
 		while True:
 			self.results = []
@@ -240,6 +247,9 @@ class TidyUpTheToysImageCaptureAndAnalysis:
 				self.sensors.process()
 				self.yaw = self.yawAccessor.getValue()
 				
+				# Get the current motor positions
+				self.currentMotorPositions = [self.positionL.getValue(), self.positionR.getValue()]
+				
 				# resize the frame
 				frame = imutils.resize(frame, width=self.analysis_width, inter=cv2.INTER_NEAREST)
 		
@@ -252,13 +262,13 @@ class TidyUpTheToysImageCaptureAndAnalysis:
 				endTime = cv2.getTickCount()
 				self.elapsed = (endTime - self.startTime) / cv2.getTickFrequency()
 				
+				# Share the results
+				self.publishResults()
+
 				# Display the results		
 				if self.showImage:
 					self.displayResults(frame)
 					
-				# Share the results
-				self.publishResults()
-
 				# Stats
 				self.printDebugStats(count)
 				count += 1
