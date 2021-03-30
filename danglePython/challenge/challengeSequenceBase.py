@@ -377,8 +377,10 @@ class ChallengeSequenceBase(ChallengeInterface):
 			self.autoModeForwardSpeed.setValue(self.maxPidForward if positionDelta > 0.0 else -self.maxPidForward)
 			self.headingError.enable()
 			# Get the current positions
-			self.targetPositionL = self.positionL.getValue()
-			self.targetPositionR = self.positionR.getValue()
+			#self.targetPositionL = self.positionL.getValue()
+			#self.targetPositionR = self.positionR.getValue()
+			self.targetPositionL = imageResults[0].motorpositions[0]
+			self.targetPositionR = imageResults[0].motorpositions[1]
 			# Maintain current heading
 			self.headingError.setTarget(self.targetAngle)
 			# Remember the target distance as part of the state data

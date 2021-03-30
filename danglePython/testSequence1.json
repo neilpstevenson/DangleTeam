@@ -1,14 +1,7 @@
 {
   "path": [
     ["SetZeroHeading", null],
-    ["Forward", [450, 0]],
-    ["Rotate", [90, 0.5]],
     ["Forward", [100, 0]],
-    ["ForwardToBlock", ["ArUco", "48", 800, 0.7]],
-    ["ForwardToBlock", ["ArUco", "48", 760, 0.5]],
-    ["Servo", ["fire",  1.0, 0.7]],
-    ["Forward", [-170, 0]],
-    ["Rotate", [-90, 0.5]],
-    ["Forward", [-410, 0]]
+    ["ForwardToBlock", ["ArUco", "48", 200, 0.7]]
    ]
 }

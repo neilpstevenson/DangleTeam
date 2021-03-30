@@ -132,7 +132,7 @@ class TidyUpTheToysImageCaptureAndAnalysis:
 		if self.fps != None:
 			cv2.putText(frame, f"{self.fps}fps", (frame.shape[1]-60, frame.shape[0]-20), cv2.FONT_HERSHEY_DUPLEX, 0.5, (0, 255, 0), 1, cv2.LINE_AA)
 
-		cv2.imshow("Overview", frame)
+		cv2.imshow("Tidy up the Toys - Overview", frame)
 
 		if self.saveFile:
 			# Write the next frame into the file
