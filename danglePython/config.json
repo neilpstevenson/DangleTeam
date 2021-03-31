@@ -22,6 +22,18 @@
     480
   ],
   "fish.display.image": true,
+  "garden.autoturn.max": 0.7,
+  "garden.forward.max": 0.5,
+  "garden.headingturn.max": 0.7,
+  "garden.manualturn.max": -15.0,
+  "garden.pid.p": [
+    0.015,
+    0.0,
+    0.0012
+  ],
+  "garden.pid.pom": false,
+  "garden.speed": 0.3,
+  "garden.speedfast": 0.5,
   "grabber.closed": 0.25,
   "grabber.open": -0.75,
   "grabber.speed": 0.2,

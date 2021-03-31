@@ -19,8 +19,8 @@ class DisplayVoiceRecognition:
         #self.results.clearCurrentResults()
         
         windowInfo = pygame.display.Info()
-        self.width = windowInfo.current_w
-        self.height = windowInfo.current_h
+        self.width = min(1024,windowInfo.current_w)
+        self.height = min(800,windowInfo.current_h)
         self.text_font = pygame.freetype.SysFont('Verdana', self.width/7)
         self.clock = pygame.time.Clock()
        

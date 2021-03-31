@@ -236,7 +236,7 @@ class VisionLineAnalysis:
 		elif voiceCommand == 'left':
 			#self.lastMask = self.right_mask
 			self.voiceCommand = voiceCommand
-		elif voiceCommand == 'go':
+		elif voiceCommand == 'go' or voiceCommand == 'fast':
 			#self.lastMask = self.edge_mask
 			self.voiceCommand = voiceCommand
 		elif voiceCommand == 'any':
