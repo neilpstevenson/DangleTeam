@@ -27,7 +27,7 @@ class StatusSharedIPC:
 			# Need to create first
 			self.data  = np.memmap(StatusSharedIPC.filename, offset=0, dtype=StatusSharedIPC.status_dt, mode='w+', shape=(1))
 			
-	def setStatus(self, title, subtitle, parameters):
+	def setStatus(self, title, subtitle = "", parameters = None):
 		self.data[0]['title'] = title
 		self.data[0]['subtitle'] = subtitle
 		self.data[0]['additional'] = "" if parameters is None else f"{parameters}"

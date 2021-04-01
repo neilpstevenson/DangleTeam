@@ -6,6 +6,7 @@ from interfaces.ControlAccessFactory import ControlAccessFactory
 from interfaces.SensorAccessFactory import SensorAccessFactory
 from interfaces.VisionAccessFactory import VisionAccessFactory
 from interfaces.VoiceRecognitionSharedIPC import VoiceRecognitionSharedIPC
+from interfaces.StatusSharedIPC import StatusSharedIPC
 from interfaces.Config import Config
 # Value providers
 from analysis.SimplePIDErrorValue import SimplePIDErrorValue
@@ -33,6 +34,9 @@ class ChallengeUpTheGardenPath(ChallengeInterface):
 		# Voice command
 		self.voice = VoiceRecognitionSharedIPC()
 		self.voice.read()
+		# Status shared memory
+		self.status = StatusSharedIPC()
+		self.status.create()
 		# Get config
 		config = Config()
 		self.pidP , self.pidI, self.pidD = config.get("garden.pid.p", (0.015, 0.0, 0.0012))	# Note: PID output is also limited ot +/-1.0
@@ -58,9 +62,9 @@ class ChallengeUpTheGardenPath(ChallengeInterface):
 
 		# Motors
 		motorsStop = FixedValue(0.0)
-		self.fullAutoForwardSpeed = FixedValue(self.constantSpeed)
+		self.fullAutoForwardSpeed = FixedValue(0.0)
 		self.motorEnable = self.sensors.button(4)
-		self.fullAutoEnable = ToggleButtonValue(self.sensors.button(5), triggeredValue = 2)
+		self.fullAutoEnable = ToggleButtonValue(self.sensors.button(5), triggeredValue = 3)
 		self.joystickForward = self.sensors.joystickAxis(1)
 		self.joystickLeftRight = self.sensors.joystickAxis(3)
 		motorL = SwitchingControlMediator( [ motorsStop, 								 # Choice 0 = Stopped \
@@ -90,7 +94,10 @@ class ChallengeUpTheGardenPath(ChallengeInterface):
 		# LED display state
 		self.ledIndicator = self.controls.led(0)
 		medPriorityProcesses.append(SimpleControlMediator( Scaler(self.motorEnable, scaling=2, offset=2, max=4), self.ledIndicator))
-		
+
+		# Initial status
+		self.status.setStatus(f"Up the", "Garden Path", "Ready")
+
 	def move(self):
 		if self.fullAutoEnable.getValue() > 0:
 			if not self.pidHeading.auto_mode:
@@ -103,8 +110,13 @@ class ChallengeUpTheGardenPath(ChallengeInterface):
 			elif voiceCommand == 'fast':
 				self.fullAutoForwardSpeed.setValue(self.constantSpeedFast)
 			elif voiceCommand == 'stop':
-				self.fullAutoForwardSpeed.setValue(self.constantSpeed)
+				self.fullAutoForwardSpeed.setValue(0.0)
 				self.fullAutoEnable.reset()
+				# Maintain position
+				self.pidHeading.auto_mode = False
+				self.headingError.setTarget(self.sensors.yaw().getValue())
+			if voiceCommand is not None and voiceCommand != "":
+				self.status.setStatus(voiceCommand)
 			# Vision turns
 			self.headingError.setTarget(self.visionTargetHeading.getValue())
 			print(self.pidHeading.components)
@@ -117,7 +129,7 @@ class ChallengeUpTheGardenPath(ChallengeInterface):
 			print(f"Err: {self.headingError.getValue()}")
 			print(self.pidHeading.components)
 		else:
-			# No change in position
+			# Maintain position
 			self.pidHeading.auto_mode = False
 			self.headingError.setTarget(self.sensors.yaw().getValue())
 	
