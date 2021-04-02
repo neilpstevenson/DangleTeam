@@ -45,7 +45,8 @@ class ChallengeUpTheGardenPath(ChallengeInterface):
 		self.maxManualTurn = config.get("garden.manualturn.max", -15.0) # Joystick-controlled max turn angle (mpu heading relative)
 		self.maxHeadingTurn = config.get("garden.headingturn.max", 0.7) # PID output scaling (manual mode)
 		self.maxAutoTurn = config.get("garden.autoturn.max", 0.7) # PID output scaling (full auto mode)
-		self.constantSpeed = config.get("garden.speed", 0.3) # Speed in full auto mode
+		self.constantSpeed = config.get("garden.speed", 0.35) # Speed in full auto mode
+		self.constantSpeedNormal = config.get("garden.speednormal", 0.4) # Speed "Go" in full auto mode
 		self.constantSpeedFast = config.get("garden.speedfast", 0.5) # Speed "fast" in full auto mode
 		config.save()
 
@@ -102,21 +103,27 @@ class ChallengeUpTheGardenPath(ChallengeInterface):
 		if self.fullAutoEnable.getValue() > 0:
 			if not self.pidHeading.auto_mode:
 				self.pidHeading.auto_mode = True
-			# Voice commands
-			voiceCommand = self.voice.findLastSpokenWord(['left','right','go', 'fast', 'any', 'stop'])
-			print(f"voiceCommand: {voiceCommand}")
-			if voiceCommand == 'right' or voiceCommand == 'left' or voiceCommand == 'go' or voiceCommand == 'any':
-				self.fullAutoForwardSpeed.setValue(self.constantSpeed)
-			elif voiceCommand == 'fast':
-				self.fullAutoForwardSpeed.setValue(self.constantSpeedFast)
-			elif voiceCommand == 'stop':
 				self.fullAutoForwardSpeed.setValue(0.0)
-				self.fullAutoEnable.reset()
-				# Maintain position
-				self.pidHeading.auto_mode = False
-				self.headingError.setTarget(self.sensors.yaw().getValue())
-			if voiceCommand is not None and voiceCommand != "":
-				self.status.setStatus(voiceCommand)
+				# Initial status
+				self.status.setStatus(f"Up the", "Garden Path", "Ready")
+			else:
+				# Voice commands
+				voiceCommand = self.voice.findLastSpokenWord(['left','right','go', 'fast', 'ahead', 'stop'])
+				print(f"voiceCommand: {voiceCommand}")
+				if voiceCommand == 'right' or voiceCommand == 'left' or voiceCommand == 'ahead':
+					self.fullAutoForwardSpeed.setValue(self.constantSpeed)
+				elif voiceCommand == 'go':
+					self.fullAutoForwardSpeed.setValue(self.constantSpeedNormal)
+				elif voiceCommand == 'fast':
+					self.fullAutoForwardSpeed.setValue(self.constantSpeedFast)
+				elif voiceCommand == 'stop':
+					self.fullAutoForwardSpeed.setValue(0.0)
+					#self.fullAutoEnable.reset()
+					# Maintain position
+					#self.pidHeading.auto_mode = False
+					#self.headingError.setTarget(self.sensors.yaw().getValue())
+				if voiceCommand is not None and voiceCommand != "":
+					self.status.setStatus(voiceCommand)
 			# Vision turns
 			self.headingError.setTarget(self.visionTargetHeading.getValue())
 			print(self.pidHeading.components)

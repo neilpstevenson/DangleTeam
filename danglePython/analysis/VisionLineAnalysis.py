@@ -159,14 +159,16 @@ class VisionLineAnalysis:
 			elif self.voiceCommand == "right":
 				first_slice = len(point_lr)*2//3
 				last_slice = len(point_lr)
-			elif self.voiceCommand == "go":
+			elif self.voiceCommand == "ahead" or self.voiceCommand == "stop":
+				# centre region of interest
 				first_slice = len(point_lr)//3
 				last_slice = len(point_lr)*2//3
 			else:
+				# use full image
 				first_slice = 0
 				last_slice = len(point_lr)
 			points = point_lr[first_slice:last_slice]
-			print(f"points: {points}")
+			#print(f"points: {points}")
 
 			# Now discard the edge points that aren't in our desired direction
 			
@@ -228,7 +230,7 @@ class VisionLineAnalysis:
 			print(f"Assessed angle: {angle:.1f}")
 
 	def applyDirectionHint(self, image):
-		voiceCommand = self.voice.findLastSpokenWord(['left','right','go', 'fast', 'any'])
+		voiceCommand = self.voice.findLastSpokenWord(['left','right','go', 'fast', 'ahead', 'head', 'stop'])
 		print(f"voiceCommand: {voiceCommand}")
 		if voiceCommand == 'right':
 			#self.lastMask = self.left_mask
@@ -239,7 +241,10 @@ class VisionLineAnalysis:
 		elif voiceCommand == 'go' or voiceCommand == 'fast':
 			#self.lastMask = self.edge_mask
 			self.voiceCommand = voiceCommand
-		elif voiceCommand == 'any':
+		elif voiceCommand == 'ahead' or  voiceCommand == 'head':
+			#self.lastMask = None
+			self.voiceCommand = 'ahead'
+		elif voiceCommand == 'stop':
 			#self.lastMask = None
 			self.voiceCommand = voiceCommand
 		else:
@@ -266,7 +271,7 @@ class VisionLineAnalysis:
 		count = 0
 		desiredPosition = None
 		self.lastMask = None
-		self.voiceCommand = "any"
+		self.voiceCommand = "ready"
 
 		while True:
 			count += 1
