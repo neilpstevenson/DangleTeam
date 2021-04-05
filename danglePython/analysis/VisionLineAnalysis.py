@@ -18,7 +18,7 @@ class VisionLineAnalysis:
 		self.saveFile = (filename is not None)
 		self.saveRaw = saveRaw
 		self.blackLine = blackLine
-		self.maxAngle = 15.0	# Cap any calulated angle to this
+		self.maxAngle = 25.0	# Cap any calulated angle to this
 		
 		# Create/overwrite
 		self.results = LineAnalysisSharedIPC()
@@ -211,7 +211,7 @@ class VisionLineAnalysis:
 					
 				# Overlay the angle calculated
 				np.set_printoptions(precision=2)
-				cv2.putText(assessment, f"{yaw:.2f}deg>>{angle:+.2f}deg", (5, self.resolution[1]-4), cv2.FONT_HERSHEY_DUPLEX, 0.5, (0, 25, 0))
+				cv2.putText(assessment, f"{yaw:.1f}deg {angle:+.1f}deg", (5, self.resolution[1]-4), cv2.FONT_HERSHEY_DUPLEX, 0.5, (0, 25, 0))
 				cv2.putText(assessment, f"{rate:.0f}fps", (self.resolution[0]-40, self.resolution[1]-4), cv2.FONT_HERSHEY_DUPLEX, 0.4, (0, 25, 0))
 				cv2.putText(assessment, self.voiceCommand, (self.resolution[0]//2 + 45, self.resolution[1]-4), cv2.FONT_HERSHEY_DUPLEX, 0.4, (0, 25, 0))
 			
@@ -321,11 +321,23 @@ class VisionLineAnalysis:
 				self.results.shareResults(startTime, analysisTime, angle, yawAngle, ((vx, vy), (x0, y0)), points)
 			elif angle != None:
 				# Ajust angle based on last successful analysis for display only
-				angle += (lastYaw - yaw)
-				if angle > 180.0:
-					angle -= 360.0
-				elif angle < -180.0:
-					angle += 360.0
+				#angle += (lastYaw - yaw)
+				#if angle > 180.0:
+				#	angle -= 360.0
+				#elif angle < -180.0:
+				#	angle += 360.0
+				# Repeat using the last known angle, hopefuly this will re-gain image analysis if we keep rotating
+				if angle > self.maxAngle:
+					yawAngle = yaw + self.maxAngle 
+				elif angle < -self.maxAngle:
+					yawAngle = yaw - self.maxAngle
+				else:
+					yawAngle = yaw + angle 
+				if yawAngle > 180.0:
+					yawAngle -= 360.0
+				elif yawAngle < -180.0:
+					yawAngle += 360.0
+				self.results.shareResults(startTime, analysisTime, angle, yawAngle, ((vx, vy), (x0, y0)), points)
 			lastYaw = yaw
 				
 			# display the results
