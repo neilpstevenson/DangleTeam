@@ -13,6 +13,7 @@ from challenge.challengeTestSequence import ChallengeTestSequence
 from challenge.challengeFeedTheFish import ChallengeFeedTheFish
 from challenge.challengeTidyTheToys import ChallengeTidyTheToys
 from challenge.challengeUpTheGardenPath import ChallengeUpTheGardenPath
+from challenge.challengeManualSequence import ChallengeManualSequence
 
 # Factories
 from interfaces.SensorAccessFactory import SensorAccessFactory

@@ -51,6 +51,8 @@ class ChallengeSequenceBase(ChallengeInterface):
 		# defaults
 		self.sequenceDefUpButtonFilename = "testSequence1.json"
 		self.sequenceDefDownButtonFilename = "testSequence2.json"
+		self.sequenceDefLeftButtonFilename = "testSequence3.json"
+		self.sequenceDefRightButtonFilename = "testSequence4.json"
 
 	def ControlOff(self, data):
 		# Stop the motors
@@ -120,6 +122,10 @@ class ChallengeSequenceBase(ChallengeInterface):
 				self.stateMachine.changeState("StartSequence", self.sequenceDefUpButtonFilename)
 			elif self.runTestSequence2.getValue() > 0:
 				self.stateMachine.changeState("StartSequence", self.sequenceDefDownButtonFilename)
+			elif self.runTestSequence3.getValue() > 0:
+				self.stateMachine.changeState("StartSequence", self.sequenceDefLeftButtonFilename)
+			elif self.runTestSequence4.getValue() > 0:
+				self.stateMachine.changeState("StartSequence", self.sequenceDefRightButtonFilename)
 			else:
 				# Full challenge
 				self.stateMachine.changeState("StartSequence", self.sequenceDefFilename)
@@ -130,6 +136,8 @@ class ChallengeSequenceBase(ChallengeInterface):
 		# Disable the PID controls
 		self.motorsSpeedMode.setValue(0)
 		self.headingError.disable()
+		self.targetAngle = self.sensors.yaw().getValue()
+
 		
 	def SetZeroHeading(self, data):
 		# Just record the current heading, so everything else is then relative to this basline
@@ -482,6 +490,9 @@ class ChallengeSequenceBase(ChallengeInterface):
 		# Initialise the PID
 		self.headingError.reset()
 
+		# initial target
+		self.targetAngle = self.sensors.yaw().getValue()
+
 		# Path recording
 		self.pathRecord = []
 		self.lastPositionL = self.targetPositionL
@@ -491,6 +502,8 @@ class ChallengeSequenceBase(ChallengeInterface):
 		self.savePositionsButton = OneShotButtonValue(self.sensors.button(1))
 		self.runTestSequence1 = self.sensors.button(13)
 		self.runTestSequence2 = self.sensors.button(14)
+		self.runTestSequence3 = self.sensors.button(15)
+		self.runTestSequence4 = self.sensors.button(16)
 
 		# Motor control - General
 		motorsStop = FixedValue(0.0)
