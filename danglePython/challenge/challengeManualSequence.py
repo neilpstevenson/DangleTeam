@@ -40,7 +40,63 @@ class ChallengeManualSequence(ChallengeSequenceBase):
 		self.sequenceDefDownButtonFilename = "downSequence.json"
 		self.sequenceDefLeftButtonFilename = "leftSequence.json"
 		self.sequenceDefRightButtonFilename = "rightSequence.json"
-		pass
+		self.sequenceDefSquareButtonFilename = "squareSequence.json"
+		self.sequenceDefCrossButtonFilename = "crossSequence.json"
+		self.sequenceDefTriangleButtonFilename = "triangleSequence.json"
+		self.sequenceDefCircleButtonFilename = "circleSequence.json"
+
+	# Override the Manual Control to enable initiation of sequences with that state
+	def ManualControlHeading(self, data):
+		# Record position
+		#if self.resetLastPositionButton.getValue() > 0:
+		#	self.lastPositionL = self.positionL.getValue()
+		#	self.lastPositionR = self.positionR.getValue()
+		#	self.pathRecord = []
+		#elif self.recordPositionButton.getValue() > 0:
+		#	currentPositionL = self.positionL.getValue()
+		#	currentPositionR = self.positionR.getValue()
+		#	self.pathRecord.append(("MoveDistance",[int(currentPositionL-self.lastPositionL), int(currentPositionR-self.lastPositionR)]))
+		#	self.lastPositionL = currentPositionL
+		#	self.lastPositionR = currentPositionR
+		#elif self.savePositionsButton.getValue() > 0:
+		#	pathFile = Config("recordedPath.json")
+		#	pathFile.set("path", self.pathRecord)
+		#	pathFile.save()
+		#	#self.pathRecord = []
+
+		# Simple remote control
+		if self.motorEnable.getValue() > 0 :
+			# Special buttons
+			if self.runTestSequence1.getValue() > 0:
+				self.autoModeEnable.setValue(1)
+				self.stateMachine.changeState("StartSequence", self.sequenceDefUpButtonFilename)
+			elif self.runTestSequence2.getValue() > 0:
+				self.autoModeEnable.setValue(1)
+				self.stateMachine.changeState("StartSequence", self.sequenceDefDownButtonFilename)
+			elif self.runTestSequence3.getValue() > 0:
+				self.autoModeEnable.setValue(1)
+				self.stateMachine.changeState("StartSequence", self.sequenceDefLeftButtonFilename)
+			elif self.runTestSequence4.getValue() > 0:
+				self.autoModeEnable.setValue(1)
+				self.stateMachine.changeState("StartSequence", self.sequenceDefRightButtonFilename)
+			elif self.runTestSequenceSq.getValue() > 0:
+				self.autoModeEnable.setValue(1)
+				self.stateMachine.changeState("StartSequence", self.sequenceDefSquareButtonFilename)
+			elif self.runTestSequenceCr.getValue() > 0:
+				self.autoModeEnable.setValue(1)
+				self.stateMachine.changeState("StartSequence", self.sequenceDefCrossButtonFilename)
+			elif self.runTestSequenceTr.getValue() > 0:
+				self.autoModeEnable.setValue(1)
+				self.stateMachine.changeState("StartSequence", self.sequenceDefTriangleButtonFilename)
+			elif self.runTestSequenceCi.getValue() > 0:
+				self.autoModeEnable.setValue(1)
+				self.stateMachine.changeState("StartSequence", self.sequenceDefCircleButtonFilename)
+			# Manual turns
+			elif self.joystickLeftRight.getValue() != 0.0:
+				self.headingError.setTarget(self.sensors.yaw().getValue() + self.joystickLeftRight.getValue() * self.maxManualTurn)
+		else:
+			self.stateMachine.changeState("MotorsOff")
+
 
 	def createProcesses(self, highPriorityProcesses, medPriorityProcesses):
 		# Set up the state machine and base behaviours
@@ -68,6 +124,12 @@ class ChallengeManualSequence(ChallengeSequenceBase):
 			
 		# Image analysis
 		self.imageAnalysisResult = VisionAccessFactory.getSingleton().getImageResult()
+
+		# Further buttons
+		self.runTestSequenceSq = self.sensors.button(3)
+		self.runTestSequenceCr = self.sensors.button(0)
+		self.runTestSequenceTr = self.sensors.button(2)
+		self.runTestSequenceCi = self.sensors.button(1)
 
 		# Nudge buttons
 		#self.NudgeForward = OneShotButtonValue(self.sensors.button(2), triggeredValue = 300)

@@ -130,12 +130,13 @@
     0.0015
   ],
   "motor.heading.pid.pom": false,
-  "motor.manualheadingturn.max": 1.0,
-  "motor.manualturnangle.max": -15.0,
+  "motor.manualheadingturn.max": 0.7,
+  "motor.manualturnangle.max": -20.0,
   "motor.position.angle.tolerance": 6.0,
   "motor.position.dist.calibration": 1.2,
   "motor.position.dist.tolerance": 20,
   "motor.position.forward.max": 1.0,
+  "motor.position.manualpidforward.max": 0.9,
   "motor.position.pid": [
     0.002,
     0.0,

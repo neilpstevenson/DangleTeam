@@ -45,6 +45,7 @@ class ChallengeSequenceBase(ChallengeInterface):
 		self.positionCalibration = config.get("motor.position.dist.calibration", 1.19)	# Number of encoder clicks per mm of motion 
 		self.maxManualTurn = config.get("motor.manualturnangle.max", -15.0) # Joystick-controlled max turn angle (mpu heading relative)
 		self.maxPidForward = config.get("motor.position.pidforward.max", 0.4)	# PID-controlled max speed
+		self.maxManualPidForward = config.get("motor.position.manualpidforward.max", 0.8)	# PID-controlled max speed (manual mode)
 		self.maxManualHeadingTurn = config.get("motor.manualheadingturn.max", 0.6) # PID output scaling (manual mode)
 		self.maxAutoHeadingTurn = config.get("tidy.autoheadingturn.max", 0.3) # PID output scaling (full auto mode)
 		config.save()
@@ -521,8 +522,8 @@ class ChallengeSequenceBase(ChallengeInterface):
 		self.motorLSimplePositionSpeed = [Scaler([self.joystickForward, self.motorPositionErrorL], scaling = self.maxPidForward)]
 		self.motorRSimplePositionSpeed = [Scaler([self.joystickForward, self.motorPositionErrorR], scaling = self.maxPidForward)]
 		#3
-		self.motorLHeadingJoystickSpeed = [SpeedDirectionCombiner(Scaler(self.joystickForward, scaling = self.maxPidForward), Scaler(self.headingError, scaling = -self.maxManualHeadingTurn))]
-		self.motorRHeadingJoystickSpeed = [SpeedDirectionCombiner(Scaler(self.joystickForward, scaling = self.maxPidForward), Scaler(self.headingError, scaling = self.maxManualHeadingTurn))]
+		self.motorLHeadingJoystickSpeed = [SpeedDirectionCombiner(Scaler(self.joystickForward, scaling = self.maxManualPidForward), Scaler(self.headingError, scaling = -self.maxManualHeadingTurn))]
+		self.motorRHeadingJoystickSpeed = [SpeedDirectionCombiner(Scaler(self.joystickForward, scaling = self.maxManualPidForward), Scaler(self.headingError, scaling = self.maxManualHeadingTurn))]
 		#4
 		self.motorLHeadingAutoSpeed = [SpeedDirectionCombiner(self.autoModeForwardSpeed, Scaler(self.headingError, scaling = -self.maxAutoHeadingTurn))]
 		self.motorRHeadingAutoSpeed = [SpeedDirectionCombiner(self.autoModeForwardSpeed, Scaler(self.headingError, scaling = self.maxAutoHeadingTurn))]
