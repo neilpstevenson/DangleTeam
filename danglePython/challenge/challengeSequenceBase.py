@@ -159,14 +159,17 @@ class ChallengeSequenceBase(ChallengeInterface):
 		#		("Rotate", 90) \
 		#	  ]
 		# Use recorded path?
-		pathFile = Config(filename)
-		seq = pathFile.get("path", [])
+		try:
+			pathFile = Config(filename)
+			seq = pathFile.get("path", [])
 
-		if len(self.pathRecord) > 0:
-			seq = self.pathRecord
-		for move in range(len(seq)):
-			nudge  = seq[move]
-			yield nudge 
+			if len(self.pathRecord) > 0:
+				seq = self.pathRecord
+			for move in range(len(seq)):
+				nudge  = seq[move]
+				yield nudge
+		except:
+			print(f"Failed to load sequence file {filename}")
 			
 	def StartSequence(self, data):
 		filename = data
@@ -179,8 +182,11 @@ class ChallengeSequenceBase(ChallengeInterface):
 		else:
 			# Process next move in sequence
 			try:
-				state, nudge = next(self.nextSeq)
-				self.stateMachine.changeState(state, nudge)
+				stateInfo = next(self.nextSeq)
+				if len(stateInfo) > 2:
+					self.stateMachine.changeState(stateInfo[0], stateInfo[1], stateInfo[2])
+				else: 
+					self.stateMachine.changeState(stateInfo[0], stateInfo[1])
 			except StopIteration:
 				# End of sequence?
 				self.stateMachine.changeState("MotorsOff")
@@ -232,7 +238,7 @@ class ChallengeSequenceBase(ChallengeInterface):
 		self.headingError.setTarget(self.targetAngle)
 		# Remember the target positions as part of the state data
 		print(f"StartRotateAngle: {angle} => {self.targetAngle}")
-		self.stateMachine.setDisplayStatus("Rotate", f"{angle}degs")
+		self.stateMachine.setDisplayData(f"{angle}degs")
 		return self.targetAngle, settleTime
 		
 	def RotateAngle(self, data):
@@ -278,7 +284,7 @@ class ChallengeSequenceBase(ChallengeInterface):
 		self.targetPositionR += distance * self.positionCalibration
 		stateData = (self.targetPositionL, self.targetPositionR, settleTime)
 		print(f"Forward:  {distance} => {stateData}")
-		self.stateMachine.setDisplayStatus("Forward", f"{distance}mm")
+		self.stateMachine.setDisplayData(f"{distance}mm")
 		return stateData
 		
 	def Forward(self, data):
@@ -318,7 +324,7 @@ class ChallengeSequenceBase(ChallengeInterface):
 		endtime = time.perf_counter() + timeout
 		servo = self.servos[servoName]
 		servo.setValue(setpoint)
-		self.stateMachine.setDisplayStatus("Servo", servoName)
+		self.stateMachine.setDisplayData(servoName)
 		return (servo, setpoint, endtime)
 		
 	def Servo(self, data):
@@ -344,7 +350,7 @@ class ChallengeSequenceBase(ChallengeInterface):
 			self.headingError.setTarget(self.targetAngle)
 			# Remember the target positions as part of the state data
 			print(f"StartRotateAngle: {angle} => {self.targetAngle}")
-			self.stateMachine.setDisplayStatus("Rotate to", blockColour)
+			self.stateMachine.setDisplayData(blockColour)
 		else:
 			# Not found
 			print(f"StartRotateAngle: Block {blockColour} not found - aborting")
@@ -407,7 +413,7 @@ class ChallengeSequenceBase(ChallengeInterface):
 			print(f"StartForwardToBlock:  positionDelta: {positionDelta}, arcDist: {arcDist}")
 			stateData = [self.targetPositionL, self.targetPositionR, blockType, blockColour, howClose, settleTime]
 			print(f"StartForwardToBlock:  {(distanceToBlock - howClose)}mm = {(self.targetPositionL,self.targetPositionR)} => {stateData}")
-			self.stateMachine.setDisplayStatus("Forward to", blockColour)
+			self.stateMachine.setDisplayData(blockColour)
 			return stateData
 		else:
 			# Not found

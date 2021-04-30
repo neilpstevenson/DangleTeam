@@ -1,5 +1,5 @@
 {
   "path": [
-    ["Forward", [200, 0]]
+    ["Forward", [200, 0], "test.png"]
    ]
 }

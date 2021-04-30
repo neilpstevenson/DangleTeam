@@ -32,7 +32,7 @@ class StateMachine:
 				if self.states[self.state][1] != None:
 					self.states[self.state][1](self.stateData)
 
-	def changeState(self, newState, data = None):
+	def changeState(self, newState, data = None, displayName = None):
 		self.timeout = None
 		if self.state != newState:
 			print(f"State change: '{self.state}' to '{newState}'")
@@ -40,7 +40,7 @@ class StateMachine:
 			if self.state != None and self.states[self.state][2] != None:
 				self.states[self.state][2](self.stateData)
 			# Change state
-			self.stateDisplayName = newState	# default
+			self.stateDisplayName = (newState if displayName is None else displayName)
 			self.stateDisplayData = ""
 			self.state = newState
 			self.stateData = None
@@ -60,5 +60,9 @@ class StateMachine:
 
 	def setDisplayStatus(self, stateDisplayName, stateDisplayData = ""):
 		self.stateDisplayName = stateDisplayName
+		self.stateDisplayData = stateDisplayData
+		self.status.setStatus(self.stateDisplayName, self.stateDisplayData, self.stateData)
+		
+	def setDisplayData(self, stateDisplayData = ""):
 		self.stateDisplayData = stateDisplayData
 		self.status.setStatus(self.stateDisplayName, self.stateDisplayData, self.stateData)
