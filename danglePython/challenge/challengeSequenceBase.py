@@ -54,6 +54,7 @@ class ChallengeSequenceBase(ChallengeInterface):
 		self.sequenceDefDownButtonFilename = "testSequence2.json"
 		self.sequenceDefLeftButtonFilename = "testSequence3.json"
 		self.sequenceDefRightButtonFilename = "testSequence4.json"
+		self.stoppedStatus = "Stopped"
 
 	def ControlOff(self, data):
 		# Stop the motors
@@ -65,7 +66,7 @@ class ChallengeSequenceBase(ChallengeInterface):
 		self.motorPositionErrorL.disable()
 		self.motorPositionErrorR.disable()
 		self.headingError.disable()
-		self.stateMachine.setDisplayStatus("Stopped")
+		self.stateMachine.setDisplayStatus(self.stoppedStatus)
 			
 	def MotorsOffState(self, data):
 		# Maintain current position

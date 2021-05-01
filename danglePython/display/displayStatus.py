@@ -57,14 +57,15 @@ class DisplayStatus:
                 # Display the status
                 screen.fill((255, 255, 255))
                 
-                pos = (0, self.height/20)
                 # Let's see if we can display an Image as the title?
                 if (title.endswith(".png") or title.endswith(".jpg")) and os.path.isfile("images/" + title):
+                        pos = (0, 0)
                         # Show image
                         img = pygame.image.load("images/" + title)
                         screen.blit(img, (self.width//2 - img.get_width()//2, pos[1]))
                         pos = (pos[0],pos[1] + img.get_height())
                 else:
+                        pos = (0, self.height/20)
                         # Large title at top
                         text_rendered,rect = self.title_font.render(title, fgcolor=(0,0,0))
                         screen.blit(text_rendered, (self.width//2 - (rect[2]-rect[0])//2, pos[1]))
