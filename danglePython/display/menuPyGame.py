@@ -49,27 +49,31 @@ class MenuDisplay:
 		self.screen.fill((255, 255, 255))
 		pos = (0,20)
 		for item in range(len(self.menuItems)):
-			if item == self.selected:
-				# Draw in big font
-				text_rendered,rect = self.title_font.render(self.menuItems[item], fgcolor=(0,0,0))
-				self.screen.blit(text_rendered, (self.width//2 - (rect[2]-rect[0])//2, pos[1]))
-				pos = (pos[0],pos[1] + rect[1] * 7 // 5)
-			else:
-				# Draw in medium font
-				text_rendered,rect = self.subTitle_font.render(self.menuItems[item], fgcolor=(0,0,0))
+			for text in self.menuItems[item].split("\n"):
+				if item == self.selected:
+					# Draw in big font
+					text_rendered,rect = self.title_font.render(self.menuItems[item], fgcolor=(0,0,0))
+				else:
+					# Draw in medium font
+					text_rendered,rect = self.subTitle_font.render(self.menuItems[item], fgcolor=(0,0,0))
 				self.screen.blit(text_rendered, (self.width//2 - (rect[2]-rect[0])//2, pos[1]))
 				pos = (pos[0],pos[1] + rect[1] * 7 // 5)
 
 		pygame.display.flip()
 		self.processEvents()
 					
-	def message(self, msg):
+	def message(self, msg, bigFont=False):
 		self.screen.fill((255, 255, 255))
-		pos = (0,20)
-		# Draw in medium font
-		text_rendered,rect = self.subTitle_font.render(msg, fgcolor=(0,0,0))
-		self.screen.blit(text_rendered, (self.width//2 - (rect[2]-rect[0])//2, pos[1]))
-		pos = (pos[0],pos[1] + rect[1] * 7 // 5)
+		pos = (0,200)
+		for text in msg.split("\n"):
+			if bigFont:
+				# Draw in big font
+				text_rendered,rect = self.title_font.render(text, fgcolor=(0,0,0))
+			else:
+				# Draw in medium font
+				text_rendered,rect = self.subTitle_font.render(text, fgcolor=(0,0,0))
+			self.screen.blit(text_rendered, (self.width//2 - (rect[2]-rect[0])//2, pos[1]))
+			pos = (pos[0],pos[1] + rect[1] * 7 // 5)
 
 		pygame.display.flip()
 		self.processEvents()

@@ -58,6 +58,12 @@ def DisplayPositions(selected, actionParams):
 def DisplayText(selected, actionParams):
 	stopButton = sensors.button(10)
 	text = actionParams[0]
+	display.message(text, True)
+	# Wait for button
+	while stopButton.getValue() == 0 and sensors.checkWatchdog() > 0:
+		time.sleep(0.2)
+		display.processEvents()
+
 	#disp = displayText(display.getDevice(), stopButton, text)
 	#disp.main()
 
@@ -69,6 +75,9 @@ def GetSelection(selected):
 		if lastSelected != upDownButtons.getValue():
 			lastSelected = int(upDownButtons.getValue())
 			display.select(lastSelected)
+		else:
+			display.processEvents()
+
 		if selectButton.getValue() > 0:
 			break
 		time.sleep(0.05)
@@ -93,16 +102,17 @@ menus = np.array([
 			[Run, ['python3','TidyUpTheToysImageProcess.py']], 
 			[Run, ['python3','DangleRun.py', '--challenge', 'ChallengeTidyTheToys']],
 			[Run, ['python3','displayStatus.py']],
-			[DisplayText, ['Tidy up the Toys']] ]], 
+			[DisplayText, ['Tidy up the\nToys']] ]], 
 	["Up the Garden Path", [
 			[Run, ['python3','VisionLineProcessor.py']], 
+			[Run, ['python3','VoiceRecogniser.py']], 
 			[Run, ['python3','DangleRun.py', '--challenge', 'UpTheGardenPath']],
 			[Run, ['python3','displayStatus.py']],
-			[DisplayText, ['Up the Garden Path']] ]], 
+			[DisplayText, ['Up the Garden\nPath']] ]], 
 	["Feed the Fish", [
 			[Run, ['python3','FeedFishImageProcess.py']], 
 			[Run, ['python3','DangleRun.py', '--challenge', 'ChallengeFeedTheFish']],
-			[DisplayText, ['Minesweeper']] ]],
+			[DisplayText, ['Feed the Fish']] ]],
 	["Stop all", [
 			[StopAll, []] ]],
 	["Quit", [
