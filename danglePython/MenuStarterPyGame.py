@@ -97,21 +97,23 @@ menus = np.array([
 	["Manual Control", [ 
 			[Run, ['python3','DangleRun.py', '--challenge', 'ChallengeManualSequence']],
 			[Run, ['python3','displayStatus.py']],
-			[DisplayPositions, []] ]], 
+			[DisplayPositions, []],
+			[DisplayText, ['Manual Control']]  ]], 
 	["Tidy up the Toys", [ 
 			[Run, ['python3','TidyUpTheToysImageProcess.py']], 
 			[Run, ['python3','DangleRun.py', '--challenge', 'ChallengeTidyTheToys']],
 			[Run, ['python3','displayStatus.py']],
 			[DisplayText, ['Tidy up the\nToys']] ]], 
-	["Up the Garden Path", [
+	["Up the\nGarden Path", [
 			[Run, ['python3','VisionLineProcessor.py']], 
 			[Run, ['python3','VoiceRecogniser.py']], 
-			[Run, ['python3','DangleRun.py', '--challenge', 'UpTheGardenPath']],
+			[Run, ['python3','DangleRun.py', '--challenge', 'ChallengeUpTheGardenPath']],
 			[Run, ['python3','displayStatus.py']],
 			[DisplayText, ['Up the Garden\nPath']] ]], 
 	["Feed the Fish", [
 			[Run, ['python3','FeedFishImageProcess.py']], 
 			[Run, ['python3','DangleRun.py', '--challenge', 'ChallengeFeedTheFish']],
+			[Run, ['python3','displayStatus.py']],
 			[DisplayText, ['Feed the Fish']] ]],
 	["Stop all", [
 			[StopAll, []] ]],
