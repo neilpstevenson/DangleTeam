@@ -48,7 +48,12 @@ def StopAll(selected, actionParams):
 
 def DisplayScreenSaver(selected, actionParams):
 	stopButton = sensors.button(10)
-	#showWelcomeSequence(display.getDevice(), stopButton)
+	text = "Please connect\Controller"
+	display.message(text, True)
+	# Wait for button
+	while stopButton.getValue() == 0 and sensors.checkWatchdog() <= 0:
+		time.sleep(0.2)
+		display.processEvents()
 
 def DisplayPositions(selected, actionParams):
 	stopButton = sensors.button(10)
@@ -72,7 +77,7 @@ def GetSelection(selected):
 	upDownButtons = StepUpDownButtonValue(sensors.button(14), sensors.button(13), min = 0, max = len(menus)-1, offset=selected, scaling = 1)
 	selectButton = sensors.button(9)
 	while True:
-		if lastSelected != upDownButtons.getValue():
+		if lastSelected != int(upDownButtons.getValue()):
 			lastSelected = int(upDownButtons.getValue())
 			display.select(lastSelected)
 		else:
