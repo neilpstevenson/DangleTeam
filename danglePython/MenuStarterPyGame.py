@@ -48,7 +48,7 @@ def StopAll(selected, actionParams):
 
 def DisplayScreenSaver(selected, actionParams):
 	stopButton = sensors.button(10)
-	text = "Please connect\Controller"
+	text = "Please connect\nController"
 	display.message(text, True)
 	# Wait for button
 	while stopButton.getValue() == 0 and sensors.checkWatchdog() <= 0:
