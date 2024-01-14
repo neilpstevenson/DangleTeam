@@ -11,7 +11,8 @@ class ImageAnalysisSharedIPC:
 					('distance',np.float32),# Estimated distance to nearest point of object (in mm)
 					('size',np.float32,(2)),# Estimated size of bounding rectangle of object (in mm)
 					('yaw',np.float32),		# Absolute yaw to centre of object at time of image capture
-					('angle',np.float32)	# Relative angle to centre of object
+					('angle',np.float32),	# Relative angle to centre of object
+					('motorpositions',np.int64, (2))	# Motor position sensors at time of image capture
 					])
 	image_analysis_shared_dt = np.dtype([
 					('timestamp',np.uint64),
@@ -22,7 +23,7 @@ class ImageAnalysisSharedIPC:
 	filename = '/dev/shm/image_analysis_shared.mmf'
 
 	# Interface class to set the results array
-	ImageResult = namedtuple('ImageResult', 'status typename name confidence distance size yaw angle')
+	ImageResult = namedtuple('ImageResult', 'status typename name confidence distance size yaw angle motorpositions')
 	
 	def create(self):
 		try:
@@ -55,6 +56,7 @@ class ImageAnalysisSharedIPC:
 			res['size'] = results[result].size
 			res['yaw'] = results[result].yaw
 			res['angle'] = results[result].angle
+			res['motorpositions'] = results[result].motorpositions
 		# Invalidate the rest
 		for result in range(len(results), len(self.data[0]['images'])):
 			self.data[0]['images'][result]['status'] = 0	# Invalid
@@ -76,7 +78,8 @@ class ImageAnalysisSharedIPC:
 					distance = res['distance'].copy(),
 					size = res['size'].copy(),
 					yaw = res['yaw'].copy(),
-					angle = res['angle'].copy() ))
+					angle = res['angle'].copy(),
+					motorpositions = res['motorpositions'].copy() ))
 		return results
 			
 	def getTimestamp(self):
@@ -108,6 +111,9 @@ class ImageAnalysisSharedIPC:
 
 	def getConfidence(self, result):
 		return self.data[0]['images'][result]['confidence']
+		
+	def getMotorPositions(self, result):
+		return self.data[0]['images'][result]['motorpositions']
 
 	def checkWatchdog(self):
 		if self.data[0]['watchdog'] > 0:

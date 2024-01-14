@@ -49,19 +49,31 @@ while True:
 
     
     cameraF = np.sqrt(cameraHeight*cameraHeight + nearest*nearest) / nearest
-    
+    centreX = frame.shape[1] // 2
     # Draw the graticule
-    for height in range(0, horizon, 30):
-        calc_dist = ((((horizon-1) / ((horizon - height))) - 1) * cameraF + 1) * nearest#effectiveNearestPont
-        #calc_dist = (np.log2(calc_dist) + 1) * nearest
-        # Compensate for heigh of camera
-        #calc_dist = calc_dist * cameraF + nearest
-        #calc_dist = np.sqrt(calc_dist*calc_dist - cameraHeight*cameraHeight)
-        cv.line(frame_annotated, (300,frame.shape[0]-height-1), (320,frame.shape[0]-height-1), (0,0,0), 2)
-        cv.putText(frame_annotated, f"{calc_dist:.0f}mm", (330,frame.shape[0]-height), cv.FONT_HERSHEY_DUPLEX, 0.6, (0, 0, 0))
-    cv.line(frame_annotated, (300,frame.shape[0]-horizon-1), (420,frame.shape[0]-horizon-1), (0,0,0), 2)
-    cv.putText(frame_annotated, f"inf", (430,frame.shape[0]-horizon), cv.FONT_HERSHEY_DUPLEX, 0.6, (0, 0, 0))
-   
+    for y in range(0, horizon, 30):
+        #calc_dist = ((((horizon-1) / ((horizon - y))) - 1) * cameraF + 1) * nearest#effectiveNearestPont
+        calc_dist = (horizon-1)
+        calc_dist /= (horizon - y)
+        calc_dist -= 1
+        calc_dist *= cameraF
+        calc_dist += 1
+        calc_dist *= nearest
+        #y2 = horizon - (horizon-1) / (((calc_dist / nearest - 1) / cameraF) + 1)
+        #print(f"({y} => {y2}")
+        cv.line(frame_annotated, (centreX,frame.shape[0]-y-1), (centreX+20,frame.shape[0]-y-1), (0,0,0), 1)
+        cv.putText(frame_annotated, f"{calc_dist:.0f}mm", (centreX+30,frame.shape[0]-y), cv.FONT_HERSHEY_DUPLEX, 0.6, (0, 0, 0))
+    # Also based on a fixed set of points
+    for dist in (250.0,300.0,400.0,500.0,750.0,1000.0,1250.0,1500.0,2000.0,3000.0):
+        if dist > nearest and nearest > 0 and horizon > 0:
+            #print(f"{horizon} {dist} {nearest} {cameraF}")
+            y = int(horizon - (horizon-1) / (((dist / nearest - 1) / cameraF) + 1))
+            cv.line(frame_annotated, (centreX-20,frame.shape[0]-y-1), (centreX,frame.shape[0]-y-1), (0,0,0), 1)
+            cv.putText(frame_annotated, f"{dist:.0f}mm", (centreX-100,frame.shape[0]-y), cv.FONT_HERSHEY_DUPLEX, 0.6, (0, 0, 0))
+    cv.line(frame_annotated, (centreX-100,frame.shape[0]-horizon-1), (centreX+100,frame.shape[0]-horizon-1), (0,0,0), 2)
+    cv.putText(frame_annotated, f"inf", (centreX+120,frame.shape[0]-horizon), cv.FONT_HERSHEY_DUPLEX, 0.6, (0, 0, 0))
+
+        
     #cv.imshow(window_capture_name, frame)
     cv.imshow(window_detection_name, frame_annotated)
     

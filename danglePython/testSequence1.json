@@ -1,0 +1,7 @@
+{
+  "path": [
+    ["SetZeroHeading", null],
+    ["Forward", [100, 0]],
+    ["ForwardToBlock", ["ArUco", "48", 200, 0.7]]
+   ]
+}

@@ -31,21 +31,25 @@ class SpeedDirectionCombiner(SensorInterface):
 			# Slow speed or stationary - turn is emphasised
 			combined = rawForwardTorque
 			nominal = (combined*combined if combined>=0.0 else -combined*combined) + rawSteerTorque*self.speedSlowComp
+			print(f"Slow: {rawForwardTorque}/{rawSteerTorque} => {nominal}")
 			return nominal
 		elif (rawForwardTorque < self.speedMed and rawForwardTorque > -self.speedMed):
 			# Medium speed - turn has to be de-emphasised to stop spins
 			combined = rawForwardTorque + rawSteerTorque*self.speedMedComp
 			nominal = combined*combined if combined>=0.0 else -combined*combined
+			print(f"Medium: {rawForwardTorque}/{rawSteerTorque} => {nominal}")
 			return nominal
 		elif (rawSteerTorque < self.speedHighThresh and rawSteerTorque > -self.speedHighThresh):
 			# High speed - no much turn, let it rip
 			combined = rawForwardTorque + rawSteerTorque*self.speedHighComp
 			nominal = combined*combined if combined>=0.0 else -combined*combined
+			print(f"High: {rawForwardTorque}/{rawSteerTorque} => {nominal}")
 			return nominal
 		else:
 			# High speed - turn has to be re-emphasised otherwise it has little effect
 			combined = rawForwardTorque*self.speedHighDecel + rawSteerTorque*self.speedHighComp
 			nominal = combined*combined if combined>=0.0 else -combined*combined
+			print(f"High Turn: {rawForwardTorque}/{rawSteerTorque} => {nominal}")
 			return nominal
 			
 	def getValue(self):

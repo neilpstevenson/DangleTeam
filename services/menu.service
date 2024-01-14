@@ -3,10 +3,11 @@ Description=Dangle menu service
 [Service]
 Type=exec
 User=pi
-WorkingDirectory=/home/pi/Projects/DangleTeam/danglePython
+WorkingDirectory=/home/pi/project/DangleTeam/danglePython
 Environment=DISPLAY=':0.0'
 Environment=LD_PRELOAD=/usr/lib/arm-linux-gnueabihf/libatomic.so.1
-ExecStart=/usr/bin/python3 /home/pi/Projects/DangleTeam/danglePython/MenuStarter.py
+ExecStartPre=/bin/sleep 5
+ExecStart=/usr/bin/python3 /home/pi/project/DangleTeam/danglePython/MenuStarterPyGame.py
 Restart=no
 [Install]
 WantedBy=multi-user.target

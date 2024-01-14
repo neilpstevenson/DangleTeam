@@ -17,7 +17,7 @@ class SensorAccessFactory:
 		# Initialise the IPC classes
 		self.mpu = MotionSensorSharedIPC()
 		self.sensorsIPC = SensorsSharedIPC()
-		self.sensorsIPC.open()
+		self.sensorsIPC.create()
 
 	__instance = None
 	@classmethod

@@ -29,5 +29,7 @@ class StepUpDownButtonValue(SensorInterface):
 				self.currentValue = self.min - self.offset
 		return self.currentValue + self.offset
 		
+	def reset(self):
+		self.currentValue = 0.0
 
 		

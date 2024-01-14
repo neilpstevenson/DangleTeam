@@ -99,7 +99,7 @@ def overlapping(pt_a, pt_b, w, h):
 
 def showWelcomeSequence(device, stopButton):
     regulator = framerate_regulator(fps=30)
-    fonts = [make_font("code2000.ttf", sz) for sz in range(36, 8, -2)]
+    fonts = [make_font("code2000.ttf", sz) for sz in range(36*3, 8, -2)]
     sq = device.width * 2
     virtual = viewport(device, sq, sq)
 

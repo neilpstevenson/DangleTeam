@@ -1,0 +1,9 @@
+{
+  "path": [
+    ["Servo", ["grabheight",  -0.4, 0.5]],
+    ["Servo", ["grabber", 1.0, 0.5]],
+    ["Servo", ["grabheight",  1.0, 0.5]],
+    ["Servo", ["grabber", -1.1, 0.5]],
+    ["Servo", ["grabheight",  -0.65, 0.2]]
+   ]
+}
