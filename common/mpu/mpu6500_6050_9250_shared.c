@@ -88,18 +88,34 @@ static struct hal_s hal = { 0 };
  * chip-to-body matrix for your particular set up.
  */
 //#define HORIZONTAL_ORIENTATION
-#if defined HORIZONTAL_ORIENTATION
+#define ORIENTATION_CONN_UP
+
+#if defined HORIZONTAL_ORIENTATION	
+/*
+	   XYZ  010_001_000 Identity Matrix
+	   XZY  001_010_000 # Long edge down, vertical mount
+	   YXZ  010_000_001
+	   YZX  000_010_001 # Short edge down, vertical mount
+	   ZXY  001_000_010 # 
+	   ZYX  000_001_010 # Horizontal mounted
+Sign is top bit of each 3-bits
+	 */
+//								Bits +/-: 0/4, 1/5, 2/6
 static signed char gyro_orientation[9] = { -1,  0,  0,
 										    0, -1,  0,
 										    0,  0,  1 };  // 4/5/2 == -Z-Y+X orientation, i.e. mounted horizontally
 #elif defined VERTICAL_ORIENTATION
 static signed char gyro_orientation[9] = {  0,  0, -1,
 										   -1,  0,  0,
-										    0,  1,  0 };  // mounted on short edge
+										    0,  1,  0 };  // 6/4/1 == mounted on short edge
+#elif defined ORIENTATION_CONN_UP
+static signed char gyro_orientation[9] = {  0,  1,  0,
+										    0,  0,  -1,
+										    -1,  0,  0 };  // 1/6/4 == mounted on long edge with connector uppermost
 #else
 static signed char gyro_orientation[9] = {  0, -1,  0,
 										    0,  0, -1,
-										    1,  0,  0 };  // mounted on long edge
+										    1,  0,  0 };  // 5/6/0 == mounted on long edge with connector downwards
 #endif
 
 /* These next two functions converts the orientation matrix (see

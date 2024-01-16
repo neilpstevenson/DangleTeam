@@ -100,6 +100,8 @@ class Simulation:
 			timestamp = quaternion.get_timestamp()
 			sampleCount = quaternion.get_sample_count()
 			sampleNumber = quaternion.get_sample_number()
+			# Compass
+			self.compassDegrees = quaternion.get_compassDegrees()
 			
 			if sampleNumberPrev == 0:
 				sampleNumberPrev = sampleNumber	# Set initial number
@@ -161,6 +163,8 @@ class Simulation:
 				sampleNumberPrev = sampleNumber
 				
 			self.screen.blit(font.render("Elapsed: {:7.3f}s,  Rate: {:5.1f}/s, Yaw: {:5.1f},  Pitch: {:5.1f},  Roll: {:5.1f}".format(timestamp, rate, self.angleYaw,self.anglePitch,self.angleRoll), True, (255,255,255)), (150, 440))
+			# Compass readings
+			self.screen.blit(font.render("Compass: {:5.1f} degrees".format(self.compassDegrees), True, (255,255,255)), (150, 456))
 				
  #           self.angleYaw += 1
 			
