@@ -144,7 +144,7 @@
   ],
   "motor.position.pid.pom": false,
   "motor.position.pidforward.max": 0.45,
-  "motors.encoders.fromioexpander": true,
+  "motors.encoders.fromioexpander": false,
   "motors.speedmode.pidconstants": [
     0.001,
     0.0001,

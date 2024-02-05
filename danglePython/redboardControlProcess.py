@@ -77,7 +77,7 @@ class MotorControlProcess:
 			if running:
 				# Adjust torque
 				torqueL = -self.motorsIPC.getRequiredTorque(2)
-				torqueR = self.motorsIPC.getRequiredTorque(1)
+				torqueR = -self.motorsIPC.getRequiredTorque(1)
 				if torqueL != self.currentMotorValues[2] or torqueR != self.currentMotorValues[1]:
 					self.currentMotorValues[2] = torqueL
 					self.currentMotorValues[1] = torqueR

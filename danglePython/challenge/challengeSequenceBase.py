@@ -529,8 +529,8 @@ class ChallengeSequenceBase(ChallengeInterface):
 		self.motorLSimplePositionSpeed = [Scaler([self.joystickForward, self.motorPositionErrorL], scaling = self.maxPidForward)]
 		self.motorRSimplePositionSpeed = [Scaler([self.joystickForward, self.motorPositionErrorR], scaling = self.maxPidForward)]
 		#3
-		self.motorLHeadingJoystickSpeed = [SpeedDirectionCombiner(Scaler(self.joystickForward, scaling = self.maxManualPidForward), Scaler(self.headingError, scaling = -self.maxManualHeadingTurn))]
-		self.motorRHeadingJoystickSpeed = [SpeedDirectionCombiner(Scaler(self.joystickForward, scaling = self.maxManualPidForward), Scaler(self.headingError, scaling = self.maxManualHeadingTurn))]
+		self.motorLHeadingJoystickSpeed = [SpeedDirectionCombiner(Scaler(self.joystickForward, scaling = self.maxManualPidForward), Scaler(self.headingError, scaling = self.maxManualHeadingTurn))]
+		self.motorRHeadingJoystickSpeed = [SpeedDirectionCombiner(Scaler(self.joystickForward, scaling = self.maxManualPidForward), Scaler(self.headingError, scaling = -self.maxManualHeadingTurn))]
 		#4
 		self.motorLHeadingAutoSpeed = [SpeedDirectionCombiner(self.autoModeForwardSpeed, Scaler(self.headingError, scaling = -self.maxAutoHeadingTurn))]
 		self.motorRHeadingAutoSpeed = [SpeedDirectionCombiner(self.autoModeForwardSpeed, Scaler(self.headingError, scaling = self.maxAutoHeadingTurn))]
