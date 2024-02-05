@@ -1,0 +1,27 @@
+# This file contails the Python3 requirements for DanglyToo
+# First install any python "apt" packages, then add the packages using this file, e.g.
+#	
+#	python3 -m venv ~/danglyToo
+#	source ~/danglyToo/bin/activate
+#   pip install -r requirements.txt
+
+# Currently needs manual install:
+#approxeng.input 
+
+# Very slow, use 'sudo apt install python3-opencv' instead
+#opencv-python
+numpy
+
+simple-pid
+pygame
+psutil
+smbus
+#smbus2
+pySerial
+
+# Not used for dangly-too
+pimoroni-ioexpander
+
+#For test plots:
+#matplotlib
+
