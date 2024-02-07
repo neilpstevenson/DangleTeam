@@ -1,0 +1,19 @@
+[
+	{	"name": "Manual Control",
+		"actions": [  
+		{ "action": "Run", "params": ["python3","DangleRun.py", "--challenge", "ChallengeManualSequence"]},
+		{ "action": "Run", "params": ["python3","displayStatus.py"]},
+		{ "action": "DisplayText", "params": ["Manual Control"]}  
+		]
+	},
+	{	"name": "Stop All",
+		"actions": [  
+		{ "action": "StopAll", "params": [] }
+		]
+	},
+	{	"name": "Stop and Quit",
+		"actions": [  
+		{ "action": "Quit", "params": [] }
+		]
+	}
+] 
