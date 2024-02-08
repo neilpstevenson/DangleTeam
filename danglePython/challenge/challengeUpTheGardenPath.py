@@ -70,11 +70,11 @@ class ChallengeUpTheGardenPath(ChallengeInterface):
 		self.joystickLeftRight = self.sensors.joystickAxis(3)
 		motorL = SwitchingControlMediator( [ motorsStop, 								 # Choice 0 = Stopped \
 											  											 # Choice 1 = Controlled
-											[SpeedDirectionCombiner(Scaler(self.joystickForward, scaling = self.maxForward), Scaler(self.headingError, scaling = -self.maxHeadingTurn))],  \
+											[SpeedDirectionCombiner(Scaler(self.joystickForward, scaling = self.maxForward), Scaler(self.headingError, scaling = self.maxHeadingTurn))],  \
 																						 # Choice 2 = Auto mode, but manual forward speed
-											[SpeedDirectionCombiner(Scaler(self.joystickForward, scaling = self.maxForward), Scaler(self.headingError, scaling = -self.maxAutoTurn))],  \
+											[SpeedDirectionCombiner(Scaler(self.joystickForward, scaling = self.maxForward), Scaler(self.headingError, scaling = self.maxAutoTurn))],  \
 																						 # Choice 3 = Full Auto mode
-											[SpeedDirectionCombiner(self.fullAutoForwardSpeed, Scaler(self.headingError, scaling = -self.maxAutoTurn))]  \
+											[SpeedDirectionCombiner(self.fullAutoForwardSpeed, Scaler(self.headingError, scaling = self.maxAutoTurn))]  \
 										   ],
 											self.controls.motor(2), \
 											ValueAdder([self.motorEnable,self.fullAutoEnable], max=3) )
@@ -82,11 +82,11 @@ class ChallengeUpTheGardenPath(ChallengeInterface):
 		highPriorityProcesses.append(motorL)
 		motorR = SwitchingControlMediator( [ motorsStop, 								 # Choice 0 = Stopped \
 																						 # Choice 1 = Manual Controlled only
-											[Scaler(SpeedDirectionCombiner(Scaler(self.joystickForward, scaling = self.maxForward), Scaler(self.headingError, scaling = self.maxHeadingTurn)), scaling = 1.0)],  \
+											[Scaler(SpeedDirectionCombiner(Scaler(self.joystickForward, scaling = self.maxForward), Scaler(self.headingError, scaling = -self.maxHeadingTurn)), scaling = 1.0)],  \
 																						 # Choice 2 = Auto mode, but manual forward speed
-											[Scaler(SpeedDirectionCombiner(Scaler(self.joystickForward, scaling = self.maxForward), Scaler(self.headingError, scaling = self.maxAutoTurn)), scaling = 1.0)],  \
+											[Scaler(SpeedDirectionCombiner(Scaler(self.joystickForward, scaling = self.maxForward), Scaler(self.headingError, scaling = -self.maxAutoTurn)), scaling = 1.0)],  \
 																						 # Choice 3 = Full Auto mode
-											[SpeedDirectionCombiner(self.fullAutoForwardSpeed, Scaler(self.headingError, scaling = self.maxAutoTurn), scaling = 1.0)]  \
+											[SpeedDirectionCombiner(self.fullAutoForwardSpeed, Scaler(self.headingError, scaling = -self.maxAutoTurn), scaling = 1.0)]  \
 										   ],
 											self.controls.motor(1), \
 											ValueAdder([self.motorEnable,self.fullAutoEnable], max=3) )
@@ -97,7 +97,7 @@ class ChallengeUpTheGardenPath(ChallengeInterface):
 		medPriorityProcesses.append(SimpleControlMediator( Scaler(self.motorEnable, scaling=2, offset=2, max=4), self.ledIndicator))
 
 		# Initial status
-		self.status.setStatus(f"Up the", "Garden Path", "Ready")
+		self.status.setStatus(f"Lava Palava", "Challenge", "Ready")
 
 	def move(self):
 		if self.fullAutoEnable.getValue() > 0:

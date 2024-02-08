@@ -6,6 +6,23 @@
 		{ "action": "DisplayText", "params": ["Manual Control"]}  
 		]
 	},
+	{	"name": "Lava Palava",
+		"actions": [  
+		{ "action": "Run", "params": ["python3","VisionLineProcessor.py"]}, 
+		{ "action": "Run", "params": ["python3","DangleRun.py", "--challenge", "ChallengeLavaPalava"]},
+		{ "action": "Run", "params": ["python3","displayStatus.py"]},
+		{ "action": "DisplayText", "params": ["Lava Palava"]}
+		] 
+	},
+	{	"name": "Up the Garden Path",
+		"actions": [  
+		{ "action": "Run", "params": ["python3","VisionLineProcessor.py"]}, 
+		{ "action": "Run", "params": ["python3","VoiceRecogniser.py"]}, 
+		{ "action": "Run", "params": ["python3","DangleRun.py", "--challenge", "ChallengeUpTheGardenPath"]},
+		{ "action": "Run", "params": ["python3","displayStatus.py"]},
+		{ "action": "DisplayText", "params": ["Up the Garden Path"]}
+		] 
+	},
 	{	"name": "Stop All",
 		"actions": [  
 		{ "action": "StopAll", "params": [] }

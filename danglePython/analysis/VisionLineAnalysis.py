@@ -4,6 +4,7 @@ from interfaces.LineAnalysisSharedIPC import LineAnalysisSharedIPC
 from interfaces.VoiceRecognitionSharedIPC import VoiceRecognitionSharedIPC
 from interfaces.SensorAccessFactory import SensorAccessFactory
 from interfaces.Config import Config
+from picamera2 import Picamera2
 
 class VisionLineAnalysis:
 
@@ -31,10 +32,16 @@ class VisionLineAnalysis:
 		self.targetLookaheadRatio = lookahead # % of screen height that we attempt to head towards
 
 		# initialize the camera and grab a reference to the raw camera capture
-		self.cap = cv2.VideoCapture(0)
-		self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, resolution[0])#320)
-		self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, resolution[1])#240)
-		self.cap.set(cv2.CAP_PROP_FPS, framerate)
+		# Legacy camera interface
+		#self.cap = cv2.VideoCapture(0)
+		#self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, resolution[0])#320)
+		#self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, resolution[1])#240)
+		#self.cap.set(cv2.CAP_PROP_FPS, framerate)
+		# New libcamera interface
+		self.picam2 = Picamera2()
+		#self.picam2.preview_configuration.controls.FrameRate = 50.0
+		self.picam2.configure( self.picam2.create_preview_configuration(main={"format": 'XRGB8888', "size": (resolution[0], resolution[1])}))
+		self.picam2.start()
 
 		self.resolution = resolution
 		self.framerate = framerate
@@ -282,9 +289,10 @@ class VisionLineAnalysis:
 			
 			# grab the raw NumPy array representing the image, then initialize the timestamp
 			# and occupied/unoccupied text
-			ret, original = self.cap.read()
+			#ret, original = self.cap.read()
+			original = self.picam2.capture_array()
 
-			# Convert to greyscale and apply a Gaussian blur to the image in order 
+			# Convert to greyscale and apply a blur to the image in order 
 			# to make more robust against noise and reflections
 			gray = cv2.cvtColor(original.copy(), cv2.COLOR_BGR2GRAY)
 			

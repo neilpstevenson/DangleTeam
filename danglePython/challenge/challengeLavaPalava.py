@@ -72,11 +72,11 @@ class ChallengeLavaPalava(ChallengeInterface):
 		self.joystickLeftRight = self.sensors.joystickAxis(3)
 		motorL = SwitchingControlMediator( [ motorsStop, 								 # Choice 0 = Stopped \
 											  											 # Choice 1 = Controlled
-											[SpeedDirectionCombiner(Scaler(self.joystickForward, scaling = self.maxForward), Scaler(self.headingError, scaling = -self.maxHeadingTurn))],  \
+											[SpeedDirectionCombiner(Scaler(self.joystickForward, scaling = self.maxForward), Scaler(self.headingError, scaling = self.maxHeadingTurn))],  \
 																						 # Choice 2 = Auto mode, but manual forward speed
-											[SpeedDirectionCombiner(Scaler(self.joystickForward, scaling = self.maxForward), Scaler(self.headingError, scaling = -self.maxAutoTurn))],  \
+											[SpeedDirectionCombiner(Scaler(self.joystickForward, scaling = self.maxForward), Scaler(self.headingError, scaling = self.maxAutoTurn))],  \
 																						 # Choice 3 = Full Auto mode
-											[SpeedDirectionCombiner(fullAutoForwardSpeed, Scaler(self.headingError, scaling = -self.maxAutoTurn))]  \
+											[SpeedDirectionCombiner(fullAutoForwardSpeed, Scaler(self.headingError, scaling = self.maxAutoTurn))]  \
 										   ],
 											self.controls.motor(2), \
 											ValueAdder([self.motorEnable,self.fullAutoEnable], max=3) )
@@ -84,11 +84,11 @@ class ChallengeLavaPalava(ChallengeInterface):
 		highPriorityProcesses.append(motorL)
 		motorR = SwitchingControlMediator( [ motorsStop, 								 # Choice 0 = Stopped \
 																						 # Choice 1 = Manual Controlled only
-											[Scaler(SpeedDirectionCombiner(Scaler(self.joystickForward, scaling = self.maxForward), Scaler(self.headingError, scaling = self.maxHeadingTurn)), scaling = 1.0)],  \
+											[Scaler(SpeedDirectionCombiner(Scaler(self.joystickForward, scaling = self.maxForward), Scaler(self.headingError, scaling = -self.maxHeadingTurn)), scaling = 1.0)],  \
 																						 # Choice 2 = Auto mode, but manual forward speed
-											[Scaler(SpeedDirectionCombiner(Scaler(self.joystickForward, scaling = self.maxForward), Scaler(self.headingError, scaling = self.maxAutoTurn)), scaling = 1.0)],  \
+											[Scaler(SpeedDirectionCombiner(Scaler(self.joystickForward, scaling = self.maxForward), Scaler(self.headingError, scaling = -self.maxAutoTurn)), scaling = 1.0)],  \
 																						 # Choice 3 = Full Auto mode
-											[SpeedDirectionCombiner(fullAutoForwardSpeed, Scaler(self.headingError, scaling = self.maxAutoTurn), scaling = 1.0)]  \
+											[SpeedDirectionCombiner(fullAutoForwardSpeed, Scaler(self.headingError, scaling = -self.maxAutoTurn), scaling = 1.0)]  \
 										   ],
 											self.controls.motor(1), \
 											ValueAdder([self.motorEnable,self.fullAutoEnable], max=3) )
