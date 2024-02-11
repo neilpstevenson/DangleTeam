@@ -1,5 +1,5 @@
 {
-  "camera.leveling.scaling": 0.012,
+  "camera.leveling.scaling": -0.024,
   "display.config": [
     "--display=linux_framebuffer",
     "--framebuffer-device=/dev/fb0",
@@ -58,7 +58,7 @@
   "lava.vision.blinkers": 120,
   "lava.vision.displaygrey": false,
   "lava.vision.displayresult": true,
-  "lava.vision.filename": "visionCapture.avi",
+  "lava.vision.filename": null,
   "lava.vision.filterRatio": 15,
   "lava.vision.framerate": 40,
   "lava.vision.ignoreTopSlices": 8,

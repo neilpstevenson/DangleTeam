@@ -8,7 +8,7 @@
 	},
 	{	"name": "Lava Palava",
 		"actions": [  
-		{ "action": "Run", "params": ["python3","VisionLineProcessor.py"]}, 
+		{ "action": "Run", "params": ["python3","VisionLineProcessorLava.py"]}, 
 		{ "action": "Run", "params": ["python3","DangleRun.py", "--challenge", "ChallengeLavaPalava"]},
 		{ "action": "Run", "params": ["python3","displayStatus.py"]},
 		{ "action": "DisplayText", "params": ["Lava Palava"]}

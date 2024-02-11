@@ -1,13 +1,14 @@
 import time
 import numpy as np
 import cv2
-from picamera.array import PiRGBArray
-from picamera import PiCamera
+from picamera2 import Picamera2
+#from picamera.array import PiRGBArray
+#from picamera import PiCamera
 from interfaces.LineAnalysisSharedIPC import LineAnalysisSharedIPC
 from interfaces.SensorAccessFactory import SensorAccessFactory
 from interfaces.Config import Config
 
-class VisionLineAnalysis:
+class VisionLineAnalysisLava:
 
 	def __init__(self, resolution, threshold, display, displayGrayscale, filename, blinkers, numSlices, framerate=30, ignoreTopSlices = 0, filterRatio=15, lookahead=0.8, saveRaw=True):
 		self.threshold = threshold
@@ -28,11 +29,15 @@ class VisionLineAnalysis:
 		self.targetLookaheadRatio = lookahead # % of screen height that we attempt to head towards
 
 		# initialize the camera and grab a reference to the raw camera capture
-		self.camera = PiCamera()
-		self.camera.resolution = resolution
+		# Legacy interface
+		#self.camera = PiCamera()
+		#self.camera.resolution = resolution
 		self.resolution = resolution
-		self.camera.framerate = framerate
-		self.rawCapture = PiRGBArray(self.camera, size=self.resolution)
+		#self.camera.framerate = framerate
+		#self.rawCapture = PiRGBArray(self.camera, size=self.resolution)
+		self.picam2 = Picamera2()
+		self.picam2.configure( self.picam2.create_preview_configuration(main={"format": 'XRGB8888', "size": (resolution[0], resolution[1])}))
+		self.picam2.start()
 		
 		# Current Yaw reading
 		self.sensors = SensorAccessFactory.getSingleton()
@@ -59,7 +64,10 @@ class VisionLineAnalysis:
 		count = 0
 		
 		# grab the next frame as a numpy array
-		for frame in self.camera.capture_continuous(self.rawCapture, format="bgr", use_video_port=True): #, resize = self.resolution):
+		while True:
+			#for frame in self.camera.capture_continuous(self.rawCapture, format="bgr", use_video_port=True): #, resize = self.resolution):
+			original = self.picam2.capture_array()
+			
 			count += 1
 			
 			# Get the current yaw value
@@ -68,7 +76,7 @@ class VisionLineAnalysis:
 			
 			# grab the raw NumPy array representing the image, then initialize the timestamp
 			# and occupied/unoccupied text
-			original = frame.array
+			#original = frame.array
 
 			# Convert to greyscale and apply a Gaussian blur to the image in order 
 			# to make more robust against noise and reflections
@@ -106,6 +114,11 @@ class VisionLineAnalysis:
 			else:
 				# Fit a striaght line to the brightest point on each slice
 				vx, vy, x0, y0 = cv2.fitLine(np.array(points), cv2.DIST_HUBER, 0, 0.1, 0.1)
+				# Strip arrays
+				vx = vx[0]
+				vy = vy[0]
+				x0 = x0[0]
+				y0 = y0[0]
 				# ensure the arrow is always pointing forwards (up the image)
 				if vy > 0:
 					vy = -vy
@@ -133,6 +146,7 @@ class VisionLineAnalysis:
 					yawAngle -= 360.0
 				elif yawAngle < -180.0:
 					yawAngle += 360.0
+				print(f"(vx, vy), (x0, y0): ({vx}, {vy}), ({x0} , {y0})")
 				self.results.shareResults(startTime, time, angle, yawAngle, ((vx, vy), (x0, y0)), point)
 			elif angle != None:
 				# Ajust angle based on last successful analysis for display only
@@ -144,7 +158,7 @@ class VisionLineAnalysis:
 			lastYaw = yaw
 				
 			# clear the stream in preparation for the next frame
-			self.rawCapture.truncate(0)
+			#self.rawCapture.truncate(0)
 
 			# display the results
 			if self.display and angle != None:
@@ -155,8 +169,10 @@ class VisionLineAnalysis:
 				for point in points:
 					cv2.circle(assessment, point, 5, (0,0,255), 1)
 				# Draw an arrow representing the brightest points
-				cv2.arrowedLine(assessment, (x0-vx, y0-vy), (x0+vx, y0+vy), (255, 255, 0), 2)
+				#print(f"values: {(int(x0-vx), int(y0-vy))}, {(int(x0+vx), int(y0+vy))}")
+				cv2.arrowedLine(assessment, (int(x0-vx), int(y0-vy)), (int(x0+vx), int(y0+vy)), (255, 255, 0), 2)
 				# Draw an angle from where we are to target
+				#print(f"values: {currentPosition}, {desiredPosition}")
 				cv2.arrowedLine(assessment, currentPosition, desiredPosition, (0, 255, 0), 3)
 				# Overlay the angle calculated
 				np.set_printoptions(precision=2)

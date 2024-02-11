@@ -24,8 +24,8 @@ class CameraLevellingControl(ChallengeInterface):
 		# Camera angle servo
 		cameraTiltServo = self.controls.servo(6)
 		currentPitch = Scaler(self.sensors.pitch(), scaling = self.scaling)
-		cameraUpDownButtons = ValueIntegrator(self.sensors.upDownButton(2, 0), scaling = -0.01, min=-0.85, max=0.85, offset = cameraTilt)
-		cameraLeveller = SimpleControlMediator( Scaler([currentPitch, cameraUpDownButtons], min=-0.9, max=0.85 ), \
+		cameraUpDownButtons = ValueIntegrator(self.sensors.upDownButton(2, 0), scaling = 0.01, min=-0.70, max=0.90, offset = cameraTilt)
+		cameraLeveller = SimpleControlMediator( Scaler([currentPitch, cameraUpDownButtons], min=-0.75, max=0.90 ), \
 												cameraTiltServo )
 		highPriorityProcesses.append(cameraLeveller)
 	

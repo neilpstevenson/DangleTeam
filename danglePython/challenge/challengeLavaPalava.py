@@ -5,6 +5,7 @@ from interfaces.ChallengeInterface import ChallengeInterface
 from interfaces.ControlAccessFactory import ControlAccessFactory
 from interfaces.SensorAccessFactory import SensorAccessFactory
 from interfaces.VisionAccessFactory import VisionAccessFactory
+from interfaces.StatusSharedIPC import StatusSharedIPC
 from interfaces.Config import Config
 # Value providers
 from analysis.SimplePIDErrorValue import SimplePIDErrorValue
@@ -34,6 +35,9 @@ class ChallengeLavaPalava(ChallengeInterface):
 		self.controls = ControlAccessFactory.getSingleton()
 		self.sensors = SensorAccessFactory.getSingleton()
 		self.vision = VisionAccessFactory.getSingleton()
+		# Status shared memory
+		self.status = StatusSharedIPC()
+		self.status.create()
 		# Common controls
 		self.grabberControl = GrabberControl()
 		self.cameraLevellingControl = CameraLevellingControl()
@@ -108,6 +112,9 @@ class ChallengeLavaPalava(ChallengeInterface):
 		self.grabberControl.createProcesses(highPriorityProcesses, medPriorityProcesses)
 		self.cameraLevellingControl.createProcesses(highPriorityProcesses, medPriorityProcesses, self.cameraTilt)
 		self.zGunControl.createProcesses(highPriorityProcesses, medPriorityProcesses)
+		
+		# Initial status
+		self.status.setStatus(f"Lava Palava", "", "Ready")
 
 	def move(self):
 		if self.fullAutoEnable.getValue() > 0:

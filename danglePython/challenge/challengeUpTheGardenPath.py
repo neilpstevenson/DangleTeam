@@ -97,7 +97,7 @@ class ChallengeUpTheGardenPath(ChallengeInterface):
 		medPriorityProcesses.append(SimpleControlMediator( Scaler(self.motorEnable, scaling=2, offset=2, max=4), self.ledIndicator))
 
 		# Initial status
-		self.status.setStatus(f"Lava Palava", "Challenge", "Ready")
+		self.status.setStatus(f"Up the", "Garden Path", "Ready")
 
 	def move(self):
 		if self.fullAutoEnable.getValue() > 0:

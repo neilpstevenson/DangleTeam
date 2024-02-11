@@ -23,7 +23,7 @@ class VisionLineProcessor:
 		
 	def run(self):
 		analyser = VisionLineAnalysisLava(self.resolution, self.threshold, self.display, 
-						self.displayGrey, self.savefilename, self.blinkers, self.numSlices, self.framerate, self.ignoreTopSlices, self.filterRatio, self.lookahead, self.saveRaw, blackLine=False) 
+						self.displayGrey, self.savefilename, self.blinkers, self.numSlices, self.framerate, self.ignoreTopSlices, self.filterRatio, self.lookahead, self.saveRaw) 
 		analyser.captureAndAssess()
 
 processor = VisionLineProcessor()
