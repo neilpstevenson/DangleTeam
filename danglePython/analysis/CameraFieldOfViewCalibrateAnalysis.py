@@ -17,6 +17,7 @@ from interfaces.ControlAccessFactory import ControlAccessFactory
 from interfaces.Config import Config
 # Analysis classes
 from analysis.ElapsedTime import elapsedTime
+from analysis.OneShotButtonValue import OneShotButtonValue
 #from analysis.ImageColouredRegionAnalyser import ImageColouredRegionAnalyser
 from analysis.ImageArucoRecogniser import ImageArucoRecogniser
 
@@ -71,7 +72,9 @@ class CameraFieldOfViewCalibrateAnalysis:
 		self.controls = ControlAccessFactory.getSingleton()
 		self.positionL = self.controls.motorPosition(2)
 		self.positionR = self.controls.motorPosition(1)
-		
+
+		# Control button
+		self.zeroYawButton = OneShotButtonValue(self.sensors.button(3))	# 
 		
 	#
 	# Print a checkpoint time for an analysis stage
@@ -95,6 +98,10 @@ class CameraFieldOfViewCalibrateAnalysis:
 	# Display an annotated image of the results
 	#		
 	def displayResults(self, frame):
+		# Overall heading
+		yawDiff = self.yawBaseline - self.yaw
+		cv2.putText(frame, f"Yaw: {self.yaw:.1f}deg, diff: {yawDiff:.1f}deg", (10, frame.shape[0]-20), cv2.FONT_HERSHEY_DUPLEX, 0.5, (0, 255, 0), 1, cv2.LINE_AA)
+
 		for analysis in [self.imageAnalysisFishTankAruco]:
 			if analysis.hasResult:
 				for id in analysis.getIds():
@@ -105,12 +112,16 @@ class CameraFieldOfViewCalibrateAnalysis:
 					#print(f"displayResults: {corners}")
 					cv2.polylines(frame, [corners],  True, (0, 255, 0), 2, 8)		
 					cv2.putText(frame, f"{id} : {analysis.name}", (corners[0][0][0], corners[0][0][1]), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 0), 2)
-					cv2.putText(frame, f"{distance:.0f}mm {angle:.1f}deg", (analysis.largestCenter[0]-65,analysis.largestCenter[1] - 18), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 0), 2)
+					cv2.putText(frame, f"{distance:.0f}mm {angle:.1f}deg", (corners[0][0][0], corners[0][0][1] + 18), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 0), 2)
+					cv2.circle(frame, analysis.largestCenter, 5, (0,0,255), 1)
+					if abs(angle) > 1.0 and abs(yawDiff) > 1.0:
+						angleScaleExpected = abs(yawDiff * self.angleAdjustment / angle) 
+						cv2.putText(frame, f"ang_adj: {angleScaleExpected:.1f}", (corners[0][0][0], corners[0][0][1] + 36), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 0), 2)
 		
 		if self.fps != None:
 			cv2.putText(frame, f"{self.fps}fps", (frame.shape[1]-60, frame.shape[0]-20), cv2.FONT_HERSHEY_DUPLEX, 0.5, (0, 255, 0), 1, cv2.LINE_AA)
 
-		cv2.imshow("Feed the Fish - ArUco markers", frame)
+		cv2.imshow("Camera Calibration with ArUco markers", frame)
 
 		if self.saveFile:
 			# Write the next frame into the file
@@ -175,7 +186,7 @@ class CameraFieldOfViewCalibrateAnalysis:
 		# to the webcam
 		if not self.recordedVideo:
 			picam2 = Picamera2()
-			picam2.configure( picam2.create_preview_configuration(main={"format": 'XRGB8888', "size": (self.resolution[0], self.resolution[1])}))
+			picam2.configure( picam2.create_preview_configuration(main={"format": 'RGB888', "size": (self.resolution[0], self.resolution[1])}))
 			picam2.start()
 			#vs = cv2.VideoCapture(0)
 			#vs.set(cv2.CAP_PROP_FRAME_WIDTH, self.resolution[0])
@@ -202,7 +213,11 @@ class CameraFieldOfViewCalibrateAnalysis:
 			print(f"Saving to file: {self.filename}")
 			# Define the codec and create VideoWriter object.
 			self.captureFile = cv2.VideoWriter(self.filename, cv2.VideoWriter_fourcc(*'mp4v'), self.frameRate, (self.resolution[0], self.resolution[1]))
-		
+
+		# Initial yaw
+		self.sensors.process()
+		self.yawBaseline = self.yawAccessor.getValue()
+
 		# keep looping
 		while True:
 			self.results = []
@@ -216,7 +231,7 @@ class CameraFieldOfViewCalibrateAnalysis:
 					frame = frame[1]
 				else:
 					original = picam2.capture_array()
-					frame = cv2.cvtColor(original, cv2.COLOR_BGR2GRAY)
+					frame = original #cv2.cvtColor(original, cv2.COLOR_BGR2GRAY)
 
 				# if we are viewing a video and we did not grab a frame,
 				# then we have reached the end of the video
@@ -226,6 +241,10 @@ class CameraFieldOfViewCalibrateAnalysis:
 				# Get the current yaw value
 				self.sensors.process()
 				self.yaw = self.yawAccessor.getValue()
+				
+				# Yaw offset zero
+				if self.zeroYawButton.getValue():
+					self.yawBaseline = self.yaw
 				
 				# Get the current motor positions
 				self.currentMotorPositions = [self.positionL.getValue(), self.positionR.getValue()]

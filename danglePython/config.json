@@ -9,7 +9,7 @@
     "--height=128"
   ],
   "display.graph.numpoints": 300,
-  "fish.analysis.anglescale": 2.1,
+  "fish.analysis.anglescale": 1.3,
   "fish.analysis.debugPrint": false,
   "fish.analysis.frameDelayMs": 1,
   "fish.analysis.save": false,
