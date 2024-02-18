@@ -1,5 +1,6 @@
 [
 	{	"name": "Manual Control",
+		"indicators": [0x03, 0x000400, 0, 0x0, 0, 0],
 		"actions": [  
 		{ "action": "Run", "params": ["python3","DangleRun.py", "--challenge", "ChallengeManualSequence"]},
 		{ "action": "Run", "params": ["python3","displayStatus.py"]},
@@ -7,6 +8,7 @@
 		]
 	},
 	{	"name": "Lava Palava",
+		"indicators": [0x0c, 0x000004, 0, 0x0, 0, 0],
 		"actions": [  
 		{ "action": "Run", "params": ["python3","VisionLineProcessorLava.py"]}, 
 		{ "action": "Run", "params": ["python3","DangleRun.py", "--challenge", "ChallengeLavaPalava"]},
@@ -15,6 +17,7 @@
 		] 
 	},
 	{	"name": "Up the Garden Path",
+		"indicators": [0x30, 0x000004, 0, 0x0, 0, 0],
 		"actions": [  
 		{ "action": "Run", "params": ["python3","VisionLineProcessor.py"]}, 
 		{ "action": "Run", "params": ["python3","VoiceRecogniser.py"]}, 
@@ -24,11 +27,13 @@
 		] 
 	},
 	{	"name": "Stop All",
+		"indicators": [0xc0, 0x040000, 0, 0x0, 0, 0],
 		"actions": [  
 		{ "action": "StopAll", "params": [] }
 		]
 	},
 	{	"name": "Stop and Quit",
+		"indicators": [0xc0, 0x040000, 0, 0xc0, 0x040000, 0],
 		"actions": [  
 		{ "action": "Quit", "params": [] }
 		]

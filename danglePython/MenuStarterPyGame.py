@@ -2,7 +2,7 @@ import time
 import numpy as np
 import psutil
 import sys
-import json
+import json5
 # Interfaces
 from interfaces.SensorAccessFactory import SensorAccessFactory
 from analysis.StepUpDownButtonValue import StepUpDownButtonValue
@@ -10,7 +10,8 @@ from analysis.StepUpDownButtonValue import StepUpDownButtonValue
 from display.menuPyGame import MenuDisplay
 from display.welcome import showWelcomeSequence
 from display.displayPosition import displayPosition
-from display.displayText import displayText
+#from display.displayText import displayText	# For Dangle OLed display
+from display.displayIndicatorEyes import displayIndicatorEyes
 
 def Run(selected, actionParams):
 	# Attempt to start the sub-process(es)
@@ -58,8 +59,13 @@ def DisplayScreenSaver(selected, actionParams):
 	text = "Please connect\nController"
 	display.message(text, True)
 	# Wait for button
+	eye = 0x01
 	while stopButton.getValue() == 0 and sensors.checkWatchdog() <= 0:
-		time.sleep(0.2)
+		eyes.setEyes(eye, 0x040000,0, eye, 0x040000, 0)
+		eye <<= 1
+		if eye > 0x0080:
+			eye = 0x01
+		time.sleep(0.05)
 		display.processEvents()
 
 def DisplayPositions(selected, actionParams):
@@ -87,6 +93,7 @@ def GetSelection(selected):
 		if lastSelected != int(upDownButtons.getValue()):
 			lastSelected = int(upDownButtons.getValue())
 			display.select(lastSelected)
+			eyes.setEyes(*menus[lastSelected,2])
 		else:
 			display.processEvents()
 
@@ -104,47 +111,17 @@ def Quit(selected, actionParams):
 	sys.exit()
 
 sensors = SensorAccessFactory.getSingleton()
-title = "Select Challenge"
-menus = np.empty(shape=[0, 2], dtype=object)
-#np.array([
-#
-#	["Manual Control", [ 
-#			[Run, ['python3','DangleRun.py', '--challenge', 'ChallengeManualSequence']],
-#			[Run, ['python3','displayStatus.py']],
-#			[DisplayPositions, []],
-#			[DisplayText, ['Manual Control']]  ]], 
-#	["Tidy up the Toys", [ 
-#			[Run, ['python3','TidyUpTheToysImageProcess.py']], 
-#			[Run, ['python3','DangleRun.py', '--challenge', 'ChallengeTidyTheToys']],
-#			[Run, ['python3','displayStatus.py']],
-#			[DisplayText, ['Tidy up the\nToys']] ]], 
-#	["Up the\nGarden Path", [
-#			[Run, ['python3','VisionLineProcessor.py']], 
-#			[Run, ['python3','VoiceRecogniser.py']], 
-#			[Run, ['python3','DangleRun.py', '--challenge', 'ChallengeUpTheGardenPath']],
-#			[Run, ['python3','displayStatus.py']],
-#			[DisplayText, ['Up the Garden\nPath']] ]], 
-#	["Feed the Fish", [
-#			[Run, ['python3','FeedFishImageProcess.py']], 
-#			[Run, ['python3','DangleRun.py', '--challenge', 'ChallengeFeedTheFish']],
-#			[Run, ['python3','displayStatus.py']],
-#			[DisplayText, ['Feed the Fish']] ]],
-#	["Stop all", [
-#			[StopAll, []] ]],
-#	["Quit", [
-#			[Quit, []] ]], 
-#	["Welcome", [
-#			[DisplayScreenSaver, []] ]]
-#	], 
-#	dtype=object)	# Needed in later numpy versions, to prevent "inhomogenous" errors
 
+title = "Select Challenge"
 # Load the menu definitions
+menus = np.empty(shape=[0, 3], dtype=object)
 with open("Menus.json", "r") as read_file:
-	json_menu = json.load(read_file)
-#print(json_menu)
+	json_menu = json5.load(read_file)
+	#print(json_menu)
 # Convert to our runtime array
 for menu_item in json_menu:
 	name = menu_item["name"]
+	indicators = menu_item["indicators"]
 	actions = []
 	for nextaction in menu_item["actions"]:
 		action = nextaction["action"]
@@ -163,12 +140,14 @@ for menu_item in json_menu:
 			actions = actions + [[DisplayScreenSaver, params]]
 		else:
 			raise ValueError(f"Unknown action '{action}'") 
-	nextmen = np.array([[name, actions]], dtype=object)
+	nextmen = np.array([[name, actions, indicators]], dtype=object)
 	menus = np.append(menus, nextmen, axis=0)
 #print(f"results: {menus}")
 
 # Enable the menu selected via joystick
 display = MenuDisplay(title, menus[:,0], 0, 3)
+# Eyes display
+eyes = displayIndicatorEyes()
 
 # Stop everything first
 StopAll(-1, [])

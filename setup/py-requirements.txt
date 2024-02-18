@@ -18,6 +18,7 @@ psutil
 smbus
 #smbus2
 pySerial
+json5
 
 # Not used for dangly-too
 pimoroni-ioexpander
