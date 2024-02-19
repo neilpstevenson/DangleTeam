@@ -2,9 +2,9 @@
 Description=PS3/4 controller service using AppoxEng interface to shared memory
 [Service]
 Type=exec
-User=pi
-WorkingDirectory=/home/pi/project/DangleTeam/danglePython
-ExecStart=/usr/bin/python3 /home/pi/project/DangleTeam/danglePython/approxEngControllerProcess.py
+User=neil
+WorkingDirectory=/home/neil/projects/dangle/DangleTeam/services
+ExecStart=/home/neil/projects/dangle/DangleTeam/services/approxeng.service.sh
 Restart=always
 RestartSec=10s
 [Install]

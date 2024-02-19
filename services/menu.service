@@ -1,13 +1,14 @@
 [Unit]
 Description=Dangle menu service
+Requires=approxeng.service eyes.service dangleredboard.service
 [Service]
 Type=exec
-User=pi
-WorkingDirectory=/home/pi/project/DangleTeam/danglePython
+User=neil
+WorkingDirectory=/home/neil/projects/dangle/DangleTeam/services
 Environment=DISPLAY=':0.0'
 Environment=LD_PRELOAD=/usr/lib/arm-linux-gnueabihf/libatomic.so.1
 ExecStartPre=/bin/sleep 5
-ExecStart=/usr/bin/python3 /home/pi/project/DangleTeam/danglePython/MenuStarterPyGame.py
+ExecStart=/home/neil/projects/dangle/DangleTeam/services/menu.service.sh
 Restart=no
 [Install]
 WantedBy=multi-user.target

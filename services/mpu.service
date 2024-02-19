@@ -2,8 +2,8 @@
 Description=MPU motion shared memory service
 [Service]
 Type=exec
-User=pi
-ExecStart=/home/pi/project/DangleTeam/common/mpu/mpu9250_shared
+User=neil
+ExecStart=/home/neil/projects/dangle/DangleTeam/common/mpu/mpu9250_shared
 Restart=always
 RestartSec=10s
 [Install]

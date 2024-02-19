@@ -1,0 +1,12 @@
+[Unit]
+Description=Dangly Too eyes display service
+[Service]
+Type=exec
+User=root
+WorkingDirectory=/home/neil/projects/dangle/DangleTeam/services
+ExecStart=/home/neil/projects/dangle/DangleTeam/services/eyes.service.sh
+Restart=always
+RestartSec=10s
+[Install]
+WantedBy=multi-user.target
+

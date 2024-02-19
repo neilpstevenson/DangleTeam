@@ -1,10 +1,12 @@
 #!/bin/bash
 
 # Link in services
-ln -s /home/pi/project/DangleTeam/services/mpu.service /etc/systemd/system
-ln -s /home/pi/project/DangleTeam/services/dangleredboard.service /etc/systemd/system
-ln -s /home/pi/project/DangleTeam/services/approxeng.service /etc/systemd/system
-#ln -s /home/pi/project/DangleTeam/services/menu.service /etc/systemd/system
+SOURCE_HOME=/home/neil/projects/dangle/DangleTeam
+ln -s $SOURCE_HOME/services/mpu.service /etc/systemd/system
+ln -s $SOURCE_HOME/services/dangleredboard.service /etc/systemd/system
+ln -s $SOURCE_HOME/services/approxeng.service /etc/systemd/system
+ln -s $SOURCE_HOME/services/eyes.service /etc/systemd/system
+ln -s $SOURCE_HOME/services/menu.service /etc/systemd/system
 
 # enable & start services
 systemctl daemon-reload
@@ -14,8 +16,10 @@ systemctl enable dangleredboard.service
 systemctl start dangleredboard.service
 systemctl enable approxeng.service
 systemctl start approxeng.service
-#systemctl enable menu.service
-#systemctl start menu.service
+systemctl enable eyes.service
+systemctl start eyes.service
+systemctl enable menu.service
+systemctl start menu.service
 
 # View logs
-journalctl -b0 --unit=mpu.service --unit=dangleredboard.service --unit=approxeng.service --unit=menu.service
+journalctl -b0 --unit=mpu.service --unit=dangleredboard.service --unit=approxeng.service --unit=eyes.service --unit=menu.service

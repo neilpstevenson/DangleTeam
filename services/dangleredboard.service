@@ -1,13 +1,13 @@
 [Unit]
 Description=Dangle redboard controller shared memory service
+After=mpu.service
 [Service]
 Type=exec
-User=pi
-WorkingDirectory=/home/pi/project/DangleTeam/danglePython
-ExecStart=/usr/bin/python3 /home/pi/project/DangleTeam/danglePython/redboardControlProcess.py
+User=neil
+WorkingDirectory=/home/neil/projects/dangle/DangleTeam/services
+ExecStart=/home/neil/projects/dangle/DangleTeam/services/dangleredboard.service.sh
 Restart=always
 RestartSec=10s
-After=mpu.service
 [Install]
 WantedBy=multi-user.target
 
