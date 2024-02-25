@@ -7,7 +7,7 @@ User=neil
 WorkingDirectory=/home/neil/projects/dangle/DangleTeam/services
 Environment=DISPLAY=':0.0'
 Environment=LD_PRELOAD=/usr/lib/arm-linux-gnueabihf/libatomic.so.1
-ExecStartPre=/bin/sleep 5
+ExecStartPre=/bin/sleep 15
 ExecStart=/home/neil/projects/dangle/DangleTeam/services/menu.service.sh
 Restart=no
 [Install]

@@ -1,4 +1,4 @@
-import time
+###import time
 import numpy as np
 import psutil
 import sys
@@ -32,11 +32,11 @@ def Run(selected, actionParams):
 		print(f"Starting: {actionParams}")
 		display.message(f"Starting\n{pythonName}")
 		psutil.Popen(actionParams)
-		time.sleep(0.5)
+		display.sleep(0.5)
 	else:
 		print(f"Already running: {actionParams}")
 		display.message(f"Running\n{pythonName}")
-		time.sleep(0.3)
+		display.sleep(0.3)
 
 def StopAll(selected, actionParams):
 	# Kill any existing processes
@@ -50,7 +50,7 @@ def StopAll(selected, actionParams):
 						print(f"Stopping: {processCmd}")
 						display.message(f"Stopping\n{pythonName}")
 						process.kill()
-						time.sleep(0.2)
+						display.sleep(0.2)
 				except psutil.NoSuchProcess:
 					pass
 
@@ -65,7 +65,7 @@ def DisplayScreenSaver(selected, actionParams):
 		eye <<= 1
 		if eye > 0x0080:
 			eye = 0x01
-		time.sleep(0.05)
+		display.sleep(0.05)
 		display.processEvents()
 
 def DisplayPositions(selected, actionParams):
@@ -79,7 +79,7 @@ def DisplayText(selected, actionParams):
 	display.message(text, True)
 	# Wait for button
 	while stopButton.getValue() == 0 and sensors.checkWatchdog() > 0:
-		time.sleep(0.2)
+		display.sleep(0.2)
 		display.processEvents()
 
 	#disp = displayText(display.getDevice(), stopButton, text)
@@ -99,12 +99,13 @@ def GetSelection(selected):
 
 		if selectButton.getValue() > 0:
 			break
-		time.sleep(0.05)
+		display.sleep(0.05)
 		
 		# Display screensaver if sensors not running
 		if sensors.checkWatchdog() <= 0:
 			DisplayScreenSaver(lastSelected, None)
 			display.select(lastSelected)
+			eyes.setEyes(*menus[lastSelected,2])
 	return lastSelected
 
 def Quit(selected, actionParams):

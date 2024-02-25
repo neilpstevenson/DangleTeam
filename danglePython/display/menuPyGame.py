@@ -17,6 +17,7 @@ class MenuDisplay:
 		self.title = title
 		self.menuItems = menuItems
 		self.selected = selected
+		self.showMenu = True
 		# Config
 		#config = Config()
 		#displayDef = config.get("display.config", MenuDisplay.defaultDisplayConfig)
@@ -46,11 +47,32 @@ class MenuDisplay:
 		
 	def show(self):
 		# Display the status
+		self.showMenu = True
+		self.render()
+		# Handle any other events
+		self.processEvents()
+
+	def render(self):
 		self.screen.fill((255, 255, 255))
-		pos = (0,20)
-		for item in range(len(self.menuItems)):
-			for text in self.menuItems[item].split("\n"):
-				if item == self.selected:
+		if self.showMenu:
+			# Display the menu
+			self.screen.fill((255, 255, 255))
+			pos = (0,20)
+			for item in range(len(self.menuItems)):
+				for text in self.menuItems[item].split("\n"):
+					if item == self.selected:
+						# Draw in big font
+						text_rendered,rect = self.title_font.render(text, fgcolor=(0,0,0))
+					else:
+						# Draw in medium font
+						text_rendered,rect = self.subTitle_font.render(text, fgcolor=(0,0,0))
+					self.screen.blit(text_rendered, (self.width//2 - (rect[2]-rect[0])//2, pos[1]))
+					pos = (pos[0],pos[1] + rect[1] * 7 // 5)
+		else:
+			# Display a simple message
+			pos = (0,200)
+			for text in self.msg.split("\n"):
+				if self.bigFont:
 					# Draw in big font
 					text_rendered,rect = self.title_font.render(text, fgcolor=(0,0,0))
 				else:
@@ -60,22 +82,14 @@ class MenuDisplay:
 				pos = (pos[0],pos[1] + rect[1] * 7 // 5)
 
 		pygame.display.flip()
-		self.processEvents()
 					
 	def message(self, msg, bigFont=False):
-		self.screen.fill((255, 255, 255))
-		pos = (0,200)
-		for text in msg.split("\n"):
-			if bigFont:
-				# Draw in big font
-				text_rendered,rect = self.title_font.render(text, fgcolor=(0,0,0))
-			else:
-				# Draw in medium font
-				text_rendered,rect = self.subTitle_font.render(text, fgcolor=(0,0,0))
-			self.screen.blit(text_rendered, (self.width//2 - (rect[2]-rect[0])//2, pos[1]))
-			pos = (pos[0],pos[1] + rect[1] * 7 // 5)
-
-		pygame.display.flip()
+		# Display the status
+		self.showMenu = False
+		self.msg = msg
+		self.bigFont = bigFont
+		self.render()
+		# Handle any other events
 		self.processEvents()
 
 		#top = 0
@@ -97,6 +111,11 @@ class MenuDisplay:
 	
 	def getDevice(self):
 		return self.device
+	
+	def sleep(self, seconds):
+		# Ensure events handled
+		pygame.time.wait(int(seconds * 1000))
+		self.render()
 		
 if __name__ == "__main__":
 	try:
