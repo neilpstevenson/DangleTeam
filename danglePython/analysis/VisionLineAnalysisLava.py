@@ -168,6 +168,8 @@ class VisionLineAnalysisLava:
 				assessment = original.copy()
 				for point in points:
 					cv2.circle(assessment, point, 5, (0,0,255), 1)
+				# Show blinkers
+				cv2.polylines(assessment, blinkerPolys, 0, (0,0,0), thickness=2)
 				# Draw an arrow representing the brightest points
 				#print(f"values: {(int(x0-vx), int(y0-vy))}, {(int(x0+vx), int(y0+vy))}")
 				cv2.arrowedLine(assessment, (int(x0-vx), int(y0-vy)), (int(x0+vx), int(y0+vy)), (255, 255, 0), 2)
