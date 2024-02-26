@@ -26,3 +26,7 @@ pimoroni-ioexpander
 #For test plots:
 #matplotlib
 
+# Arducam - See docs.arducam.com
+# git clone https://github.com/ArduCAM/Arducam_tof_camera.git
+# cd Arducam_tof_camera
+# ./Install_dependencies_python.sh

@@ -8,3 +8,10 @@ sudo apt install liblapack-dev libatlas-base-dev
 #sudo apt install libatlas3-base libwebp6 libtiff5 libjasper1 libopenexr23 libqtgui4 libqt4-test libqtcore4 libilmbase12 libgstreamer1.0-0 libavcodec57 libavformat57 libavutil55 libswscale4 
 
 # picamera2?
+
+# Arducam & OpenCV - See docs.arducam.com
+# git clone https://github.com/ArduCAM/Arducam_tof_camera.git
+# cd Arducam_tof_camera
+# ./Install_dependencies.sh
+# ./compile.sh
+
