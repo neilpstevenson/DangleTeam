@@ -15,3 +15,7 @@ sudo apt install liblapack-dev libatlas-base-dev
 # ./Install_dependencies.sh
 # ./compile.sh
 
+# Get project 
+# mkdir projects/dangle
+# cd projects/dangle
+# git clone https://neilpstevenson:password@github.com/neilpstevenson/DangleTeam.git
