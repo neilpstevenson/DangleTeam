@@ -5,8 +5,8 @@
 #	source ~/danglyToo/bin/activate
 #   pip install -r requirements.txt
 
-# Currently needs manual install:
-#approxeng.input 
+approxeng.input 
+pigpio
 
 # Very slow, use 'sudo apt install python3-opencv' instead
 #opencv-python
@@ -16,12 +16,21 @@ simple-pid
 pygame
 psutil
 smbus
-#smbus2
+smbus2
 pySerial
 json5
 
 # Not used for dangly-too
 pimoroni-ioexpander
+
+# For eyes
+#neopixel
+#board
+rpi_ws281x
+adafruit-circuitpython-neopixel
+adafruit-blinka
+Rpi.GPIO
+pyaudio
 
 #For test plots:
 #matplotlib
@@ -30,3 +39,5 @@ pimoroni-ioexpander
 # git clone https://github.com/ArduCAM/Arducam_tof_camera.git
 # cd Arducam_tof_camera
 # ./Install_dependencies_python.sh
+
+ArducamDepthCamera
