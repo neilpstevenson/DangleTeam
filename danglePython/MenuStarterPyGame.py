@@ -1,4 +1,3 @@
-###import time
 import numpy as np
 import psutil
 import sys
@@ -8,9 +7,6 @@ from interfaces.SensorAccessFactory import SensorAccessFactory
 from analysis.StepUpDownButtonValue import StepUpDownButtonValue
 # Menu stuff
 from display.menuPyGame import MenuDisplay
-from display.welcome import showWelcomeSequence
-from display.displayPosition import displayPosition
-#from display.displayText import displayText	# For Dangle OLed display
 from display.displayIndicatorEyes import displayIndicatorEyes
 
 def Run(selected, actionParams):
