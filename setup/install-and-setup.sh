@@ -11,17 +11,18 @@ mkdir projects projects/dangle
 # Set up git
 git config --global user.email "neil.github@secureness.co.uk"
 git config --global user.name "Neil Stevenson"
+git config credential.helper store
 
 # Get the Dangle code
 cd projects/dangle
 GITUSER="neilpstevenson"
-GITPASSWORD="github_pat_XXX or PASSWORD"
-git clone "https://$GITUSER:$GITPASSWORD@github.com/neilpstevenson/DangleTeam.git"
+git clone "https://$GITUSER@github.com/neilpstevenson/DangleTeam.git"
 git checkout DanglyToo
 # Note: password can be changed using 
-# git remote set-url origin "new urls with password"
+# git remote set-url origin "https://user:pass@github.com/..."
 # or by using 
-# git config credentials.helper store
+# git config credential.helper store
+# Then on next pull/push it will save the username and PAT/password
 
 # Build the MPU code exe
 cd ~/projects/dangle/DangleTeam/common/mpu
