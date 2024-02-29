@@ -53,6 +53,7 @@ sudo apt install -y liblapack-dev libatlas-base-dev
 sudo apt install -y python3-opencv libopenblas-dev 
 #sudo apt install -y libcblas-dev libhdf5-dev libhdf5-serial-dev libjasper-dev 
 #sudo apt install -y libqtgui4 libqt4-test
+sudo apt install -y python3-picamera2
 
 # Required for neopixel????
 sudo apt install -y python3-pyaudio
@@ -73,6 +74,20 @@ source ~/redboard/bin/activate
 # Install the remaining Pyhon libraries into the environment
 cd ~/projects/dangle/DangleTeam/setup
 pip install -r py-requirements.txt
+
+# Need to manually link opencv into env
+ln -s /usr/lib/python3/dist-packages/cv2.* ~/redboard/lib/python3.11/site-packages/
+ln -s /usr/lib/python3/dist-packages/picamera2 ~/redboard/lib/python3.11/site-packages/
+ln -s /usr/lib/python3/dist-packages/libcamera ~/redboard/lib/python3.11/site-packages/
+ln -s /usr/lib/python3/dist-packages/v4l2* ~/redboard/lib/python3.11/site-packages/
+ln -s /usr/lib/python3/dist-packages/prctl.py ~/redboard/lib/python3.11/site-packages/
+ln -s /usr/lib/python3/dist-packages/_prctl.* ~/redboard/lib/python3.11/site-packages/
+ln -s /usr/lib/python3/dist-packages/piexif* ~/redboard/lib/python3.11/site-packages/
+ln -s /usr/lib/python3/dist-packages/pidng* ~/redboard/lib/python3.11/site-packages/
+ln -s /usr/lib/python3/dist-packages/simplejpeg* ~/redboard/lib/python3.11/site-packages/
+ln -s /usr/lib/python3/dist-packages/av* ~/redboard/lib/python3.11/site-packages/
+ln -s /usr/lib/python3/dist-packages/pykms ~/redboard/lib/python3.11/site-packages/
+
 
 # Start the Dangle services
 cd ~/projects/dangle/DangleTeam/services
