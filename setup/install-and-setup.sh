@@ -15,9 +15,13 @@ git config --global user.name "Neil Stevenson"
 # Get the Dangle code
 cd projects/dangle
 GITUSER="neilpstevenson"
-GITPASSWORD="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"
+GITPASSWORD="github_pat_XXX or PASSWORD"
 git clone "https://$GITUSER:$GITPASSWORD@github.com/neilpstevenson/DangleTeam.git"
 git checkout DanglyToo
+# Note: password can be changed using 
+# git remote set-url origin "new urls with password"
+# or by using 
+# git config credentials.helper store
 
 # Build the MPU code exe
 cd ~/projects/dangle/DangleTeam/common/mpu
@@ -48,6 +52,9 @@ sudo apt install -y liblapack-dev libatlas-base-dev
 sudo apt install -y python3-opencv libopenblas-dev 
 #sudo apt install -y libcblas-dev libhdf5-dev libhdf5-serial-dev libjasper-dev 
 #sudo apt install -y libqtgui4 libqt4-test
+
+# Required for neopixel????
+sudo apt install -y python3-pyaudio
 
 # Start the pigpiod deamon
 sudo systemctl enable pigpiod

@@ -20,6 +20,9 @@ smbus2
 pySerial
 json5
 
+# For fonts etc.
+Pillow
+
 # Not used for dangly-too
 pimoroni-ioexpander
 
@@ -30,7 +33,7 @@ rpi_ws281x
 adafruit-circuitpython-neopixel
 adafruit-blinka
 Rpi.GPIO
-pyaudio
+#pyaudio
 
 #For test plots:
 #matplotlib
