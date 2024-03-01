@@ -3,7 +3,8 @@
 
 # import the necessary packages
 from collections import deque
-from imutils.video import VideoStream
+#from imutils.video import VideoStream
+from picamera2 import Picamera2
 import numpy as np
 import argparse
 import cv2
@@ -179,7 +180,8 @@ class EcoDisasterImageCaptureAndAnalysis:
 						 distance = self.distance,
 						 size = [0,0],
 						 yaw = self.yawHeading,
-						 angle = self.angle )
+						 angle = self.angle,
+						 motorpositions = [0,0] )
 					self.results.append(result)
 				else:
 					print(f"reject at: {(x,y)}, {len(approx)}, {keepDims}, {keepSolidity}({solidity:0.3f}), {keepAspectRatio}({aspectRatio:0.3f}), area: {area:0.3f}/{hullArea}")
@@ -259,7 +261,8 @@ class EcoDisasterImageCaptureAndAnalysis:
 					 distance = self.distance,
 					 size = [0,0],
 					 yaw = self.yawHeading,
-					 angle = self.angle )
+					 angle = self.angle,
+					 motorpositions = [0,0] )
 				self.results.append(result)
 					
 		# Debug output	
@@ -373,11 +376,14 @@ class EcoDisasterImageCaptureAndAnalysis:
 		# if a video path was not supplied, grab the reference
 		# to the webcam
 		if not self.recordedVideo:
-			vs = VideoStream(src=0)
-			vs.stream.stream.set( cv2.CAP_PROP_WHITE_BALANCE_BLUE_U, 7.5)
-			vs.stream.stream.set( cv2.CAP_PROP_WHITE_BALANCE_RED_V, 7.5)
-			vs.stream.stream.set( cv2.CAP_PROP_AUTO_WB, 0)
-			vs.start()
+			self.picam2 = Picamera2()
+			self.picam2.configure( self.picam2.create_preview_configuration(main={"format": 'RGB888', "size": (640,480)}))
+			self.picam2.start()
+			#vs = VideoStream(src=0)
+			#vs.stream.stream.set( cv2.CAP_PROP_WHITE_BALANCE_BLUE_U, 7.5)
+			#vs.stream.stream.set( cv2.CAP_PROP_WHITE_BALANCE_RED_V, 7.5)
+			#vs.stream.stream.set( cv2.CAP_PROP_AUTO_WB, 0)
+			#vs.start()
 		# otherwise, grab a reference to the video file
 		else:
 			vs = cv2.VideoCapture(self.videoFilenanme)
@@ -399,10 +405,11 @@ class EcoDisasterImageCaptureAndAnalysis:
 				self.startTime = cv2.getTickCount()
 				
 				# grab the current frame
-				frame = vs.read()
-
-				# handle the frame from VideoCapture or VideoStream
-				frame = frame[1] if self.recordedVideo else frame
+				if self.recordedVideo:
+					frame = vs.read()[1]
+				else:
+					frame = self.picam2.capture_array()
+					#frame = vs.read()
 
 				# if we are viewing a video and we did not grab a frame,
 				# then we have reached the end of the video

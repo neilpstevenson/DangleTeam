@@ -36,7 +36,7 @@ class VisionLineAnalysisLava:
 		#self.camera.framerate = framerate
 		#self.rawCapture = PiRGBArray(self.camera, size=self.resolution)
 		self.picam2 = Picamera2()
-		self.picam2.configure( self.picam2.create_preview_configuration(main={"format": 'XRGB8888', "size": (resolution[0], resolution[1])}))
+		self.picam2.configure( self.picam2.create_preview_configuration(main={"format": 'RGB888', "size": (resolution[0], resolution[1])}))
 		self.picam2.start()
 		
 		# Current Yaw reading

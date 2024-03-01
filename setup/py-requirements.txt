@@ -45,3 +45,6 @@ Rpi.GPIO
 # ./Install_dependencies_python.sh
 
 ArducamDepthCamera
+
+# pyimagesearch helpers
+imutils

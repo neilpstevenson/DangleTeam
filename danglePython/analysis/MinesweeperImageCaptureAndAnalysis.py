@@ -3,7 +3,8 @@
 
 # import the necessary packages
 from collections import deque
-from imutils.video import VideoStream
+#from imutils.video import VideoStream
+from picamera2 import Picamera2
 import numpy as np
 import argparse
 import cv2
@@ -215,7 +216,8 @@ class MinesweeperImageCaptureAndAnalysis:
 			 distance = self.distance,
 			 size = [0,0],
 			 yaw = yawHeading,
-			 angle = self.angle )
+			 angle = self.angle,
+			 motorpositions = [0,0] )
 			self.results.shareResults(self.startTime, timestamp, [result0] )
 		elif self.angle != None:
 			# Ajust angle based on last successful analysis for display only
@@ -245,7 +247,10 @@ class MinesweeperImageCaptureAndAnalysis:
 		# if a video path was not supplied, grab the reference
 		# to the webcam
 		if not self.recordedVideo:
-			vs = VideoStream(src=0).start()
+			self.picam2 = Picamera2()
+			self.picam2.configure( self.picam2.create_preview_configuration(main={"format": 'RGB888', "size": (640,480)}))
+			self.picam2.start()
+			#vs = VideoStream(src=0).start()
 		# otherwise, grab a reference to the video file
 		else:
 			vs = cv2.VideoCapture(self.videoFilenanme)
@@ -265,10 +270,11 @@ class MinesweeperImageCaptureAndAnalysis:
 				self.startTime = cv2.getTickCount()
 				
 				# grab the current frame
-				frame = vs.read()
-
-				# handle the frame from VideoCapture or VideoStream
-				frame = frame[1] if self.recordedVideo else frame
+				if self.recordedVideo:
+					frame = vs.read()[1]
+				else:
+					frame = self.picam2.capture_array()
+					#frame = vs.read()
 
 				# if we are viewing a video and we did not grab a frame,
 				# then we have reached the end of the video
