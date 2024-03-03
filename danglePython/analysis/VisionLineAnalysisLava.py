@@ -48,7 +48,7 @@ class VisionLineAnalysisLava:
 		if self.filename != None:
 			print(f"Saving to file: {self.filename}")
 			# Define the codec and create VideoWriter object.
-			self.captureFile = cv2.VideoWriter(self.filename, cv2.VideoWriter_fourcc(*'mp4v'), 10, self.camera.resolution)
+			self.captureFile = cv2.VideoWriter(self.filename, cv2.VideoWriter_fourcc(*'mp4v'), 10, (self.resolution[0], self.resolution[1]))
 			
 		# Start timer, so we know how long things took
 		startTime = cv2.getTickCount()
@@ -100,10 +100,10 @@ class VisionLineAnalysisLava:
 					point = (maxLoc[0],maxLoc[1]+offset)
 					offset += len(slices[bit])
 					if maxVal < self.threshold:
-						#print(f"Ignoring point: {point}, value {maxVal}")
+						print(f"Ignoring point: {point}, value {maxVal}")
 						pass
 					else:
-						#print(f"Using point: {point}, value {maxVal}")
+						print(f"Using point: {point}, value {maxVal}")
 						points.append(point)
 				else:
 					offset += len(slices[bit])
